@@ -1,13 +1,9 @@
-MÉDICO AMIGO v1.0.1 AUTH FIX
+MÉDICO AMIGO v1.0.2 AUTH DIAGNÓSTICO
 
-CORRECCIÓN
-- Eliminado el controlador de login simulado heredado del prototipo.
-- El formulario de acceso ahora se procesa únicamente mediante Supabase Auth.
-- Se agregó una protección adicional para impedir mostrar Inicio sin un perfil autenticado.
-- Contraseña incorrecta: debe permanecer en Login.
-- Credenciales correctas: carga doctor_profiles y recién entonces muestra Inicio.
+- Mantiene exclusivamente Supabase Auth.
+- Añade mensaje visible de autenticación en el formulario real.
+- Muestra la causa devuelta por Supabase (credenciales, correo no confirmado o conexión).
+- No permite acceso por login simulado.
 
-ESTADO
-Login y perfil: Supabase.
-Pacientes, consultas, recetas y pagos: todavía sessionStorage.
-NO usar datos clínicos reales todavía.
+Esta versión sirve para identificar si la cuenta creada en Supabase necesita
+restablecer contraseña o confirmar correo.

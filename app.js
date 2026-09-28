@@ -428,8 +428,17 @@ async function realLogin(){
  });
  if(button){button.disabled=false;button.textContent=oldText||'INGRESAR';}
  if(error){
-   console.error(error);
-   authMsg('Correo o contraseña incorrectos.');
+   console.error('Supabase login error:',error);
+   const msg=(error.message||'').toLowerCase();
+   if(msg.includes('invalid login credentials')){
+     authMsg('Correo o contraseña incorrectos. Si estás seguro de la contraseña, restablécela en Supabase Authentication.');
+   }else if(msg.includes('email not confirmed')){
+     authMsg('El correo todavía no está confirmado en Supabase.');
+   }else if(msg.includes('failed to fetch') || msg.includes('network')){
+     authMsg('No se pudo conectar con Supabase. Revisa internet y vuelve a intentar.');
+   }else{
+     authMsg('Supabase respondió: '+(error.message||'Error de autenticación'));
+   }
    return;
  }
  password.value='';
