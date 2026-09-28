@@ -21,10 +21,7 @@
     content="#073b66"
   >
 
-  <link
-    rel="stylesheet"
-    href="styles.css"
-  >
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 
@@ -37,10 +34,7 @@
        LOGIN
   ========================================= -->
 
-  <section
-    id="loginScreen"
-    class="login"
-  >
+  <section id="loginScreen" class="login">
 
     <div class="brand">
 
@@ -106,10 +100,7 @@
       </div>
 
 
-      <button
-        class="primary-button"
-        type="submit"
-      >
+      <button class="primary-button" type="submit">
         INICIAR SESIÓN
       </button>
 
@@ -128,13 +119,8 @@
        PANTALLA PRINCIPAL
   ========================================= -->
 
-  <section
-    id="homeScreen"
-    class="home hidden"
-  >
+  <section id="homeScreen" class="home hidden">
 
-
-    <!-- CABECERA -->
 
     <header class="home-header">
 
@@ -162,9 +148,6 @@
     </header>
 
 
-
-    <!-- BIENVENIDA -->
-
     <div class="doctor-welcome">
 
       <p>
@@ -181,9 +164,6 @@
 
     </div>
 
-
-
-    <!-- NUEVA CONSULTA -->
 
     <button
       id="newConsultationBtn"
@@ -210,9 +190,6 @@
     </button>
 
 
-
-    <!-- BUSCAR PACIENTE -->
-
     <button
       id="searchPatientBtn"
       class="patient-search"
@@ -238,9 +215,6 @@
     </button>
 
 
-
-    <!-- ATENCIÓN DE HOY -->
-
     <section class="today-section">
 
       <div class="section-heading">
@@ -258,18 +232,13 @@
 
       <div class="stats-grid">
 
-
         <div class="stat-card">
 
           <span>👥</span>
 
-          <strong>
-            0
-          </strong>
+          <strong>0</strong>
 
-          <small>
-            Consultas
-          </small>
+          <small>Consultas</small>
 
         </div>
 
@@ -278,13 +247,9 @@
 
           <span>💵</span>
 
-          <strong>
-            Bs 0
-          </strong>
+          <strong>Bs 0</strong>
 
-          <small>
-            Ingresos
-          </small>
+          <small>Ingresos</small>
 
         </div>
 
@@ -293,24 +258,16 @@
 
           <span>🕐</span>
 
-          <strong>
-            0
-          </strong>
+          <strong>0</strong>
 
-          <small>
-            Pendientes
-          </small>
+          <small>Pendientes</small>
 
         </div>
-
 
       </div>
 
     </section>
 
-
-
-    <!-- CONSULTAS RECIENTES -->
 
     <section class="recent-section">
 
@@ -342,54 +299,35 @@
     </section>
 
 
-
-    <!-- MENÚ INFERIOR -->
-
     <nav class="bottom-nav">
 
-      <button
-        class="nav-item active"
-        type="button"
-      >
+      <button class="nav-item active" type="button">
 
         <span>⌂</span>
 
-        <small>
-          Inicio
-        </small>
+        <small>Inicio</small>
 
       </button>
 
 
-      <button
-        class="nav-item"
-        type="button"
-      >
+      <button class="nav-item" type="button">
 
         <span>♟</span>
 
-        <small>
-          Pacientes
-        </small>
+        <small>Pacientes</small>
 
       </button>
 
 
-      <button
-        class="nav-item"
-        type="button"
-      >
+      <button class="nav-item" type="button">
 
         <span>•••</span>
 
-        <small>
-          Más
-        </small>
+        <small>Más</small>
 
       </button>
 
     </nav>
-
 
   </section>
 
@@ -404,8 +342,6 @@
     class="patient-screen hidden"
   >
 
-
-    <!-- CABECERA -->
 
     <header class="screen-header">
 
@@ -434,19 +370,13 @@
     </header>
 
 
-
-    <!-- PASOS -->
-
     <div class="progress-steps">
-
 
       <div class="step active">
 
         <span>1</span>
 
-        <small>
-          Paciente
-        </small>
+        <small>Paciente</small>
 
       </div>
 
@@ -455,9 +385,7 @@
 
         <span>2</span>
 
-        <small>
-          Consulta
-        </small>
+        <small>Consulta</small>
 
       </div>
 
@@ -466,9 +394,7 @@
 
         <span>3</span>
 
-        <small>
-          Receta
-        </small>
+        <small>Receta</small>
 
       </div>
 
@@ -477,29 +403,19 @@
 
         <span>4</span>
 
-        <small>
-          Cobro
-        </small>
+        <small>Cobro</small>
 
       </div>
-
 
     </div>
 
 
-
-    <!-- CONTENIDO -->
-
     <div class="patient-content">
 
 
-      <!-- BUSCADOR -->
-
       <div class="patient-search-box">
 
-        <span>
-          ⌕
-        </span>
+        <span>⌕</span>
 
         <input
           id="patientSearchInput"
@@ -516,16 +432,11 @@
       </div>
 
 
-
-      <!-- RESULTADOS -->
-
       <div
         id="patientResults"
         class="patient-results"
       >
 
-
-        <!-- PACIENTE DE PRUEBA 1 -->
 
         <article
           class="patient-result"
@@ -563,9 +474,6 @@
         </article>
 
 
-
-        <!-- PACIENTE DE PRUEBA 2 -->
-
         <article
           class="patient-result"
           data-name="Carlos Mamani"
@@ -601,21 +509,15 @@
 
         </article>
 
-
       </div>
 
-
-
-      <!-- SIN RESULTADOS -->
 
       <div
         id="noPatientResults"
         class="no-results hidden"
       >
 
-        <span>
-          🔎
-        </span>
+        <span>🔎</span>
 
         <strong>
           No encontramos pacientes
@@ -627,9 +529,6 @@
 
       </div>
 
-
-
-      <!-- REGISTRAR PACIENTE -->
 
       <div class="new-patient-box">
 
@@ -655,8 +554,427 @@
 
       </div>
 
+    </div>
+
+  </section>
+
+
+
+  <!-- ========================================
+       REGISTRAR NUEVO PACIENTE
+  ========================================= -->
+
+  <section
+    id="newPatientScreen"
+    class="patient-screen hidden"
+  >
+
+
+    <header class="screen-header">
+
+      <button
+        id="backPatientSearchBtn"
+        class="back-button"
+        type="button"
+        aria-label="Volver"
+      >
+        ←
+      </button>
+
+
+      <div>
+
+        <h1>
+          Nuevo paciente
+        </h1>
+
+        <p>
+          Registrar datos del paciente
+        </p>
+
+      </div>
+
+    </header>
+
+
+    <div class="progress-steps">
+
+      <div class="step active">
+
+        <span>1</span>
+
+        <small>Paciente</small>
+
+      </div>
+
+
+      <div class="step">
+
+        <span>2</span>
+
+        <small>Consulta</small>
+
+      </div>
+
+
+      <div class="step">
+
+        <span>3</span>
+
+        <small>Receta</small>
+
+      </div>
+
+
+      <div class="step">
+
+        <span>4</span>
+
+        <small>Cobro</small>
+
+      </div>
 
     </div>
+
+
+
+    <form
+      id="newPatientForm"
+      class="patient-form"
+    >
+
+
+      <!-- DATOS PERSONALES -->
+
+      <div class="form-section">
+
+        <div class="form-section-title">
+
+          <div>
+
+            <span class="form-section-icon">
+              👤
+            </span>
+
+            <div>
+
+              <h2>
+                Datos personales
+              </h2>
+
+              <p>
+                Información básica del paciente
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="patientFullName">
+            Nombre completo *
+          </label>
+
+          <input
+            id="patientFullName"
+            type="text"
+            placeholder="Ej. Juan Pérez López"
+            autocomplete="name"
+            required
+          >
+
+        </div>
+
+
+        <div class="form-row">
+
+          <div class="form-group">
+
+            <label for="patientDocument">
+              CI / Documento
+            </label>
+
+            <input
+              id="patientDocument"
+              type="text"
+              placeholder="Documento"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="patientBirthDate">
+              Fecha de nacimiento
+            </label>
+
+            <input
+              id="patientBirthDate"
+              type="date"
+            >
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="calculatedAge"
+          class="calculated-age hidden"
+        >
+          Edad: <strong id="ageValue">-</strong>
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="patientSex">
+            Sexo
+          </label>
+
+          <select id="patientSex">
+
+            <option value="">
+              Seleccionar
+            </option>
+
+            <option value="Femenino">
+              Femenino
+            </option>
+
+            <option value="Masculino">
+              Masculino
+            </option>
+
+            <option value="Otro">
+              Otro
+            </option>
+
+            <option value="No especificado">
+              Prefiere no especificar
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- CONTACTO -->
+
+      <div class="form-section">
+
+        <div class="form-section-title">
+
+          <div>
+
+            <span class="form-section-icon">
+              📱
+            </span>
+
+            <div>
+
+              <h2>
+                Contacto
+              </h2>
+
+              <p>
+                Datos para comunicación y visitas
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="patientPhone">
+            Teléfono / WhatsApp
+          </label>
+
+          <input
+            id="patientPhone"
+            type="tel"
+            placeholder="Ej. 71234567"
+            autocomplete="tel"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="patientAddress">
+            Dirección
+          </label>
+
+          <textarea
+            id="patientAddress"
+            rows="2"
+            placeholder="Dirección del paciente"
+          ></textarea>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="emergencyContact">
+            Contacto de emergencia
+          </label>
+
+          <input
+            id="emergencyContact"
+            type="text"
+            placeholder="Nombre y teléfono"
+          >
+
+        </div>
+
+      </div>
+
+
+
+      <!-- INFORMACIÓN MÉDICA -->
+
+      <details class="medical-details">
+
+        <summary>
+
+          <div>
+
+            <span class="form-section-icon">
+              🩺
+            </span>
+
+            <div>
+
+              <strong>
+                Información médica
+              </strong>
+
+              <small>
+                Antecedentes, alergias y medicación
+              </small>
+
+            </div>
+
+          </div>
+
+          <span class="details-arrow">
+            ›
+          </span>
+
+        </summary>
+
+
+        <div class="medical-details-content">
+
+
+          <div class="form-group">
+
+            <label for="patientHistory">
+              Antecedentes relevantes
+            </label>
+
+            <textarea
+              id="patientHistory"
+              rows="3"
+              placeholder="Antecedentes personales, quirúrgicos, familiares..."
+            ></textarea>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="patientAllergies">
+              Alergias
+            </label>
+
+            <textarea
+              id="patientAllergies"
+              rows="2"
+              placeholder="Medicamentos, alimentos u otras alergias"
+            ></textarea>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="patientMedication">
+              Medicación habitual
+            </label>
+
+            <textarea
+              id="patientMedication"
+              rows="2"
+              placeholder="Medicamentos que utiliza actualmente"
+            ></textarea>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="patientObservations">
+              Observaciones
+            </label>
+
+            <textarea
+              id="patientObservations"
+              rows="2"
+              placeholder="Información adicional relevante"
+            ></textarea>
+
+          </div>
+
+        </div>
+
+      </details>
+
+
+
+      <!-- ACCIONES -->
+
+      <div class="form-actions">
+
+        <button
+          id="cancelNewPatientBtn"
+          class="secondary-form-button"
+          type="button"
+        >
+          CANCELAR
+        </button>
+
+
+        <button
+          class="save-patient-button"
+          type="submit"
+        >
+          GUARDAR Y CONTINUAR →
+        </button>
+
+      </div>
+
+
+      <p class="required-fields">
+        * Campo obligatorio
+      </p>
+
+
+    </form>
 
   </section>
 
