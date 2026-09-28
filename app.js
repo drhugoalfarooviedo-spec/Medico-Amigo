@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 const $=id=>document.getElementById(id),screens=[$('loginScreen'),$('homeScreen'),$('patientScreen'),$('newPatientScreen'),$('consultationScreen'),$('prescriptionScreen'),$('paymentScreen'),$('patientsScreen'),$('patientDetailScreen'),$('settingsScreen')];let selectedPatient=null,currentConsultation=null,currentPrescription=null;
 const show=s=>{screens.forEach(x=>x.classList.add('hidden'));s.classList.remove('hidden');scrollTo(0,0)};
 const normalize=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const cards=()=>document.querySelectorAll('.patient-result');
-$('loginForm').onsubmit=e=>{e.preventDefault();show($('homeScreen'))};function openPatients(){show($('patientScreen'));$('patientSearchInput').value='';filter();setTimeout(()=>$('patientSearchInput').focus(),100)}
+/* v1.0.1: eliminado el login simulado de la etapa prototipo */function openPatients(){show($('patientScreen'));$('patientSearchInput').value='';filter();setTimeout(()=>$('patientSearchInput').focus(),100)}
 $('newConsultationBtn').onclick=openPatients;$('searchPatientBtn').onclick=openPatients;$('backHomeBtn').onclick=()=>show($('homeScreen'));
 function filter(){const q=normalize($('patientSearchInput').value.trim());let n=0;cards().forEach(c=>{const ok=[c.dataset.name,c.dataset.ci,c.dataset.phone].some(v=>normalize(v).includes(q));c.style.display=ok?'flex':'none';if(ok)n++});$('patientResults').classList.toggle('hidden',n===0);$('noPatientResults').classList.toggle('hidden',n!==0)}$('patientSearchInput').oninput=filter;
 function patientFromCard(c){const small=c.querySelector('.patient-info small')?.textContent||'';return{name:c.querySelector('.patient-info strong').textContent.trim(),ci:c.dataset.ci||'',phone:c.dataset.phone||'',meta:small,history:c.dataset.history||'',allergies:c.dataset.allergies||'',medication:c.dataset.medication||''}}
@@ -379,9 +379,7 @@ function findLoginFields(){
  const password =
    $('password') || $('loginPassword') || document.querySelector('input[type="password"]');
  const button =
-   $('loginBtn') || document.querySelector('.login-button') ||
-   document.querySelector('#loginScreen button[type="submit"]') ||
-   document.querySelector('#loginScreen button');
+   document.querySelector('#loginForm button[type="submit"], #loginForm button');
  return {email,password,button};
 }
 async function loadDoctorProfile(){
@@ -454,12 +452,12 @@ async function initSupabaseAuth(){
  supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 
  const fields=findLoginFields();
- if(fields.button){
-   fields.button.onclick=(e)=>{e.preventDefault();realLogin();};
- }
- const form=fields.email?.closest('form')||fields.password?.closest('form');
+ const form=$('loginForm');
  if(form){
-   form.onsubmit=(e)=>{e.preventDefault();realLogin();};
+   form.onsubmit=(e)=>{e.preventDefault();e.stopPropagation();realLogin();return false;};
+ }
+ if(fields.button){
+   fields.button.type='submit';
  }
  if($('logoutBtn'))$('logoutBtn').onclick=realLogout;
 

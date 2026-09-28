@@ -1,19 +1,13 @@
-MÉDICO AMIGO v1.0 AUTH
+MÉDICO AMIGO v1.0.1 AUTH FIX
 
-ETAPA IMPLEMENTADA
-- Supabase Auth real con correo y contraseña.
-- Sesión persistente gestionada por Supabase.
-- Carga del perfil del médico autenticado desde doctor_profiles.
-- Botón Salir para cerrar sesión.
-- Project URL y Publishable key integrados en el frontend.
-- No se usa ninguna Secret key ni service_role.
+CORRECCIÓN
+- Eliminado el controlador de login simulado heredado del prototipo.
+- El formulario de acceso ahora se procesa únicamente mediante Supabase Auth.
+- Se agregó una protección adicional para impedir mostrar Inicio sin un perfil autenticado.
+- Contraseña incorrecta: debe permanecer en Login.
+- Credenciales correctas: carga doctor_profiles y recién entonces muestra Inicio.
 
-IMPORTANTE
-Esta es la primera etapa de v1.0.
-El login y el perfil profesional ya usan Supabase.
-Pacientes, consultas, recetas y pagos TODAVÍA conservan la lógica temporal
-de sessionStorage de v0.9. No usar todavía información clínica real.
-
-SIGUIENTE ETAPA
-Migrar Pacientes -> Consultas -> Recetas -> Pagos a Supabase y verificar RLS
-con dos usuarios de prueba antes de considerar uso con datos reales.
+ESTADO
+Login y perfil: Supabase.
+Pacientes, consultas, recetas y pagos: todavía sessionStorage.
+NO usar datos clínicos reales todavía.
