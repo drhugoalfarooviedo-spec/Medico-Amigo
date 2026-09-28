@@ -1,14 +1,13 @@
-MÉDICO AMIGO v0.6 — PROTOTIPO
+MÉDICO AMIGO v0.6.1
 
-Novedades:
-- Paso 3: Receta médica.
-- Permite agregar/eliminar múltiples medicamentos.
-- Campos: medicamento, presentación/concentración, dosis, vía, frecuencia, duración e instrucciones.
-- Hereda diagnóstico e indicaciones de la consulta.
-- Genera código único de receta.
-- Vista previa imprimible en A4 y opción del navegador para Guardar como PDF.
-- Incluye firma de DEMOSTRACIÓN. La firma real y los datos profesionales se configurarán en un módulo seguro posterior.
+Corrección de la vista previa de receta:
+- Hoja A4 centrada en pantalla.
+- Botón Descargar / imprimir PDF fuera de la receta.
+- El botón no aparece al imprimir.
+- Encabezado médico y datos del paciente reorganizados.
+- Medicamentos y pauta con mejor jerarquía visual.
+- Duración numérica mostrada como días.
+- Firma preparada para usar una imagen configurada por el médico.
+- Diseño responsive para vista previa en celular.
 
-IMPORTANTE:
-Este prototipo aún NO usa autenticación real, Supabase ni RLS. No ingresar datos reales de pacientes.
-La firma incluida es solo demostrativa y no debe utilizarse como firma real.
+IMPORTANTE: prototipo. No utilizar datos clínicos reales hasta implementar autenticación real, Supabase y RLS.
