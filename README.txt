@@ -1,21 +1,19 @@
-MÉDICO AMIGO v0.9
+MÉDICO AMIGO v1.0 AUTH
 
-NOVEDADES
-- Configuración del médico desde el botón de engranaje.
-- Dr. Omar Ponce configurado inicialmente.
-- Matrícula profesional: P-6720806.
-- Teléfono / WhatsApp: 67003714.
-- Atención médica a domicilio: no se solicita ni muestra dirección de consultorio.
-- Tarifa habitual opcional y vacía por defecto.
-- Carga y vista previa de firma para recetas.
-- La receta usa automáticamente nombre, profesión, matrícula, teléfono y firma configurados.
-- Nuevo apartado en Consulta: Estudios complementarios / estudios de gabinete revisados.
-- Se diferencia entre estudios ya revisados e indicaciones de nuevos estudios.
-- Los estudios complementarios quedan incluidos en el historial de la consulta.
-- Se corrigió el acceso al módulo Pacientes desde el menú inferior.
+ETAPA IMPLEMENTADA
+- Supabase Auth real con correo y contraseña.
+- Sesión persistente gestionada por Supabase.
+- Carga del perfil del médico autenticado desde doctor_profiles.
+- Botón Salir para cerrar sesión.
+- Project URL y Publishable key integrados en el frontend.
+- No se usa ninguna Secret key ni service_role.
 
 IMPORTANTE
-Esta versión continúa siendo un prototipo front-end.
-La configuración, firma, pacientes y consultas se almacenan temporalmente en sessionStorage.
-NO usar datos clínicos reales ni una firma real definitiva hasta implementar Supabase,
-autenticación real, almacenamiento seguro y políticas RLS.
+Esta es la primera etapa de v1.0.
+El login y el perfil profesional ya usan Supabase.
+Pacientes, consultas, recetas y pagos TODAVÍA conservan la lógica temporal
+de sessionStorage de v0.9. No usar todavía información clínica real.
+
+SIGUIENTE ETAPA
+Migrar Pacientes -> Consultas -> Recetas -> Pagos a Supabase y verificar RLS
+con dos usuarios de prueba antes de considerar uso con datos reales.

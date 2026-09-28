@@ -127,3 +127,9 @@
 .save-settings-button{min-height:52px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--azul),var(--turquesa));color:#fff;font-size:10px;font-weight:700;cursor:pointer}
 @media(max-width:520px){.settings-form{padding-left:18px;padding-right:18px}}
 @media(max-width:390px){.settings-actions{grid-template-columns:1fr}}
+
+/* v1.0 Auth */
+.auth-message{margin:0 0 12px;padding:10px 12px;border-radius:11px;font-size:10px;line-height:1.45;background:#fff4f4;border:1px solid #f0cccc;color:#9a4040}
+.auth-message.success{background:#effaf4;border-color:#ccebd9;color:#24764a}
+.header-actions{display:flex;align-items:center;gap:8px}
+.logout-button{border:1px solid #dbe7ed;background:#fff;color:#637b89;border-radius:11px;padding:9px 12px;font-size:9px;font-weight:700;cursor:pointer}

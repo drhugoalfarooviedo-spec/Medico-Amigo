@@ -348,3 +348,126 @@ updateDoctorUI();
 updateDashboard();
 
 });
+
+/* ============================================================
+   v1.0 AUTH - SUPABASE
+   Etapa 1: autenticación real + sesión + perfil del médico.
+   Los módulos clínicos continúan en sessionStorage hasta la
+   siguiente etapa de migración.
+============================================================ */
+const SUPABASE_URL='https://kdjvsbiqjpztdugewuve.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
+
+let supabaseClient=null;
+let authenticatedDoctor=null;
+
+function authMsg(message,type='error'){
+ const el=$('authMessage');
+ if(!el)return;
+ el.textContent=message;
+ el.classList.remove('hidden','success');
+ if(type==='success')el.classList.add('success');
+}
+function clearAuthMsg(){
+ const el=$('authMessage');
+ if(el){el.textContent='';el.classList.add('hidden');el.classList.remove('success');}
+}
+function findLoginFields(){
+ const email =
+   $('email') || $('loginEmail') || document.querySelector('input[type="email"]') ||
+   document.querySelector('input[placeholder*="Correo" i]');
+ const password =
+   $('password') || $('loginPassword') || document.querySelector('input[type="password"]');
+ const button =
+   $('loginBtn') || document.querySelector('.login-button') ||
+   document.querySelector('#loginScreen button[type="submit"]') ||
+   document.querySelector('#loginScreen button');
+ return {email,password,button};
+}
+async function loadDoctorProfile(){
+ const {data:{user}}=await supabaseClient.auth.getUser();
+ if(!user)return null;
+ const {data,error}=await supabaseClient.from('doctor_profiles').select('*').eq('id',user.id).single();
+ if(error)throw error;
+ authenticatedDoctor={user,...data};
+
+ // Mirror the secure profile into the existing prototype UI for this stage.
+ const cfg=getDoctorConfig();
+ cfg.name=data.full_name||cfg.name;
+ cfg.specialty=data.specialty||cfg.specialty;
+ cfg.registration=data.professional_registration||cfg.registration;
+ cfg.phone=data.phone||cfg.phone;
+ cfg.fee=(data.usual_fee===null||data.usual_fee===undefined)?'':String(data.usual_fee);
+ saveDoctorConfig(cfg);
+ updateDoctorUI();
+ return authenticatedDoctor;
+}
+async function enterAuthenticatedApp(){
+ try{
+   await loadDoctorProfile();
+   clearAuthMsg();
+   show($('homeScreen'));
+ }catch(err){
+   console.error(err);
+   await supabaseClient.auth.signOut();
+   show($('loginScreen'));
+   authMsg('No se pudo cargar el perfil profesional. Verifica la configuración de Supabase.');
+ }
+}
+async function realLogin(){
+ const {email,password,button}=findLoginFields();
+ if(!email||!password)return;
+ clearAuthMsg();
+ if(!email.value.trim()||!password.value){
+   authMsg('Ingresa tu correo y contraseña.');
+   return;
+ }
+ const oldText=button?button.textContent:'';
+ if(button){button.disabled=true;button.textContent='INGRESANDO...';}
+ const {error}=await supabaseClient.auth.signInWithPassword({
+   email:email.value.trim(),
+   password:password.value
+ });
+ if(button){button.disabled=false;button.textContent=oldText||'INGRESAR';}
+ if(error){
+   console.error(error);
+   authMsg('Correo o contraseña incorrectos.');
+   return;
+ }
+ password.value='';
+ await enterAuthenticatedApp();
+}
+async function realLogout(){
+ await supabaseClient.auth.signOut();
+ authenticatedDoctor=null;
+ show($('loginScreen'));
+ const {password}=findLoginFields();
+ if(password)password.value='';
+ clearAuthMsg();
+}
+async function initSupabaseAuth(){
+ if(!window.supabase){
+   show($('loginScreen'));
+   authMsg('No se pudo cargar la conexión segura. Revisa tu conexión a internet.');
+   return;
+ }
+ supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+
+ const fields=findLoginFields();
+ if(fields.button){
+   fields.button.onclick=(e)=>{e.preventDefault();realLogin();};
+ }
+ const form=fields.email?.closest('form')||fields.password?.closest('form');
+ if(form){
+   form.onsubmit=(e)=>{e.preventDefault();realLogin();};
+ }
+ if($('logoutBtn'))$('logoutBtn').onclick=realLogout;
+
+ const {data:{session}}=await supabaseClient.auth.getSession();
+ if(session){
+   await enterAuthenticatedApp();
+ }else{
+   show($('loginScreen'));
+ }
+}
+initSupabaseAuth();
