@@ -1,198 +1,305 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* =========================================
+   PANTALLA PRINCIPAL
+========================================= */
+
+.hidden {
+  display: none !important;
 }
 
-:root {
-  --azul: #073b66;
-  --azul-oscuro: #052c4d;
-  --turquesa: #08a6bd;
-  --turquesa-claro: #e7f8fa;
-  --blanco: #ffffff;
-  --fondo: #f4f7fa;
-  --texto: #17324d;
-  --gris: #6f8294;
-  --borde: #dbe5ed;
-}
-
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  background: linear-gradient(135deg, #eef5f9, #ffffff);
-  color: var(--texto);
-  min-height: 100vh;
-}
-
-.app {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 24px;
-}
-
-.login {
+.home {
   width: 100%;
-  max-width: 420px;
-  background: var(--blanco);
-  border-radius: 28px;
-  padding: 42px 32px 26px;
+  max-width: 480px;
+  min-height: 100vh;
+  background: #f7fafc;
+  position: relative;
+  padding-bottom: 90px;
+  overflow: hidden;
   box-shadow: 0 18px 50px rgba(5, 44, 77, 0.12);
-  border: 1px solid rgba(219, 229, 237, 0.8);
 }
 
-.brand {
-  text-align: center;
-  margin-bottom: 42px;
-}
+/* CABECERA */
 
-.brand-icon {
-  width: 82px;
-  height: 82px;
-  margin: 0 auto 18px;
+.home-header {
+  background: linear-gradient(135deg, var(--azul-oscuro), var(--azul));
+  min-height: 90px;
+  padding: 25px 22px 18px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--azul), var(--turquesa));
-  border-radius: 24px;
-  font-size: 42px;
+  justify-content: space-between;
+  color: white;
+}
+
+.mini-brand {
+  display: flex;
+  flex-direction: column;
+}
+
+.mini-brand strong {
+  font-size: 20px;
+  letter-spacing: -0.4px;
+}
+
+.mini-brand strong span {
+  color: #27c3d5;
+}
+
+.mini-brand small {
+  font-size: 9px;
+  letter-spacing: 1px;
+  margin-top: 3px;
+  color: #bcebf0;
+}
+
+.settings-button {
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* BIENVENIDA */
+
+.doctor-welcome {
+  padding: 24px 22px 18px;
+}
+
+.doctor-welcome p {
+  font-size: 16px;
+  color: var(--gris);
+  margin-bottom: 3px;
+}
+
+.doctor-welcome h1 {
+  color: var(--azul-oscuro);
+  font-size: 27px;
+  margin-bottom: 4px;
+}
+
+.doctor-welcome span {
+  font-size: 14px;
+  color: var(--gris);
+}
+
+/* NUEVA CONSULTA */
+
+.new-consultation-button {
+  width: calc(100% - 44px);
+  margin: 4px 22px 16px;
+  min-height: 86px;
+  border: none;
+  border-radius: 20px;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #078aa9, #10b5c5);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+  cursor: pointer;
   box-shadow: 0 10px 25px rgba(8, 166, 189, 0.22);
 }
 
-.brand h1 {
-  color: var(--azul);
-  font-size: 30px;
-  letter-spacing: -1px;
-  margin-bottom: 5px;
+.plus-circle {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 300;
 }
 
-.brand h1 span {
+.new-consultation-button strong {
+  display: block;
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.new-consultation-button small {
+  font-size: 13px;
+  color: #dffbff;
+}
+
+/* BUSCAR PACIENTE */
+
+.patient-search {
+  width: calc(100% - 44px);
+  margin: 0 22px 27px;
+  min-height: 68px;
+  background: white;
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-icon {
   color: var(--turquesa);
+  font-size: 32px;
+  line-height: 1;
 }
 
-.brand p {
-  color: var(--azul);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 1.3px;
-}
-
-.welcome {
-  margin-bottom: 28px;
-}
-
-.welcome h2 {
-  font-size: 25px;
-  color: var(--azul-oscuro);
-  margin-bottom: 7px;
-}
-
-.welcome p {
-  color: var(--gris);
-  font-size: 15px;
-}
-
-.field {
-  margin-bottom: 19px;
-}
-
-.field label {
+.patient-search strong {
   display: block;
   color: var(--texto);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 3px;
+}
+
+.patient-search small {
+  color: var(--gris);
+  font-size: 12px;
+}
+
+/* SECCIONES */
+
+.today-section,
+.recent-section {
+  padding: 0 22px;
+  margin-bottom: 27px;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 13px;
+}
+
+.section-heading h2 {
+  font-size: 13px;
+  color: var(--azul-oscuro);
+  letter-spacing: 0.3px;
+}
+
+.section-heading button {
+  border: none;
+  background: transparent;
+  color: #078cad;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* ESTADÍSTICAS */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.stat-card {
+  background: white;
+  min-height: 112px;
+  border-radius: 17px;
+  border: 1px solid #e5edf3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(5, 44, 77, 0.04);
+}
+
+.stat-card span {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.stat-card strong {
+  font-size: 20px;
+  color: var(--azul-oscuro);
+  margin-bottom: 4px;
+}
+
+.stat-card small {
+  font-size: 11px;
+  color: var(--gris);
+}
+
+/* CONSULTAS RECIENTES */
+
+.empty-state {
+  background: white;
+  border: 1px dashed #cbd9e3;
+  border-radius: 18px;
+  padding: 27px 20px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 29px;
   margin-bottom: 8px;
 }
 
-.field input {
-  width: 100%;
-  height: 54px;
-  border: 1.5px solid var(--borde);
-  border-radius: 14px;
-  padding: 0 16px;
-  font-size: 16px;
-  color: var(--texto);
-  background: #fbfdfe;
-  outline: none;
-  transition: 0.2s;
-}
-
-.field input:focus {
-  border-color: var(--turquesa);
-  background: var(--blanco);
-  box-shadow: 0 0 0 4px rgba(8, 166, 189, 0.1);
-}
-
-.field input::placeholder {
-  color: #a4b1bd;
-}
-
-.primary-button {
-  width: 100%;
-  height: 56px;
-  border: none;
-  border-radius: 14px;
-  margin-top: 8px;
-  background: linear-gradient(135deg, var(--azul), var(--turquesa));
-  color: var(--blanco);
+.empty-state strong {
+  display: block;
+  color: var(--azul-oscuro);
   font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(8, 166, 189, 0.22);
-  transition: 0.2s;
+  margin-bottom: 6px;
 }
 
-.primary-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(8, 166, 189, 0.28);
-}
-
-.primary-button:active {
-  transform: translateY(0);
-}
-
-.version {
-  text-align: center;
-  color: #9aabb8;
+.empty-state p {
+  color: var(--gris);
   font-size: 12px;
-  margin-top: 34px;
 }
 
-/* Adaptación para celular */
+/* NAVEGACIÓN INFERIOR */
 
-@media (max-width: 520px) {
-  body {
-    background: var(--blanco);
-  }
+.bottom-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 76px;
+  background: white;
+  border-top: 1px solid #e0e9ef;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding-bottom: env(safe-area-inset-bottom);
+}
 
-  .app {
-    padding: 0;
-    align-items: stretch;
-  }
+.nav-item {
+  border: none;
+  background: transparent;
+  color: #8294a4;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
 
-  .login {
-    max-width: none;
-    min-height: 100vh;
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
-    padding: 64px 24px 24px;
-    display: flex;
-    flex-direction: column;
-  }
+.nav-item span {
+  font-size: 23px;
+  line-height: 1;
+}
 
-  .brand {
-    margin-bottom: 55px;
-  }
+.nav-item small {
+  font-size: 11px;
+}
 
-  .brand-icon {
-    width: 88px;
-    height: 88px;
-  }
+.nav-item.active {
+  color: var(--azul);
+  font-weight: 700;
+}
 
-  .version {
-    margin-top: auto;
-    padding-top: 35px;
+/* ESCRITORIO */
+
+@media (min-width: 521px) {
+  .home {
+    border-radius: 28px;
+    min-height: 820px;
   }
 }
