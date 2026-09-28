@@ -1,14 +1,13 @@
-MÉDICO AMIGO v0.4 - PROTOTIPO
+MÉDICO AMIGO - v0.5
 
-Incluye:
-- Login temporal de demostración (NO es autenticación segura).
-- Inicio.
-- Búsqueda/selección de pacientes.
-- Registro de paciente.
-- Cálculo automático de edad.
-- Validación de fecha de nacimiento (1900 hasta hoy).
-- Validación de CI/documento duplicado durante la sesión.
-- Al guardar/seleccionar paciente avanza directamente al Paso 2 Consulta.
+Novedades:
+- Paso 2 Consulta médica completo.
+- Paciente seleccionado visible durante la atención.
+- Fecha y hora automáticas.
+- Motivo de consulta y enfermedad actual.
+- Resumen de antecedentes, alergias y medicación registrada.
+- Signos vitales: PA, FC, SpO2, temperatura, FR, peso y talla.
+- Examen físico, diagnóstico, indicaciones, observaciones y seguimiento.
+- Guardar y continuar lleva al Paso 3 Receta (pantalla preparada para v0.6).
 
-IMPORTANTE:
-Esta versión todavía NO usa Supabase, NO persiste datos y NO debe utilizarse con datos reales de pacientes. GitHub Pages es público y el login actual es solo visual.
+IMPORTANTE: versión de prototipo. No usar datos clínicos reales todavía. No existe persistencia segura ni autenticación Supabase/RLS en esta versión.
