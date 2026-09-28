@@ -1,21 +1,10 @@
-MÉDICO AMIGO v1.0.3 AUTH FIXED
+MÉDICO AMIGO v1.0.4
 
-La prueba auth-test-v2 confirmó:
-- Supabase Auth funciona.
-- La Publishable key funciona.
-- RLS permite leer el perfil correcto.
-- El usuario Dr. Hugo Alfaro carga su propio doctor_profiles.
+Corrección del problema identificado en v1.0.3:
+- Los campos reales de correo y contraseña no tenían IDs, por lo que el login no leía sus valores.
+- El bloque de autenticación anterior estaba fuera del DOMContentLoaded y no podía usar las utilidades internas de la app.
+- v1.0.4 usa selectores DOM propios y la conexión REST directa que auth-test-v2 confirmó como funcional.
+- El formulario captura el submit antes que cualquier controlador antiguo.
+- Carga doctor_profiles por UID y muestra el nombre del médico autenticado.
 
-Esta versión reemplaza la integración Auth anterior por la misma conexión directa
-que funcionó en auth-test-v2.
-
-IMPLEMENTADO:
-- Login real.
-- Sesión local con token Supabase.
-- Carga de doctor_profiles según UID autenticado.
-- Logout.
-- Sin login falso.
-- Sin dependencia del CDN supabase-js.
-
-AÚN NO USAR DATOS CLÍNICOS REALES:
-pacientes, consultas, recetas y pagos siguen pendientes de migración completa a Supabase.
+Todavía no usar datos clínicos reales: la migración de pacientes/consultas/recetas/pagos viene después.

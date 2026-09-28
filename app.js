@@ -350,77 +350,87 @@ updateDashboard();
 });
 
 
+
 /* ============================================================
-   v1.0.3 AUTH - SUPABASE DIRECTO
-   Implementación basada en la prueba auth-test-v2 confirmada.
+   v1.0.4 AUTH - FIX DEFINITIVO DE INTEGRACIÓN
+   Usa la misma API directa validada por auth-test-v2.
 ============================================================ */
-const SUPABASE_URL='https://kdjvsbiqjpztdugewuve.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
-const AUTH_STORAGE_KEY='medico_amigo_supabase_session';
-let authenticatedDoctor=null;
+document.addEventListener('DOMContentLoaded',()=>{
+ const URL='https://kdjvsbiqjpztdugewuve.supabase.co';
+ const KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
+ const SESSION='medico_amigo_supabase_session';
+ const login=document.getElementById('loginScreen');
+ const home=document.getElementById('homeScreen');
+ const form=document.getElementById('loginForm');
+ const email=document.getElementById('email');
+ const password=document.getElementById('password');
+ const message=document.getElementById('authMessage');
+ const logout=document.getElementById('logoutBtn');
 
-function authMsg(message,type='error'){
- const el=$('authMessage'); if(!el)return;
- el.textContent=message; el.classList.remove('hidden','success');
- if(type==='success')el.classList.add('success');
-}
-function clearAuthMsg(){const el=$('authMessage');if(el){el.textContent='';el.classList.add('hidden');el.classList.remove('success');}}
-function authHeaders(token){return {'apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json'};}
-function getStoredSession(){try{return JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY)||'null')}catch{return null}}
-function storeSession(s){localStorage.setItem(AUTH_STORAGE_KEY,JSON.stringify(s))}
-function clearSession(){localStorage.removeItem(AUTH_STORAGE_KEY)}
-
-async function fetchDoctorProfile(session){
- const uid=session.user.id;
- const r=await fetch(SUPABASE_URL+'/rest/v1/doctor_profiles?id=eq.'+encodeURIComponent(uid)+'&select=*',{
-   headers:authHeaders(session.access_token)
- });
- const raw=await r.text(); let data; try{data=JSON.parse(raw)}catch{data=null}
- if(!r.ok) throw new Error((data&&data.message)||raw||'No se pudo consultar doctor_profiles');
- if(!Array.isArray(data)||!data.length) throw new Error('No existe un perfil médico para este usuario.');
- const p=data[0]; authenticatedDoctor={user:session.user,...p};
- const cfg=getDoctorConfig();
- cfg.name=p.full_name||cfg.name; cfg.specialty=p.specialty||cfg.specialty;
- cfg.registration=p.professional_registration||''; cfg.phone=p.phone||'';
- cfg.fee=(p.usual_fee===null||p.usual_fee===undefined)?'':String(p.usual_fee);
- saveDoctorConfig(cfg); updateDoctorUI();
- return p;
-}
-async function enterWithSession(session){
- try{
-   await fetchDoctorProfile(session);
-   clearAuthMsg();
-   show($('homeScreen'));
- }catch(e){
-   console.error(e); clearSession(); authenticatedDoctor=null; show($('loginScreen'));
-   authMsg('La sesión inició, pero no se pudo cargar el perfil: '+e.message);
+ function screen(el){
+   document.querySelectorAll('main.app > section').forEach(x=>x.classList.add('hidden'));
+   if(el)el.classList.remove('hidden');
+   window.scrollTo(0,0);
  }
-}
-async function realLogin(){
- const email=$('email'), password=$('password');
- if(!email||!password)return;
- clearAuthMsg();
- if(!email.value.trim()||!password.value){authMsg('Ingresa tu correo y contraseña.');return}
- const btn=$('loginForm')?.querySelector('button[type="submit"],button');
- const old=btn?.textContent||'INICIAR SESIÓN'; if(btn){btn.disabled=true;btn.textContent='INGRESANDO...'}
- try{
-   const r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{
-     method:'POST',
-     headers:{'Content-Type':'application/json','apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+SUPABASE_PUBLISHABLE_KEY},
-     body:JSON.stringify({email:email.value.trim(),password:password.value})
+ function msg(t,ok=false){
+   if(!message)return;
+   message.textContent=t; message.classList.remove('hidden','success');
+   if(ok)message.classList.add('success');
+ }
+ function clearMsg(){if(message){message.textContent='';message.classList.add('hidden');message.classList.remove('success')}}
+ function saveProfile(p){
+   let cfg={};
+   try{cfg=JSON.parse(sessionStorage.getItem('medicoAmigoDoctorConfig')||'{}')}catch{}
+   cfg.name=p.full_name||'Médico';
+   cfg.specialty=p.specialty||'Médico';
+   cfg.registration=p.professional_registration||'';
+   cfg.phone=p.phone||'';
+   cfg.fee=(p.usual_fee==null)?'':String(p.usual_fee);
+   sessionStorage.setItem('medicoAmigoDoctorConfig',JSON.stringify(cfg));
+   const n=document.querySelector('.doctor-welcome h1');
+   const r=document.querySelector('.doctor-welcome span');
+   if(n)n.textContent=cfg.name;if(r)r.textContent=cfg.specialty;
+ }
+ async function profile(session){
+   const r=await fetch(URL+'/rest/v1/doctor_profiles?id=eq.'+encodeURIComponent(session.user.id)+'&select=*',{
+     headers:{apikey:KEY,Authorization:'Bearer '+session.access_token}
    });
-   const raw=await r.text(); let data={}; try{data=JSON.parse(raw)}catch{}
-   if(!r.ok){authMsg('No se pudo iniciar sesión: '+(data.msg||data.message||data.error_description||raw));return}
-   storeSession(data); password.value=''; await enterWithSession(data);
- }catch(e){authMsg('No se pudo conectar con Supabase: '+e.message)}
- finally{if(btn){btn.disabled=false;btn.textContent=old}}
-}
-function realLogout(){clearSession();authenticatedDoctor=null;show($('loginScreen'));clearAuthMsg();}
-async function initDirectAuth(){
- const form=$('loginForm');
- if(form) form.onsubmit=e=>{e.preventDefault();realLogin();return false};
- if($('logoutBtn')) $('logoutBtn').onclick=realLogout;
- const s=getStoredSession();
- if(s?.access_token&&s?.user?.id) await enterWithSession(s); else show($('loginScreen'));
-}
-initDirectAuth();
+   const raw=await r.text();let d;try{d=JSON.parse(raw)}catch{}
+   if(!r.ok)throw new Error(d?.message||raw||'Error al consultar perfil');
+   if(!Array.isArray(d)||!d.length)throw new Error('No existe doctor_profiles para este usuario');
+   saveProfile(d[0]); return d[0];
+ }
+ async function enter(session){
+   try{
+     await profile(session);
+     clearMsg();screen(home);
+   }catch(e){
+     localStorage.removeItem(SESSION);screen(login);
+     msg('Login correcto, pero falló el perfil: '+e.message);
+   }
+ }
+ if(form)form.addEventListener('submit',async e=>{
+   e.preventDefault();e.stopImmediatePropagation();
+   const btn=form.querySelector('button[type="submit"]');
+   const old=btn.textContent;btn.disabled=true;btn.textContent='INGRESANDO...';clearMsg();
+   try{
+     const r=await fetch(URL+'/auth/v1/token?grant_type=password',{
+       method:'POST',
+       headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},
+       body:JSON.stringify({email:email.value.trim(),password:password.value})
+     });
+     const raw=await r.text();let d={};try{d=JSON.parse(raw)}catch{}
+     if(!r.ok){msg('No se pudo iniciar sesión: '+(d.msg||d.message||raw));return}
+     localStorage.setItem(SESSION,JSON.stringify(d));password.value='';
+     await enter(d);
+   }catch(err){msg('Error de conexión: '+err.message)}
+   finally{btn.disabled=false;btn.textContent=old}
+ },true);
+
+ if(logout)logout.addEventListener('click',()=>{
+   localStorage.removeItem(SESSION);screen(login);clearMsg();
+ },true);
+
+ let s=null;try{s=JSON.parse(localStorage.getItem(SESSION)||'null')}catch{}
+ if(s?.access_token&&s?.user?.id)enter(s);else screen(login);
+});
