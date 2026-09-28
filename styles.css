@@ -480,3 +480,431 @@ body {
     min-height: 820px;
   }
 }
+
+/* ========================================
+   NUEVA CONSULTA - SELECCIONAR PACIENTE
+======================================== */
+
+.patient-screen {
+  width: 100%;
+  max-width: 480px;
+  min-height: 820px;
+  background: #f7fafc;
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  box-shadow: 0 18px 50px rgba(5, 44, 77, 0.12);
+}
+
+
+/* CABECERA */
+
+.screen-header {
+  min-height: 105px;
+  padding: 24px 22px 20px;
+  background: linear-gradient(135deg, var(--azul-oscuro), var(--azul));
+  color: white;
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.back-button {
+  width: 43px;
+  height: 43px;
+  flex: 0 0 43px;
+
+  border: none;
+  border-radius: 13px;
+
+  background: rgba(255, 255, 255, 0.13);
+  color: white;
+
+  font-size: 25px;
+  cursor: pointer;
+}
+
+.screen-header h1 {
+  font-size: 21px;
+  margin-bottom: 4px;
+}
+
+.screen-header p {
+  font-size: 13px;
+  color: #cce6f1;
+}
+
+
+/* PASOS DE LA CONSULTA */
+
+.progress-steps {
+  background: white;
+  padding: 18px 18px 17px;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+
+  border-bottom: 1px solid #e5edf3;
+}
+
+.step {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 6px;
+
+  color: #91a0ad;
+}
+
+.step:not(:last-child)::after {
+  content: "";
+
+  position: absolute;
+
+  top: 14px;
+  left: calc(50% + 18px);
+
+  width: calc(100% - 36px);
+  height: 2px;
+
+  background: #dde6ec;
+}
+
+.step span {
+  position: relative;
+  z-index: 2;
+
+  width: 29px;
+  height: 29px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #edf2f5;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.step small {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.step.active {
+  color: var(--turquesa);
+}
+
+.step.active span {
+  background: var(--turquesa);
+  color: white;
+
+  box-shadow: 0 5px 12px rgba(8, 166, 189, 0.2);
+}
+
+
+/* CONTENIDO */
+
+.patient-content {
+  padding: 24px 22px 30px;
+}
+
+
+/* BUSCADOR */
+
+.patient-search-box {
+  height: 58px;
+
+  display: flex;
+  align-items: center;
+
+  background: white;
+
+  border: 1.5px solid #d9e4eb;
+  border-radius: 16px;
+
+  padding: 0 16px;
+
+  transition: 0.2s ease;
+}
+
+.patient-search-box:focus-within {
+  border-color: var(--turquesa);
+
+  box-shadow:
+    0 0 0 4px rgba(8, 166, 189, 0.08);
+}
+
+.patient-search-box span {
+  color: var(--turquesa);
+
+  font-size: 27px;
+
+  margin-right: 11px;
+}
+
+.patient-search-box input {
+  flex: 1;
+
+  min-width: 0;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  color: var(--texto);
+
+  font-size: 14px;
+}
+
+.patient-search-box input::placeholder {
+  color: #9aaab6;
+}
+
+.search-help {
+  font-size: 11px;
+
+  color: #8b9aa7;
+
+  margin: 8px 3px 20px;
+}
+
+
+/* RESULTADOS */
+
+.patient-results {
+  display: flex;
+  flex-direction: column;
+
+  gap: 11px;
+
+  margin-bottom: 24px;
+}
+
+.patient-result {
+  min-height: 84px;
+
+  display: flex;
+  align-items: center;
+
+  background: white;
+
+  border: 1px solid #e1e9ef;
+  border-radius: 17px;
+
+  padding: 13px 14px;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.patient-result:hover {
+  border-color: #b9dce4;
+
+  box-shadow:
+    0 6px 18px rgba(5, 44, 77, 0.07);
+}
+
+.patient-result:active {
+  transform: scale(0.985);
+}
+
+
+/* AVATAR */
+
+.patient-avatar {
+  width: 48px;
+  height: 48px;
+
+  flex: 0 0 48px;
+
+  border-radius: 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #e4f7fa;
+
+  color: #078ca5;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  margin-right: 13px;
+}
+
+
+/* DATOS DEL PACIENTE */
+
+.patient-info {
+  flex: 1;
+
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.patient-info strong {
+  color: var(--azul-oscuro);
+
+  font-size: 15px;
+
+  margin-bottom: 4px;
+}
+
+.patient-info span {
+  color: #60788a;
+
+  font-size: 12px;
+
+  margin-bottom: 3px;
+}
+
+.patient-info small {
+  color: #91a0ad;
+
+  font-size: 11px;
+}
+
+.result-arrow {
+  color: #9bb0be;
+
+  font-size: 29px;
+
+  margin-left: 8px;
+}
+
+
+/* SIN RESULTADOS */
+
+.no-results {
+  background: white;
+
+  border: 1px dashed #cbd9e3;
+  border-radius: 18px;
+
+  padding: 28px 20px;
+
+  text-align: center;
+
+  margin-bottom: 22px;
+}
+
+.no-results > span {
+  display: block;
+
+  font-size: 30px;
+
+  margin-bottom: 10px;
+}
+
+.no-results strong {
+  display: block;
+
+  color: var(--azul-oscuro);
+
+  font-size: 15px;
+
+  margin-bottom: 6px;
+}
+
+.no-results p {
+  color: var(--gris);
+
+  font-size: 12px;
+
+  line-height: 1.5;
+}
+
+
+/* PACIENTE NUEVO */
+
+.new-patient-box {
+  background: #eef9fb;
+
+  border: 1px solid #d2edf1;
+  border-radius: 18px;
+
+  padding: 18px;
+}
+
+.new-patient-box > div {
+  margin-bottom: 14px;
+}
+
+.new-patient-box strong {
+  display: block;
+
+  color: var(--azul-oscuro);
+
+  font-size: 14px;
+
+  margin-bottom: 5px;
+}
+
+.new-patient-box p {
+  color: #69818f;
+
+  font-size: 11px;
+
+  line-height: 1.45;
+}
+
+.new-patient-box button {
+  width: 100%;
+  min-height: 48px;
+
+  border: none;
+  border-radius: 13px;
+
+  background: var(--azul);
+  color: white;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+
+/* ========================================
+   CELULAR - NUEVA CONSULTA
+======================================== */
+
+@media (max-width: 520px) {
+
+  .patient-screen {
+    max-width: none;
+
+    min-height: 100vh;
+
+    border-radius: 0;
+
+    box-shadow: none;
+  }
+
+  .screen-header {
+    padding-top:
+      max(22px, env(safe-area-inset-top));
+  }
+
+  .patient-content {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+}
