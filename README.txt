@@ -1,18 +1,17 @@
-MÉDICO AMIGO v0.7
+MÉDICO AMIGO v0.8
 
-Novedades:
-- Paso 4: Cobro.
-- Precio de consulta y monto pagado.
-- Métodos de pago: Efectivo, QR, Transferencia, Tarjeta u Otro.
-- Estado automático: Pagado, Pago parcial o Pendiente.
-- Cálculo automático de saldo.
-- Observaciones de pago.
-- Finalización de la consulta.
-- Dashboard de la sesión actualizado con consultas, ingresos y pendientes.
-- Consultas recientes de la sesión.
+NOVEDADES
+- Módulo Pacientes accesible desde el menú inferior.
+- Buscador por nombre, CI o teléfono.
+- Ficha individual del paciente.
+- Datos personales, contacto e información médica.
+- Historial cronológico de consultas.
+- Detalle de consulta anterior con diagnóstico, signos vitales, examen físico, plan, receta y pago.
+- Inicio de una nueva consulta directamente desde la ficha.
+- Registro profesional del Dr. Omar Ponce actualizado a P-6720806 en la receta.
+- Conserva todo el flujo v0.7: Paciente → Consulta → Receta/PDF → Cobro → Finalizar → Inicio.
 
-IMPORTANTE:
-Esta versión continúa siendo un prototipo front-end.
-Los datos se guardan únicamente en sessionStorage del navegador.
-NO utilizar datos clínicos reales hasta implementar autenticación real,
-Supabase y políticas RLS.
+IMPORTANTE
+Sigue siendo un prototipo front-end. Los registros se mantienen únicamente durante
+la sesión del navegador mediante sessionStorage. No utilizar información clínica real
+hasta implementar Supabase, autenticación real y políticas RLS.

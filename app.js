@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded',()=>{
-const $=id=>document.getElementById(id),screens=[$('loginScreen'),$('homeScreen'),$('patientScreen'),$('newPatientScreen'),$('consultationScreen'),$('prescriptionScreen'),$('paymentScreen')];let selectedPatient=null,currentConsultation=null,currentPrescription=null;
+const $=id=>document.getElementById(id),screens=[$('loginScreen'),$('homeScreen'),$('patientScreen'),$('newPatientScreen'),$('consultationScreen'),$('prescriptionScreen'),$('paymentScreen'),$('patientsScreen'),$('patientDetailScreen')];let selectedPatient=null,currentConsultation=null,currentPrescription=null;
 const show=s=>{screens.forEach(x=>x.classList.add('hidden'));s.classList.remove('hidden');scrollTo(0,0)};
 const normalize=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const cards=()=>document.querySelectorAll('.patient-result');
 $('loginForm').onsubmit=e=>{e.preventDefault();show($('homeScreen'))};function openPatients(){show($('patientScreen'));$('patientSearchInput').value='';filter();setTimeout(()=>$('patientSearchInput').focus(),100)}
@@ -112,13 +112,144 @@ $('paymentForm').onsubmit=e=>{
  const price=money($('consultationPrice').value),paid=money($('amountPaid').value);
  const status=price>0&&paid>=price?'Pagado':paid>0?'Pago parcial':'Pendiente';
  const payment={price,amountPaid:paid,method:$('paymentMethod').value,status,balance:Math.max(price-paid,0),notes:$('paymentNotes').value.trim(),date:new Date().toISOString()};
+ currentConsultation.reason=currentConsultation.reason||currentConsultation.motive||currentConsultation.motivo||'';
+ currentConsultation.illness=currentConsultation.illness||currentConsultation.currentIllness||currentConsultation.enfermedad||'';
+ currentConsultation.exam=currentConsultation.exam||currentConsultation.physicalExam||'';
+ currentConsultation.instructions=currentConsultation.instructions||currentConsultation.indications||'';
  const record={id:'CONS-'+Date.now(),patient:selectedPatient,consultation:currentConsultation,prescription:currentPrescription,payment,finishedAt:new Date().toISOString()};
- const records=loadSessionRecords();records.push(record);saveSessionRecords(records);
+ const records=loadSessionRecords();records.push(record);saveSessionRecords(records);upsertDirectoryPatient(selectedPatient);
  updateDashboard();
  $('consultationForm').reset();
  selectedPatient=null;currentConsultation=null;currentPrescription=null;
  show($('homeScreen'));
 };
+
+/* =========================================
+   v0.8 - DIRECTORIO DE PACIENTES E HISTORIAL
+========================================= */
+let detailPatient=null;
+
+function basePatients(){
+ return [
+  {name:'María Fernández',ci:'4587214',phone:'71234567',age:68,sex:'Femenino',meta:'68 años · Femenino',address:'',emergency:'',history:'',allergies:'',medication:'',observations:''},
+  {name:'Carlos Mamani',ci:'6843210',phone:'76543210',age:42,sex:'Masculino',meta:'42 años · Masculino',address:'',emergency:'',history:'',allergies:'',medication:'',observations:''}
+ ];
+}
+function storedPatients(){
+ try{
+  const saved=JSON.parse(sessionStorage.getItem('medicoAmigoPatients')||'null');
+  if(Array.isArray(saved))return saved;
+ }catch{}
+ const initial=basePatients();
+ sessionStorage.setItem('medicoAmigoPatients',JSON.stringify(initial));
+ return initial;
+}
+function savePatientsDirectory(list){sessionStorage.setItem('medicoAmigoPatients',JSON.stringify(list))}
+function upsertDirectoryPatient(p){
+ const list=storedPatients();
+ const key=(p.ci||'').trim();
+ let i=key?list.findIndex(x=>(x.ci||'').trim()===key):-1;
+ if(i<0)i=list.findIndex(x=>normalize(x.name)===normalize(p.name)&&(!key||!(x.ci||'')));
+ const normalized={
+  name:p.name||'Paciente',ci:p.ci||'',phone:p.phone||'',age:p.age??null,sex:p.sex||'',
+  meta:p.meta||[p.age!=null?p.age+' años':'',p.sex||''].filter(Boolean).join(' · '),
+  address:p.address||'',emergency:p.emergency||'',history:p.history||'',allergies:p.allergies||'',
+  medication:p.medication||'',observations:p.observations||''
+ };
+ if(i>=0)list[i]={...list[i],...normalized};else list.push(normalized);
+ savePatientsDirectory(list);
+ return normalized;
+}
+function patientRecords(p){
+ return loadSessionRecords().filter(r=>{
+  if(p.ci&&r.patient.ci)return String(r.patient.ci)===String(p.ci);
+  return normalize(r.patient.name)===normalize(p.name);
+ });
+}
+function renderPatientsDirectory(){
+ const q=normalize($('patientsDirectorySearch').value.trim());
+ const list=storedPatients().filter(p=>[p.name,p.ci,p.phone].some(v=>normalize(v).includes(q)));
+ const box=$('patientsDirectoryList');box.innerHTML='';
+ $('patientsDirectoryCount').textContent=storedPatients().length+' paciente'+(storedPatients().length===1?'':'s');
+ $('patientsDirectoryEmpty').classList.toggle('hidden',list.length>0);
+ list.forEach(p=>{
+  const card=document.createElement('article');card.className='directory-patient-card';
+  const avatar=document.createElement('div');avatar.className='patient-avatar';avatar.textContent=initials(p.name);
+  const info=document.createElement('div');info.className='directory-patient-info';
+  const n=document.createElement('strong');n.textContent=p.name;
+  const meta=document.createElement('span');meta.textContent=[p.ci?'CI: '+p.ci:'Sin documento',p.phone||'Sin teléfono'].join(' · ');
+  const sub=document.createElement('small');sub.textContent=p.meta||'Datos básicos registrados';
+  info.append(n,meta,sub);
+  const count=document.createElement('span');count.className='directory-history-count';const c=patientRecords(p).length;count.textContent=c+' consulta'+(c===1?'':'s');
+  const arrow=document.createElement('span');arrow.className='result-arrow';arrow.textContent='›';
+  card.append(avatar,info,count,arrow);card.onclick=()=>openPatientDetail(p);box.appendChild(card);
+ });
+}
+function openPatientsDirectory(){
+ renderPatientsDirectory();show($('patientsScreen'));setTimeout(()=>$('patientsDirectorySearch').focus(),100);
+}
+function textOr(v,fallback='—'){return String(v||'').trim()||fallback}
+function openPatientDetail(p){
+ detailPatient=p;
+ $('detailHeaderName').textContent=p.name;$('detailName').textContent=p.name;$('detailAvatar').textContent=initials(p.name);
+ $('detailMeta').textContent=[p.ci?'CI: '+p.ci:'Sin documento',p.meta].filter(Boolean).join(' · ');
+ $('detailPhone').textContent=p.phone||'Sin teléfono registrado';$('detailCi').textContent=textOr(p.ci);
+ $('detailAge').textContent=p.age!=null?p.age+' años':'—';$('detailSex').textContent=textOr(p.sex);
+ $('detailPhoneGrid').textContent=textOr(p.phone);$('detailAddress').textContent=textOr(p.address);
+ $('detailEmergency').textContent=textOr(p.emergency);$('detailHistory').textContent=textOr(p.history,'Sin información registrada');
+ $('detailAllergies').textContent=textOr(p.allergies,'Sin información registrada');
+ $('detailMedication').textContent=textOr(p.medication,'Sin información registrada');
+ $('detailObservations').textContent=textOr(p.observations,'Sin información registrada');
+ renderPatientHistory(p);show($('patientDetailScreen'));
+}
+function renderPatientHistory(p){
+ const records=patientRecords(p).slice().reverse(),box=$('patientHistoryList');box.innerHTML='';
+ $('detailHistoryCount').textContent=records.length;$('patientHistoryEmpty').classList.toggle('hidden',records.length>0);
+ records.forEach(r=>{
+  const card=document.createElement('article');card.className='history-card';
+  const main=document.createElement('div');main.className='history-card-main';
+  const title=document.createElement('strong');title.textContent=r.consultation.diagnosis||'Consulta médica';
+  const date=document.createElement('span');date.textContent=new Intl.DateTimeFormat('es-BO',{dateStyle:'medium',timeStyle:'short'}).format(new Date(r.finishedAt));
+  const reason=document.createElement('small');reason.textContent=r.consultation.reason||'Sin motivo registrado';main.append(title,date,reason);
+  const pay=document.createElement('span');pay.className='history-card-payment'+(r.payment.status==='Pagado'?'':' pending');pay.textContent=r.payment.status;
+  card.append(main,pay);card.onclick=()=>openHistoryModal(r);box.appendChild(card);
+ });
+}
+function safe(v){return textOr(v,'No registrado')}
+function openHistoryModal(r){
+ $('historyModalTitle').textContent=r.consultation.diagnosis||'Consulta médica';
+ const c=r.consultation,p=r.payment,rx=r.prescription;
+ const meds=rx&&Array.isArray(rx.medications)&&rx.medications.length
+   ?rx.medications.map((m,i)=>`${i+1}. ${m.name||'Medicamento'}${m.presentation?' · '+m.presentation:''}${m.dose?' · '+m.dose:''}${m.route?' · '+m.route:''}${m.frequency?' · '+m.frequency:''}${m.duration?' · '+m.duration:''}`).join('\n')
+   :'Sin receta registrada';
+ $('historyModalContent').innerHTML=`
+  <div class="history-detail-block"><h3>Motivo de consulta</h3><p>${escapeHtml(safe(c.reason))}</p></div>
+  <div class="history-detail-block"><h3>Enfermedad actual</h3><p>${escapeHtml(safe(c.illness))}</p></div>
+  <div class="history-detail-block"><h3>Signos vitales</h3><div class="history-vitals">
+   <div><small>Presión arterial</small><strong>${escapeHtml(safe(c.bp))}</strong></div>
+   <div><small>Frecuencia cardíaca</small><strong>${escapeHtml(safe(c.hr))}</strong></div>
+   <div><small>SpO₂</small><strong>${escapeHtml(safe(c.spo2))}</strong></div>
+   <div><small>Temperatura</small><strong>${escapeHtml(safe(c.temp))}</strong></div>
+   <div><small>Frecuencia respiratoria</small><strong>${escapeHtml(safe(c.rr))}</strong></div>
+   <div><small>Peso</small><strong>${escapeHtml(safe(c.weight))}</strong></div>
+  </div></div>
+  <div class="history-detail-block"><h3>Examen físico</h3><p>${escapeHtml(safe(c.exam))}</p></div>
+  <div class="history-detail-block"><h3>Diagnóstico / impresión clínica</h3><p>${escapeHtml(safe(c.diagnosis))}</p></div>
+  <div class="history-detail-block"><h3>Plan e indicaciones</h3><p>${escapeHtml(safe(c.instructions))}</p></div>
+  <div class="history-detail-block"><h3>Receta</h3><p>${escapeHtml(meds)}</p></div>
+  <div class="history-detail-block"><h3>Pago</h3><p>${escapeHtml(p.status)} · Bs ${money(p.amountPaid).toFixed(2).replace('.00','')} · ${escapeHtml(p.method||'Sin método')}</p></div>`;
+ $('consultationHistoryModal').classList.remove('hidden');
+}
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+$('patientsNavBtn').onclick=openPatientsDirectory;
+$('patientsBackHomeBtn').onclick=()=>show($('homeScreen'));
+$('patientsDirectorySearch').oninput=renderPatientsDirectory;
+$('patientsAddBtn').onclick=()=>{$('newPatientForm').reset();show($('newPatientScreen'));setTimeout(()=>$('patientFullName').focus(),100)};
+$('patientDetailBackBtn').onclick=openPatientsDirectory;
+$('startConsultationFromDetailBtn').onclick=()=>{if(detailPatient)selectPatient(detailPatient)};
+$('closeHistoryModalBtn').onclick=()=>$('consultationHistoryModal').classList.add('hidden');
+$('consultationHistoryModal').onclick=e=>{if(e.target===$('consultationHistoryModal'))$('consultationHistoryModal').classList.add('hidden')};
+
 updateDashboard();
 
 });
