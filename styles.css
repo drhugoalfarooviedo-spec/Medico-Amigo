@@ -103,3 +103,27 @@
 .history-vitals strong{font-size:10px;color:var(--azul-oscuro)}
 @media(max-width:520px){.patients-page,.patient-detail-page{padding-left:18px;padding-right:18px}}
 @media(max-width:390px){.patient-profile-card{align-items:flex-start;flex-wrap:wrap}.patient-profile-card>button{margin-top:10px;width:100%}.patient-detail-grid{grid-template-columns:1fr}.patient-detail-grid .wide{grid-column:auto}}
+
+
+/* ========================================
+   v0.9 - CONFIGURACIÓN + ESTUDIOS
+======================================== */
+.study-note{margin-top:-4px;padding:10px 12px;border-radius:11px;background:#f3f8fb;color:#718795;font-size:9px;line-height:1.5}
+.settings-form{padding:22px 22px 32px}
+.settings-message{margin-bottom:14px;padding:11px 13px;border-radius:12px;background:#effaf4;border:1px solid #ccebd9;color:#24764a;font-size:10px;font-weight:700}
+.home-care-badge{display:flex;gap:11px;align-items:center;padding:13px 14px;border-radius:14px;background:#eef9fb;border:1px solid #d2edf1}
+.home-care-badge>span{font-size:21px}
+.home-care-badge>div{display:flex;flex-direction:column}
+.home-care-badge strong{font-size:11px;color:var(--azul-oscuro);margin-bottom:3px}
+.home-care-badge small{font-size:9px;color:#69818f;line-height:1.4}
+.signature-upload-box{display:flex;flex-direction:column;align-items:center;gap:10px}
+.signature-preview{width:100%;height:125px;border:1px dashed #bdd0dc;border-radius:15px;background:#fbfdfe;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.signature-preview span{font-size:10px;color:#91a0ad}
+.signature-preview img{max-width:88%;max-height:100px;object-fit:contain}
+.signature-upload-button{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;border-radius:12px;background:#eef9fb;border:1px solid #c9e8ed;color:#078ca5;font-size:10px;font-weight:700;cursor:pointer}
+.remove-signature-button{border:0;background:transparent;color:#a24d4d;font-size:9px;text-decoration:underline;cursor:pointer}
+.signature-help{font-size:9px;color:#8497a5;line-height:1.45;margin-top:9px;text-align:center}
+.settings-actions{display:grid;grid-template-columns:.8fr 1.5fr;gap:10px;margin-top:18px}
+.save-settings-button{min-height:52px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--azul),var(--turquesa));color:#fff;font-size:10px;font-weight:700;cursor:pointer}
+@media(max-width:520px){.settings-form{padding-left:18px;padding-right:18px}}
+@media(max-width:390px){.settings-actions{grid-template-columns:1fr}}

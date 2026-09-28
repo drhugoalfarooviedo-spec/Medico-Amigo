@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded',()=>{
-const $=id=>document.getElementById(id),screens=[$('loginScreen'),$('homeScreen'),$('patientScreen'),$('newPatientScreen'),$('consultationScreen'),$('prescriptionScreen'),$('paymentScreen'),$('patientsScreen'),$('patientDetailScreen')];let selectedPatient=null,currentConsultation=null,currentPrescription=null;
+const $=id=>document.getElementById(id),screens=[$('loginScreen'),$('homeScreen'),$('patientScreen'),$('newPatientScreen'),$('consultationScreen'),$('prescriptionScreen'),$('paymentScreen'),$('patientsScreen'),$('patientDetailScreen'),$('settingsScreen')];let selectedPatient=null,currentConsultation=null,currentPrescription=null;
 const show=s=>{screens.forEach(x=>x.classList.add('hidden'));s.classList.remove('hidden');scrollTo(0,0)};
 const normalize=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const cards=()=>document.querySelectorAll('.patient-result');
 $('loginForm').onsubmit=e=>{e.preventDefault();show($('homeScreen'))};function openPatients(){show($('patientScreen'));$('patientSearchInput').value='';filter();setTimeout(()=>$('patientSearchInput').focus(),100)}
@@ -13,7 +13,7 @@ $('registerPatientBtn').onclick=()=>{$('newPatientForm').reset();$('calculatedAg
 const birth=$('patientBirthDate');birth.max=new Date().toISOString().split('T')[0];function age(){if(!birth.value){$('calculatedAge').classList.add('hidden');return null}const b=new Date(birth.value+'T00:00:00'),t=new Date();if(isNaN(b)||b>t||b.getFullYear()<1900){$('calculatedAge').classList.add('hidden');return null}let a=t.getFullYear()-b.getFullYear();if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate()))a--;$('ageValue').textContent=a+(a===1?' año':' años');$('calculatedAge').classList.remove('hidden');return a}birth.onchange=age;
 function initials(n){const w=n.trim().split(/\s+/);return((w[0]?.[0]||'P')+(w[1]?.[0]||'')).toUpperCase()}function msg(t){const m=$('formMessage');m.textContent=t;m.className='form-message error';m.scrollIntoView({behavior:'smooth',block:'center'})}
 $('newPatientForm').onsubmit=e=>{e.preventDefault();const name=$('patientFullName').value.trim(),ci=$('patientDocument').value.trim(),phone=$('patientPhone').value.trim();if(!name)return msg('Ingresa el nombre completo del paciente.');if(birth.value&&(age()===null))return msg('Revisa la fecha de nacimiento. Debe estar entre 1900 y la fecha actual.');if(ci&&[...cards()].some(c=>c.dataset.ci===ci))return msg('Ya existe un paciente registrado con ese CI / documento.');const a=age(),sex=$('patientSex').value,art=document.createElement('article');art.className='patient-result';Object.assign(art.dataset,{name,ci,phone,history:$('patientHistory').value.trim(),allergies:$('patientAllergies').value.trim(),medication:$('patientMedication').value.trim()});const details=[a!==null?a+(a===1?' año':' años'):'',sex].filter(Boolean).join(' · ')||'Datos básicos registrados';art.innerHTML=`<div class="patient-avatar">${initials(name)}</div><div class="patient-info"><strong></strong><span></span><small></small></div><span class="result-arrow">›</span>`;art.querySelector('strong').textContent=name;art.querySelector('.patient-info span').textContent=ci?'CI: '+ci:'Sin documento';art.querySelector('small').textContent=details;$('patientResults').prepend(art);bind(art);select(art)};
-$('consultationForm').onsubmit=e=>{e.preventDefault();if(!$('consultationReason').value.trim()){$('consultationReason').focus();return}if(!$('diagnosis').value.trim()){$('diagnosis').focus();return}currentConsultation={patient:selectedPatient,date:new Date().toISOString(),reason:$('consultationReason').value.trim(),currentIllness:$('currentIllness').value.trim(),vitals:{bloodPressure:$('bloodPressure').value.trim(),heartRate:$('heartRate').value,spo2:$('oxygenSaturation').value,temperature:$('temperature').value,respiratoryRate:$('respiratoryRate').value,weight:$('weight').value,height:$('height').value},physicalExam:$('physicalExam').value.trim(),diagnosis:$('diagnosis').value.trim(),indications:$('consultationIndications').value.trim(),notes:$('consultationNotes').value.trim(),followUp:$('followUp').value.trim()};openPrescription()};
+$('consultationForm').onsubmit=e=>{e.preventDefault();if(!$('consultationReason').value.trim()){$('consultationReason').focus();return}if(!$('diagnosis').value.trim()){$('diagnosis').focus();return}currentConsultation={patient:selectedPatient,date:new Date().toISOString(),reason:$('consultationReason').value.trim(),currentIllness:$('currentIllness').value.trim(),vitals:{bloodPressure:$('bloodPressure').value.trim(),heartRate:$('heartRate').value,spo2:$('oxygenSaturation').value,temperature:$('temperature').value,respiratoryRate:$('respiratoryRate').value,weight:$('weight').value,height:$('height').value},physicalExam:$('physicalExam').value.trim(),complementaryStudies:$('complementaryStudies').value.trim(),diagnosis:$('diagnosis').value.trim(),indications:$('consultationIndications').value.trim(),notes:$('consultationNotes').value.trim(),followUp:$('followUp').value.trim()};openPrescription()};
 function prescriptionId(){const d=new Date(),pad=n=>String(n).padStart(2,'0');return 'RX-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+String(Date.now()).slice(-5)}
 function openPrescription(){if(!selectedPatient||!currentConsultation)return;$('prescriptionPatientName').textContent=selectedPatient.name;$('prescriptionSelectedName').textContent=selectedPatient.name;$('prescriptionSelectedMeta').textContent=[selectedPatient.ci?'CI: '+selectedPatient.ci:'Sin documento',selectedPatient.meta].filter(Boolean).join(' · ');$('prescriptionAvatar').textContent=initials(selectedPatient.name);$('prescriptionDiagnosis').textContent=currentConsultation.diagnosis;$('prescriptionCode').textContent=prescriptionId();$('prescriptionGeneralInstructions').value=currentConsultation.indications||'';$('medicationsList').innerHTML='';addMedication();show($('prescriptionScreen'))}
 function addMedication(data={}){const n=$('medicationsList').children.length+1,c=document.createElement('div');c.className='medication-card';c.innerHTML=`<div class="medication-card-header"><strong>Medicamento ${n}</strong><button class="remove-medication" type="button" title="Eliminar">×</button></div><div class="form-group"><label>Medicamento</label><input class="med-name" placeholder="Ej. Paracetamol" value=""></div><div class="medication-grid"><div class="form-group"><label>Presentación / concentración</label><input class="med-presentation" placeholder="Ej. 500 mg"></div><div class="form-group"><label>Dosis</label><input class="med-dose" placeholder="Ej. 1 tableta"></div><div class="form-group"><label>Vía</label><select class="med-route"><option value="">Seleccionar</option><option>Oral</option><option>Sublingual</option><option>Tópica</option><option>Inhalatoria</option><option>Intramuscular</option><option>Intravenosa</option><option>Subcutánea</option><option>Rectal</option><option>Oftálmica</option><option>Ótica</option><option>Otra</option></select></div><div class="form-group"><label>Frecuencia</label><input class="med-frequency" placeholder="Ej. cada 8 horas"></div><div class="form-group"><label>Duración</label><input class="med-duration" placeholder="Ej. 5 días"></div></div><div class="form-group"><label>Instrucciones adicionales</label><textarea class="med-instructions" rows="2" placeholder="Ej. tomar después de las comidas"></textarea></div>`;c.querySelector('.med-name').value=data.name||'';c.querySelector('.med-presentation').value=data.presentation||'';c.querySelector('.med-dose').value=data.dose||'';c.querySelector('.med-frequency').value=data.frequency||'';c.querySelector('.med-duration').value=data.duration||'';c.querySelector('.med-instructions').value=data.instructions||'';c.querySelector('.med-route').value=data.route||'';c.querySelector('.remove-medication').onclick=()=>{c.remove();renumberMeds()};$('medicationsList').appendChild(c)}
@@ -23,6 +23,10 @@ $('addMedicationBtn').onclick=()=>addMedication();$('backToConsultationBtn').onc
 function escapeHtml(v){return String(v||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function prescriptionPrint(){
  const list=meds(),p=selectedPatient,c=currentConsultation,code=$('prescriptionCode').textContent;
+ const cfg=getDoctorConfig();
+ const signatureHtml=cfg.signature
+   ? `<div class="signature-placeholder"><img src="${cfg.signature}" alt="Firma del médico" style="max-width:190px;max-height:48px;object-fit:contain"></div>`
+   : '<div class="signature-placeholder">Firma del médico</div>';
  const when=new Intl.DateTimeFormat('es-BO',{dateStyle:'long'}).format(new Date());
  const age=(p.meta||'').split(' · ')[0]||'';
  const medsHtml=list.length?list.map((m,i)=>{
@@ -33,7 +37,7 @@ function prescriptionPrint(){
  if(!w){alert('El navegador bloqueó la vista previa. Habilita ventanas emergentes para generar la receta.');return}
  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Receta ${escapeHtml(code)}</title><style>
  *{box-sizing:border-box}html,body{margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;background:#edf3f7;color:#17324d;padding:28px 16px}.toolbar{max-width:210mm;margin:0 auto 14px;display:flex;justify-content:flex-end}.print-btn{border:0;border-radius:10px;background:#073b66;color:#fff;padding:11px 18px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(5,44,77,.18)}.page{width:210mm;min-height:297mm;margin:0 auto;background:#fff;padding:17mm 18mm 15mm;box-shadow:0 12px 35px rgba(5,44,77,.13);position:relative}.head{border-bottom:3px solid #08a6bd;padding-bottom:12px;display:flex;justify-content:space-between;gap:24px;align-items:flex-start}.brand{font-size:25px;font-weight:800;letter-spacing:.2px;color:#073b66}.brand span{color:#08a6bd}.tag{font-size:9px;font-weight:700;letter-spacing:1px;color:#4f7188;margin-top:3px}.doctor{text-align:right;font-size:10.5px;line-height:1.45;min-width:180px}.doctor b{font-size:13px;color:#073b66}.patient-box{margin:16px 0 13px;padding:12px 14px;border:1px solid #dbe5ed;border-radius:10px;background:#fbfdfe;display:grid;grid-template-columns:1fr auto;gap:20px;font-size:10.5px;line-height:1.55}.patient-box .right{text-align:right}.diagnosis{margin:13px 0 18px;font-size:11.5px;line-height:1.5}.section-title{font-size:17px;color:#073b66;margin:0 0 6px}.rx{padding:11px 0;border-bottom:1px solid #e6edf2}.rx-title{display:flex;align-items:baseline;gap:6px}.rx-title span{font-size:12px;font-weight:700}.rx-title b{font-size:14px;color:#052c4d}.rx-title em{font-size:10.5px;color:#61788a;font-style:normal}.rx-dose{font-size:11.5px;margin:5px 0 0 18px;line-height:1.5}.rx-note{font-size:10.5px;color:#5f7282;margin:4px 0 0 18px;line-height:1.45}.empty-rx{font-size:11px;color:#6f8294;padding:12px 0}.instructions-block{margin-top:20px}.instructions{white-space:pre-wrap;font-size:11.5px;line-height:1.6;padding-top:3px}.signature-area{margin-top:42px;display:flex;justify-content:flex-end}.signature-box{width:230px;text-align:center}.signature-placeholder{height:48px;display:flex;align-items:flex-end;justify-content:center;color:#8da0ae;font-size:9px}.signature-line{border-top:1px solid #60788a;padding-top:6px;font-size:10px;line-height:1.4}.signature-line b{font-size:11.5px;color:#073b66}.footer{position:absolute;left:18mm;right:18mm;bottom:12mm;border-top:1px solid #dbe5ed;padding-top:7px;font-size:8px;color:#8193a1;display:flex;justify-content:space-between}.legal-note{font-size:8px;color:#94a4af;text-align:center;margin-top:7px}@page{size:A4;margin:0}@media(max-width:850px){body{padding:12px 0}.toolbar{padding:0 12px}.page{width:100%;min-height:0;padding:22px 18px;box-shadow:none}.footer{position:static;margin-top:35px}.patient-box{grid-template-columns:1fr}.patient-box .right{text-align:left}}@media print{body{background:#fff;padding:0}.toolbar{display:none}.page{width:210mm;min-height:297mm;margin:0;padding:17mm 18mm 15mm;box-shadow:none}.footer{position:absolute;left:18mm;right:18mm;bottom:12mm}.patient-box{grid-template-columns:1fr auto}.patient-box .right{text-align:right}}
- </style></head><body><div class="toolbar"><button class="print-btn" onclick="window.print()">Descargar / imprimir PDF</button></div><main class="page"><header class="head"><div><div class="brand">MÉDICO <span>AMIGO</span></div><div class="tag">ATENCIÓN MÉDICA INTEGRAL</div></div><div class="doctor"><b>Dr. Omar Ponce</b><br>Médico<br>Registro profesional: por configurar</div></header><section class="patient-box"><div><b>Paciente:</b> ${escapeHtml(p.name)}<br><b>CI:</b> ${escapeHtml(p.ci||'No registrado')}${age?'<br><b>Edad:</b> '+escapeHtml(age):''}</div><div class="right"><b>Fecha:</b> ${escapeHtml(when)}<br><b>Receta:</b> ${escapeHtml(code)}</div></section><div class="diagnosis"><b>Diagnóstico / impresión clínica:</b> ${escapeHtml(c.diagnosis)}</div><h2 class="section-title">Rp/</h2>${medsHtml}<section class="instructions-block"><h2 class="section-title">Indicaciones generales</h2><div class="instructions">${escapeHtml($('prescriptionGeneralInstructions').value||'Sin indicaciones adicionales.')}</div></section><div class="signature-area"><div class="signature-box"><div class="signature-placeholder">Firma configurada del médico</div><div class="signature-line"><b>Dr. Omar Ponce</b><br>Médico<br>Registro profesional: por configurar</div><div class="legal-note">La imagen de firma se incorporará desde Configuración.</div></div></div><footer class="footer"><span>${escapeHtml(code)}</span><span>Generado por Médico Amigo</span></footer></main></body></html>`);
+ </style></head><body><div class="toolbar"><button class="print-btn" onclick="window.print()">Descargar / imprimir PDF</button></div><main class="page"><header class="head"><div><div class="brand">MÉDICO <span>AMIGO</span></div><div class="tag">ATENCIÓN MÉDICA INTEGRAL</div></div><div class="doctor"><b>${escapeHtml(cfg.name)}</b><br>${escapeHtml(cfg.specialty)}<br>Registro profesional: ${escapeHtml(cfg.registration)}${cfg.phone?'<br>Tel. '+escapeHtml(cfg.phone):''}</div></header><section class="patient-box"><div><b>Paciente:</b> ${escapeHtml(p.name)}<br><b>CI:</b> ${escapeHtml(p.ci||'No registrado')}${age?'<br><b>Edad:</b> '+escapeHtml(age):''}</div><div class="right"><b>Fecha:</b> ${escapeHtml(when)}<br><b>Receta:</b> ${escapeHtml(code)}</div></section><div class="diagnosis"><b>Diagnóstico / impresión clínica:</b> ${escapeHtml(c.diagnosis)}</div><h2 class="section-title">Rp/</h2>${medsHtml}<section class="instructions-block"><h2 class="section-title">Indicaciones generales</h2><div class="instructions">${escapeHtml($('prescriptionGeneralInstructions').value||'Sin indicaciones adicionales.')}</div></section><div class="signature-area"><div class="signature-box">${signatureHtml}<div class="signature-line"><b>${escapeHtml(cfg.name)}</b><br>${escapeHtml(cfg.specialty)}<br>Registro profesional: ${escapeHtml(cfg.registration)}</div><div class="legal-note">${cfg.signature?'Firma cargada en la configuración del médico.':'Sin imagen de firma cargada.'}</div></div></div><footer class="footer"><span>${escapeHtml(code)}</span><span>Generado por Médico Amigo</span></footer></main></body></html>`);
  w.document.close();
 } 
 $('previewPrescriptionBtn').onclick=prescriptionPrint;
@@ -53,7 +57,7 @@ function openPayment(){
  $('paymentAvatar').textContent=initials(selectedPatient.name);
  $('paymentDiagnosis').textContent=currentConsultation.diagnosis||'Consulta médica';
  $('paymentDate').textContent=new Intl.DateTimeFormat('es-BO',{dateStyle:'medium'}).format(new Date());
- $('consultationPrice').value='';
+ const cfg=getDoctorConfig();$('consultationPrice').value=cfg.fee||'';
  $('amountPaid').value='';
  $('paymentMethod').value='';
  $('paymentNotes').value='';
@@ -234,7 +238,7 @@ function openHistoryModal(r){
    <div><small>Peso</small><strong>${escapeHtml(safe(c.weight))}</strong></div>
   </div></div>
   <div class="history-detail-block"><h3>Examen físico</h3><p>${escapeHtml(safe(c.exam))}</p></div>
-  <div class="history-detail-block"><h3>Diagnóstico / impresión clínica</h3><p>${escapeHtml(safe(c.diagnosis))}</p></div>
+  <div class="history-detail-block"><h3>Estudios complementarios revisados</h3><p>${escapeHtml(safe(c.complementaryStudies))}</p></div><div class="history-detail-block"><h3>Diagnóstico / impresión clínica</h3><p>${escapeHtml(safe(c.diagnosis))}</p></div>
   <div class="history-detail-block"><h3>Plan e indicaciones</h3><p>${escapeHtml(safe(c.instructions))}</p></div>
   <div class="history-detail-block"><h3>Receta</h3><p>${escapeHtml(meds)}</p></div>
   <div class="history-detail-block"><h3>Pago</h3><p>${escapeHtml(p.status)} · Bs ${money(p.amountPaid).toFixed(2).replace('.00','')} · ${escapeHtml(p.method||'Sin método')}</p></div>`;
@@ -249,6 +253,97 @@ $('patientDetailBackBtn').onclick=openPatientsDirectory;
 $('startConsultationFromDetailBtn').onclick=()=>{if(detailPatient)selectPatient(detailPatient)};
 $('closeHistoryModalBtn').onclick=()=>$('consultationHistoryModal').classList.add('hidden');
 $('consultationHistoryModal').onclick=e=>{if(e.target===$('consultationHistoryModal'))$('consultationHistoryModal').classList.add('hidden')};
+
+
+/* =========================================
+   v0.9 - CONFIGURACIÓN DEL MÉDICO
+========================================= */
+const defaultDoctorConfig={
+ name:'Dr. Omar Ponce',
+ specialty:'Médico',
+ registration:'P-6720806',
+ phone:'67003714',
+ fee:'',
+ signature:''
+};
+
+function getDoctorConfig(){
+ try{
+  return {...defaultDoctorConfig,...JSON.parse(sessionStorage.getItem('medicoAmigoDoctorConfig')||'{}')};
+ }catch{
+  return {...defaultDoctorConfig};
+ }
+}
+function saveDoctorConfig(cfg){
+ sessionStorage.setItem('medicoAmigoDoctorConfig',JSON.stringify(cfg));
+}
+function updateDoctorUI(){
+ const cfg=getDoctorConfig();
+ const welcome=document.querySelector('.doctor-welcome h1');
+ const role=document.querySelector('.doctor-welcome span');
+ if(welcome)welcome.textContent=cfg.name;
+ if(role)role.textContent=cfg.specialty;
+}
+function renderSignaturePreview(){
+ const cfg=getDoctorConfig(),box=$('signaturePreview');
+ box.innerHTML='';
+ if(cfg.signature){
+  const img=document.createElement('img');img.src=cfg.signature;img.alt='Firma del médico';box.appendChild(img);
+  $('removeSignatureBtn').classList.remove('hidden');
+ }else{
+  const span=document.createElement('span');span.textContent='Sin firma cargada';box.appendChild(span);
+  $('removeSignatureBtn').classList.add('hidden');
+ }
+}
+function openSettings(){
+ const cfg=getDoctorConfig();
+ $('doctorName').value=cfg.name;
+ $('doctorSpecialty').value=cfg.specialty;
+ $('doctorRegistration').value=cfg.registration;
+ $('doctorPhone').value=cfg.phone;
+ $('doctorFee').value=cfg.fee;
+ $('settingsMessage').classList.add('hidden');
+ renderSignaturePreview();
+ show($('settingsScreen'));
+}
+$('settingsBtn').onclick=openSettings;
+$('settingsBackBtn').onclick=$('settingsCancelBtn').onclick=()=>show($('homeScreen'));
+
+$('doctorSignature').onchange=e=>{
+ const file=e.target.files&&e.target.files[0];
+ if(!file)return;
+ if(file.size>1200000){
+  alert('La imagen es demasiado grande. Usa una firma de hasta 1,2 MB.');
+  e.target.value='';
+  return;
+ }
+ const reader=new FileReader();
+ reader.onload=()=>{
+  const cfg=getDoctorConfig();cfg.signature=reader.result;saveDoctorConfig(cfg);renderSignaturePreview();
+ };
+ reader.readAsDataURL(file);
+};
+$('removeSignatureBtn').onclick=()=>{
+ const cfg=getDoctorConfig();cfg.signature='';saveDoctorConfig(cfg);$('doctorSignature').value='';renderSignaturePreview();
+};
+$('doctorSettingsForm').onsubmit=e=>{
+ e.preventDefault();
+ const existing=getDoctorConfig();
+ const cfg={
+  name:$('doctorName').value.trim()||defaultDoctorConfig.name,
+  specialty:$('doctorSpecialty').value.trim()||'Médico',
+  registration:$('doctorRegistration').value.trim()||defaultDoctorConfig.registration,
+  phone:$('doctorPhone').value.trim(),
+  fee:$('doctorFee').value,
+  signature:existing.signature||''
+ };
+ saveDoctorConfig(cfg);
+ updateDoctorUI();
+ $('settingsMessage').textContent='Configuración guardada correctamente en este navegador.';
+ $('settingsMessage').classList.remove('hidden');
+ window.scrollTo({top:0,behavior:'smooth'});
+};
+updateDoctorUI();
 
 updateDashboard();
 

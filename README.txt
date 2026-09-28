@@ -1,17 +1,21 @@
-MÉDICO AMIGO v0.8
+MÉDICO AMIGO v0.9
 
 NOVEDADES
-- Módulo Pacientes accesible desde el menú inferior.
-- Buscador por nombre, CI o teléfono.
-- Ficha individual del paciente.
-- Datos personales, contacto e información médica.
-- Historial cronológico de consultas.
-- Detalle de consulta anterior con diagnóstico, signos vitales, examen físico, plan, receta y pago.
-- Inicio de una nueva consulta directamente desde la ficha.
-- Registro profesional del Dr. Omar Ponce actualizado a P-6720806 en la receta.
-- Conserva todo el flujo v0.7: Paciente → Consulta → Receta/PDF → Cobro → Finalizar → Inicio.
+- Configuración del médico desde el botón de engranaje.
+- Dr. Omar Ponce configurado inicialmente.
+- Matrícula profesional: P-6720806.
+- Teléfono / WhatsApp: 67003714.
+- Atención médica a domicilio: no se solicita ni muestra dirección de consultorio.
+- Tarifa habitual opcional y vacía por defecto.
+- Carga y vista previa de firma para recetas.
+- La receta usa automáticamente nombre, profesión, matrícula, teléfono y firma configurados.
+- Nuevo apartado en Consulta: Estudios complementarios / estudios de gabinete revisados.
+- Se diferencia entre estudios ya revisados e indicaciones de nuevos estudios.
+- Los estudios complementarios quedan incluidos en el historial de la consulta.
+- Se corrigió el acceso al módulo Pacientes desde el menú inferior.
 
 IMPORTANTE
-Sigue siendo un prototipo front-end. Los registros se mantienen únicamente durante
-la sesión del navegador mediante sessionStorage. No utilizar información clínica real
-hasta implementar Supabase, autenticación real y políticas RLS.
+Esta versión continúa siendo un prototipo front-end.
+La configuración, firma, pacientes y consultas se almacenan temporalmente en sessionStorage.
+NO usar datos clínicos reales ni una firma real definitiva hasta implementar Supabase,
+autenticación real, almacenamiento seguro y políticas RLS.
