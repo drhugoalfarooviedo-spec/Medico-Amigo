@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Médico Amigo</title>
+
+  <meta name="description" content="Sistema de gestión de consultas médicas">
+  <meta name="theme-color" content="#063b67">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <main class="app">
+
+    <section class="login">
+
+      <div class="brand">
+        <div class="brand-icon">🩺</div>
+
+        <h1>
+          MÉDICO <span>AMIGO</span>
+        </h1>
+
+        <p>ATENCIÓN MÉDICA INTEGRAL</p>
+      </div>
+
+      <div class="welcome">
+        <h2>Bienvenido</h2>
+        <p>Ingresa a tu cuenta para continuar</p>
+      </div>
+
+      <form id="loginForm">
+
+        <div class="field">
+          <label for="email">Correo electrónico</label>
+
+          <input
+            type="email"
+            id="email"
+            placeholder="medico@ejemplo.com"
+            autocomplete="email"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label for="password">Contraseña</label>
+
+          <input
+            type="password"
+            id="password"
+            placeholder="Ingresa tu contraseña"
+            autocomplete="current-password"
+            required
+          >
+        </div>
+
+        <button type="submit" class="primary-button">
+          INICIAR SESIÓN
+        </button>
+
+      </form>
+
+      <p class="version">
+        Médico Amigo · Versión 1.0
+      </p>
+
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+
+</body>
+</html>
