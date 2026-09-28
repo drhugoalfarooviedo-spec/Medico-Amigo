@@ -7,7 +7,7 @@
   <title>Médico Amigo</title>
 
   <meta name="description" content="Sistema de gestión de consultas médicas">
-  <meta name="theme-color" content="#063b67">
+  <meta name="theme-color" content="#073b66">
 
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -16,15 +16,16 @@
 
   <main class="app">
 
-    <section class="login">
+    <!-- =========================
+         LOGIN
+    ========================== -->
+
+    <section id="loginScreen" class="login">
 
       <div class="brand">
         <div class="brand-icon">🩺</div>
 
-        <h1>
-          MÉDICO <span>AMIGO</span>
-        </h1>
-
+        <h1>MÉDICO <span>AMIGO</span></h1>
         <p>ATENCIÓN MÉDICA INTEGRAL</p>
       </div>
 
@@ -37,7 +38,6 @@
 
         <div class="field">
           <label for="email">Correo electrónico</label>
-
           <input
             type="email"
             id="email"
@@ -49,7 +49,6 @@
 
         <div class="field">
           <label for="password">Contraseña</label>
-
           <input
             type="password"
             id="password"
@@ -71,7 +70,143 @@
 
     </section>
 
+
+    <!-- =========================
+         INICIO
+    ========================== -->
+
+    <section id="homeScreen" class="home hidden">
+
+      <header class="home-header">
+
+        <div class="mini-brand">
+          <strong>MÉDICO <span>AMIGO</span></strong>
+          <small>ATENCIÓN MÉDICA INTEGRAL</small>
+        </div>
+
+        <button class="settings-button" type="button">
+          ⚙️
+        </button>
+
+      </header>
+
+
+      <section class="doctor-welcome">
+
+        <p>Buenas tardes,</p>
+
+        <h1>Dr. Omar Ponce</h1>
+
+        <span>Médico</span>
+
+      </section>
+
+
+      <button id="newConsultationBtn"
+              class="new-consultation-button"
+              type="button">
+
+        <span class="plus-circle">+</span>
+
+        <span>
+          <strong>NUEVA CONSULTA</strong>
+          <small>Iniciar atención médica</small>
+        </span>
+
+      </button>
+
+
+      <button id="searchPatientBtn"
+              class="patient-search"
+              type="button">
+
+        <span class="search-icon">⌕</span>
+
+        <span>
+          <strong>Buscar paciente</strong>
+          <small>Nombre, CI o teléfono</small>
+        </span>
+
+      </button>
+
+
+      <section class="today-section">
+
+        <div class="section-heading">
+          <h2>ATENCIÓN DE HOY</h2>
+          <button type="button">Ver resumen</button>
+        </div>
+
+
+        <div class="stats-grid">
+
+          <article class="stat-card">
+            <span>👥</span>
+            <strong>0</strong>
+            <small>Consultas</small>
+          </article>
+
+          <article class="stat-card">
+            <span>💵</span>
+            <strong>Bs 0</strong>
+            <small>Ingresos</small>
+          </article>
+
+          <article class="stat-card">
+            <span>🕐</span>
+            <strong>0</strong>
+            <small>Pendientes</small>
+          </article>
+
+        </div>
+
+      </section>
+
+
+      <section class="recent-section">
+
+        <div class="section-heading">
+          <h2>CONSULTAS RECIENTES</h2>
+        </div>
+
+        <div class="empty-state">
+
+          <div class="empty-icon">🩺</div>
+
+          <strong>Aún no hay consultas</strong>
+
+          <p>
+            Las consultas realizadas aparecerán aquí.
+          </p>
+
+        </div>
+
+      </section>
+
+
+      <nav class="bottom-nav">
+
+        <button class="nav-item active" type="button">
+          <span>⌂</span>
+          <small>Inicio</small>
+        </button>
+
+        <button class="nav-item" type="button">
+          <span>👤</span>
+          <small>Pacientes</small>
+        </button>
+
+        <button class="nav-item" type="button">
+          <span>•••</span>
+          <small>Más</small>
+        </button>
+
+      </nav>
+
+    </section>
+
   </main>
+
 
   <script src="app.js"></script>
 
