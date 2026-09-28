@@ -1,214 +1,671 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>Médico Amigo</title>
 
-  <meta name="description" content="Sistema de gestión de consultas médicas">
-  <meta name="theme-color" content="#073b66">
+  <meta
+    name="description"
+    content="Sistema de gestión de consultas médicas"
+  >
 
-  <link rel="stylesheet" href="styles.css">
+  <meta
+    name="theme-color"
+    content="#073b66"
+  >
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
 </head>
+
 
 <body>
 
-  <main class="app">
+<main class="app">
 
-    <!-- =========================
-         LOGIN
-    ========================== -->
 
-    <section id="loginScreen" class="login">
+  <!-- ========================================
+       LOGIN
+  ========================================= -->
 
-      <div class="brand">
-        <div class="brand-icon">🩺</div>
+  <section
+    id="loginScreen"
+    class="login"
+  >
 
-        <h1>MÉDICO <span>AMIGO</span></h1>
-        <p>ATENCIÓN MÉDICA INTEGRAL</p>
+    <div class="brand">
+
+      <div class="brand-icon">
+        🩺
       </div>
 
-      <div class="welcome">
-        <h2>Bienvenido</h2>
-        <p>Ingresa a tu cuenta para continuar</p>
+      <h1>
+        MÉDICO <span>AMIGO</span>
+      </h1>
+
+      <p>
+        ATENCIÓN MÉDICA INTEGRAL
+      </p>
+
+    </div>
+
+
+    <div class="welcome">
+
+      <h2>Bienvenido</h2>
+
+      <p>
+        Ingresa a tu cuenta para continuar
+      </p>
+
+    </div>
+
+
+    <form id="loginForm">
+
+      <div class="field">
+
+        <label for="email">
+          Correo electrónico
+        </label>
+
+        <input
+          id="email"
+          type="email"
+          placeholder="correo@ejemplo.com"
+          autocomplete="email"
+          required
+        >
+
       </div>
 
-      <form id="loginForm">
 
-        <div class="field">
-          <label for="email">Correo electrónico</label>
-          <input
-            type="email"
-            id="email"
-            placeholder="medico@ejemplo.com"
-            autocomplete="email"
-            required
-          >
-        </div>
+      <div class="field">
 
-        <div class="field">
-          <label for="password">Contraseña</label>
-          <input
-            type="password"
-            id="password"
-            placeholder="Ingresa tu contraseña"
-            autocomplete="current-password"
-            required
-          >
-        </div>
+        <label for="password">
+          Contraseña
+        </label>
 
-        <button type="submit" class="primary-button">
-          INICIAR SESIÓN
+        <input
+          id="password"
+          type="password"
+          placeholder="Contraseña"
+          autocomplete="current-password"
+          required
+        >
+
+      </div>
+
+
+      <button
+        class="primary-button"
+        type="submit"
+      >
+        INICIAR SESIÓN
+      </button>
+
+    </form>
+
+
+    <div class="version">
+      Médico Amigo · Versión 1.0
+    </div>
+
+  </section>
+
+
+
+  <!-- ========================================
+       PANTALLA PRINCIPAL
+  ========================================= -->
+
+  <section
+    id="homeScreen"
+    class="home hidden"
+  >
+
+
+    <!-- CABECERA -->
+
+    <header class="home-header">
+
+      <div class="mini-brand">
+
+        <strong>
+          MÉDICO <span>AMIGO</span>
+        </strong>
+
+        <small>
+          ATENCIÓN MÉDICA INTEGRAL
+        </small>
+
+      </div>
+
+
+      <button
+        class="settings-button"
+        type="button"
+        aria-label="Configuración"
+      >
+        ⚙️
+      </button>
+
+    </header>
+
+
+
+    <!-- BIENVENIDA -->
+
+    <div class="doctor-welcome">
+
+      <p>
+        Buenas tardes,
+      </p>
+
+      <h1>
+        Dr. Omar Ponce
+      </h1>
+
+      <span>
+        Médico
+      </span>
+
+    </div>
+
+
+
+    <!-- NUEVA CONSULTA -->
+
+    <button
+      id="newConsultationBtn"
+      class="new-consultation-button"
+      type="button"
+    >
+
+      <span class="plus-circle">
+        +
+      </span>
+
+      <div>
+
+        <strong>
+          NUEVA CONSULTA
+        </strong>
+
+        <small>
+          Iniciar atención médica
+        </small>
+
+      </div>
+
+    </button>
+
+
+
+    <!-- BUSCAR PACIENTE -->
+
+    <button
+      id="searchPatientBtn"
+      class="patient-search"
+      type="button"
+    >
+
+      <span class="search-icon">
+        ⌕
+      </span>
+
+      <div>
+
+        <strong>
+          Buscar paciente
+        </strong>
+
+        <small>
+          Nombre, CI o teléfono
+        </small>
+
+      </div>
+
+    </button>
+
+
+
+    <!-- ATENCIÓN DE HOY -->
+
+    <section class="today-section">
+
+      <div class="section-heading">
+
+        <h2>
+          ATENCIÓN DE HOY
+        </h2>
+
+        <button type="button">
+          Ver resumen
         </button>
 
-      </form>
+      </div>
 
-      <p class="version">
-        Médico Amigo · Versión 1.0
-      </p>
+
+      <div class="stats-grid">
+
+
+        <div class="stat-card">
+
+          <span>👥</span>
+
+          <strong>
+            0
+          </strong>
+
+          <small>
+            Consultas
+          </small>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>💵</span>
+
+          <strong>
+            Bs 0
+          </strong>
+
+          <small>
+            Ingresos
+          </small>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>🕐</span>
+
+          <strong>
+            0
+          </strong>
+
+          <small>
+            Pendientes
+          </small>
+
+        </div>
+
+
+      </div>
 
     </section>
 
 
-    <!-- =========================
-         INICIO
-    ========================== -->
 
-    <section id="homeScreen" class="home hidden">
+    <!-- CONSULTAS RECIENTES -->
 
-      <header class="home-header">
+    <section class="recent-section">
 
-        <div class="mini-brand">
-          <strong>MÉDICO <span>AMIGO</span></strong>
-          <small>ATENCIÓN MÉDICA INTEGRAL</small>
+      <div class="section-heading">
+
+        <h2>
+          CONSULTAS RECIENTES
+        </h2>
+
+      </div>
+
+
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          🩺
         </div>
 
-        <button class="settings-button" type="button">
-          ⚙️
-        </button>
+        <strong>
+          Aún no hay consultas
+        </strong>
 
-      </header>
+        <p>
+          Las consultas realizadas aparecerán aquí.
+        </p>
 
+      </div>
 
-      <section class="doctor-welcome">
-
-        <p>Buenas tardes,</p>
-
-        <h1>Dr. Omar Ponce</h1>
-
-        <span>Médico</span>
-
-      </section>
+    </section>
 
 
-      <button id="newConsultationBtn"
-              class="new-consultation-button"
-              type="button">
 
-        <span class="plus-circle">+</span>
+    <!-- MENÚ INFERIOR -->
 
-        <span>
-          <strong>NUEVA CONSULTA</strong>
-          <small>Iniciar atención médica</small>
-        </span>
+    <nav class="bottom-nav">
+
+      <button
+        class="nav-item active"
+        type="button"
+      >
+
+        <span>⌂</span>
+
+        <small>
+          Inicio
+        </small>
 
       </button>
 
 
-      <button id="searchPatientBtn"
-              class="patient-search"
-              type="button">
+      <button
+        class="nav-item"
+        type="button"
+      >
 
-        <span class="search-icon">⌕</span>
+        <span>♟</span>
 
-        <span>
-          <strong>Buscar paciente</strong>
-          <small>Nombre, CI o teléfono</small>
-        </span>
+        <small>
+          Pacientes
+        </small>
 
       </button>
 
 
-      <section class="today-section">
+      <button
+        class="nav-item"
+        type="button"
+      >
 
-        <div class="section-heading">
-          <h2>ATENCIÓN DE HOY</h2>
-          <button type="button">Ver resumen</button>
-        </div>
+        <span>•••</span>
 
+        <small>
+          Más
+        </small>
 
-        <div class="stats-grid">
+      </button>
 
-          <article class="stat-card">
-            <span>👥</span>
-            <strong>0</strong>
-            <small>Consultas</small>
-          </article>
-
-          <article class="stat-card">
-            <span>💵</span>
-            <strong>Bs 0</strong>
-            <small>Ingresos</small>
-          </article>
-
-          <article class="stat-card">
-            <span>🕐</span>
-            <strong>0</strong>
-            <small>Pendientes</small>
-          </article>
-
-        </div>
-
-      </section>
+    </nav>
 
 
-      <section class="recent-section">
+  </section>
 
-        <div class="section-heading">
-          <h2>CONSULTAS RECIENTES</h2>
-        </div>
 
-        <div class="empty-state">
 
-          <div class="empty-icon">🩺</div>
+  <!-- ========================================
+       NUEVA CONSULTA - SELECCIONAR PACIENTE
+  ========================================= -->
 
-          <strong>Aún no hay consultas</strong>
+  <section
+    id="patientScreen"
+    class="patient-screen hidden"
+  >
+
+
+    <!-- CABECERA -->
+
+    <header class="screen-header">
+
+      <button
+        id="backHomeBtn"
+        class="back-button"
+        type="button"
+        aria-label="Volver"
+      >
+        ←
+      </button>
+
+
+      <div>
+
+        <h1>
+          Nueva consulta
+        </h1>
+
+        <p>
+          Selecciona al paciente
+        </p>
+
+      </div>
+
+    </header>
+
+
+
+    <!-- PASOS -->
+
+    <div class="progress-steps">
+
+
+      <div class="step active">
+
+        <span>1</span>
+
+        <small>
+          Paciente
+        </small>
+
+      </div>
+
+
+      <div class="step">
+
+        <span>2</span>
+
+        <small>
+          Consulta
+        </small>
+
+      </div>
+
+
+      <div class="step">
+
+        <span>3</span>
+
+        <small>
+          Receta
+        </small>
+
+      </div>
+
+
+      <div class="step">
+
+        <span>4</span>
+
+        <small>
+          Cobro
+        </small>
+
+      </div>
+
+
+    </div>
+
+
+
+    <!-- CONTENIDO -->
+
+    <div class="patient-content">
+
+
+      <!-- BUSCADOR -->
+
+      <div class="patient-search-box">
+
+        <span>
+          ⌕
+        </span>
+
+        <input
+          id="patientSearchInput"
+          type="search"
+          placeholder="Buscar por nombre, CI o teléfono"
+          autocomplete="off"
+        >
+
+      </div>
+
+
+      <div class="search-help">
+        Escribe para buscar un paciente registrado
+      </div>
+
+
+
+      <!-- RESULTADOS -->
+
+      <div
+        id="patientResults"
+        class="patient-results"
+      >
+
+
+        <!-- PACIENTE DE PRUEBA 1 -->
+
+        <article
+          class="patient-result"
+          data-name="Maria Fernandez"
+          data-ci="4587214"
+          data-phone="71234567"
+        >
+
+          <div class="patient-avatar">
+            MF
+          </div>
+
+
+          <div class="patient-info">
+
+            <strong>
+              María Fernández
+            </strong>
+
+            <span>
+              CI: 4587214
+            </span>
+
+            <small>
+              68 años · Femenino
+            </small>
+
+          </div>
+
+
+          <span class="result-arrow">
+            ›
+          </span>
+
+        </article>
+
+
+
+        <!-- PACIENTE DE PRUEBA 2 -->
+
+        <article
+          class="patient-result"
+          data-name="Carlos Mamani"
+          data-ci="6843210"
+          data-phone="76543210"
+        >
+
+          <div class="patient-avatar">
+            CM
+          </div>
+
+
+          <div class="patient-info">
+
+            <strong>
+              Carlos Mamani
+            </strong>
+
+            <span>
+              CI: 6843210
+            </span>
+
+            <small>
+              42 años · Masculino
+            </small>
+
+          </div>
+
+
+          <span class="result-arrow">
+            ›
+          </span>
+
+        </article>
+
+
+      </div>
+
+
+
+      <!-- SIN RESULTADOS -->
+
+      <div
+        id="noPatientResults"
+        class="no-results hidden"
+      >
+
+        <span>
+          🔎
+        </span>
+
+        <strong>
+          No encontramos pacientes
+        </strong>
+
+        <p>
+          Puedes registrar uno nuevo para iniciar la consulta.
+        </p>
+
+      </div>
+
+
+
+      <!-- REGISTRAR PACIENTE -->
+
+      <div class="new-patient-box">
+
+        <div>
+
+          <strong>
+            ¿Paciente nuevo?
+          </strong>
 
           <p>
-            Las consultas realizadas aparecerán aquí.
+            Regístralo rápidamente para comenzar la atención.
           </p>
 
         </div>
 
-      </section>
 
-
-      <nav class="bottom-nav">
-
-        <button class="nav-item active" type="button">
-          <span>⌂</span>
-          <small>Inicio</small>
+        <button
+          id="registerPatientBtn"
+          type="button"
+        >
+          + REGISTRAR NUEVO PACIENTE
         </button>
 
-        <button class="nav-item" type="button">
-          <span>👤</span>
-          <small>Pacientes</small>
-        </button>
-
-        <button class="nav-item" type="button">
-          <span>•••</span>
-          <small>Más</small>
-        </button>
-
-      </nav>
-
-    </section>
-
-  </main>
+      </div>
 
 
-  <script src="app.js"></script>
+    </div>
+
+  </section>
+
+
+</main>
+
+
+<script src="app.js"></script>
 
 </body>
+
 </html>
