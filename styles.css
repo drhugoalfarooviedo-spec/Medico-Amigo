@@ -6,3 +6,30 @@
 
 /* v0.6 - Receta médica */
 .prescription-form{padding:22px 22px 32px}.prescription-meta{display:grid;grid-template-columns:1.2fr .8fr;gap:10px;margin-bottom:16px}.prescription-meta>div{background:#fff;border:1px solid #e1e9ef;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column}.prescription-meta small{font-size:10px;color:var(--gris);margin-bottom:4px}.prescription-meta strong{font-size:12px;color:var(--azul-oscuro);line-height:1.35}.medication-card{border:1px solid #dce6ed;border-radius:16px;padding:15px;margin-bottom:13px;background:#fbfdfe}.medication-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}.medication-card-header strong{font-size:13px;color:var(--azul-oscuro)}.remove-medication{width:32px;height:32px;border:0;border-radius:9px;background:#fff1f1;color:#a13d3d;cursor:pointer;font-weight:700}.medication-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 11px}.add-medication-button{width:100%;height:48px;border:1.5px dashed #8fd4de;border-radius:13px;background:#effbfc;color:#078ca5;font-size:11px;font-weight:700;cursor:pointer}.signature-status{display:flex;gap:12px;align-items:center;background:#f3f8fb;border:1px solid #dbe7ee;border-radius:16px;padding:14px 16px;margin-bottom:18px}.signature-status>span{font-size:24px}.signature-status div{display:flex;flex-direction:column}.signature-status strong{font-size:12px;color:var(--azul-oscuro);margin-bottom:3px}.signature-status small{font-size:10px;line-height:1.4;color:var(--gris)}.prescription-actions{display:grid;grid-template-columns:.7fr 1fr 1.35fr;gap:9px}.preview-prescription-button,.save-prescription-button{min-height:52px;border-radius:14px;font-size:10px;font-weight:700;cursor:pointer}.preview-prescription-button{border:1.5px solid #9ed9e1;background:#effbfc;color:#078ca5}.save-prescription-button{border:0;background:linear-gradient(135deg,var(--azul),var(--turquesa));color:#fff}@media(max-width:520px){.prescription-form{padding-left:18px;padding-right:18px}}@media(max-width:390px){.prescription-meta,.medication-grid,.prescription-actions{grid-template-columns:1fr}}
+
+
+/* v0.7 - Cobro y cierre de consulta */
+.payment-form{padding:22px 22px 32px}
+.payment-summary{display:grid;grid-template-columns:1.2fr .8fr;gap:10px;margin-bottom:16px}
+.payment-summary>div{background:#fff;border:1px solid #e1e9ef;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column}
+.payment-summary small{font-size:10px;color:var(--gris);margin-bottom:4px}
+.payment-summary strong{font-size:12px;color:var(--azul-oscuro);line-height:1.35}
+.payment-status-box{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#eef9fb;border:1px solid #d2edf1;border-radius:15px;padding:14px 15px;margin:3px 0 17px}
+.payment-status-box>div{display:flex;flex-direction:column}
+.payment-status-box small{font-size:10px;color:var(--gris);margin-bottom:3px}
+.payment-status-box strong{font-size:14px;color:var(--azul-oscuro)}
+.payment-status-box>span{font-size:11px;font-weight:700;color:#60788a;text-align:right}
+.payment-status-box.paid{background:#effaf4;border-color:#ccebd9}
+.payment-status-box.paid strong,.payment-status-box.paid>span{color:#24764a}
+.payment-status-box.partial{background:#fff9ed;border-color:#f1dfb9}
+.payment-status-box.partial strong,.payment-status-box.partial>span{color:#8b6828}
+.payment-actions{display:grid;grid-template-columns:.8fr 1.5fr;gap:10px;margin-top:20px}
+.finish-consultation-button{min-height:52px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--azul),var(--turquesa));color:#fff;font-size:11px;font-weight:700;cursor:pointer}
+.recent-consultation{background:#fff;border:1px solid #e1e9ef;border-radius:16px;padding:13px 14px;margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.recent-consultation>div:first-child{min-width:0;display:flex;flex-direction:column}
+.recent-consultation strong{font-size:13px;color:var(--azul-oscuro);margin-bottom:4px}
+.recent-consultation small{font-size:10px;color:var(--gris);line-height:1.4}
+.recent-consultation .recent-payment{font-size:10px;font-weight:700;padding:6px 8px;border-radius:9px;background:#eef9fb;color:#078ca5;white-space:nowrap}
+.recent-consultation .recent-payment.pending{background:#fff3e5;color:#9b641b}
+@media(max-width:520px){.payment-form{padding-left:18px;padding-right:18px}}
+@media(max-width:390px){.payment-summary,.payment-actions{grid-template-columns:1fr}}

@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded',()=>{
-const $=id=>document.getElementById(id),screens=[$('loginScreen'),$('homeScreen'),$('patientScreen'),$('newPatientScreen'),$('consultationScreen'),$('prescriptionScreen')];let selectedPatient=null,currentConsultation=null;
+const $=id=>document.getElementById(id),screens=[$('loginScreen'),$('homeScreen'),$('patientScreen'),$('newPatientScreen'),$('consultationScreen'),$('prescriptionScreen'),$('paymentScreen')];let selectedPatient=null,currentConsultation=null,currentPrescription=null;
 const show=s=>{screens.forEach(x=>x.classList.add('hidden'));s.classList.remove('hidden');scrollTo(0,0)};
 const normalize=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const cards=()=>document.querySelectorAll('.patient-result');
 $('loginForm').onsubmit=e=>{e.preventDefault();show($('homeScreen'))};function openPatients(){show($('patientScreen'));$('patientSearchInput').value='';filter();setTimeout(()=>$('patientSearchInput').focus(),100)}
@@ -37,5 +37,88 @@ function prescriptionPrint(){
  w.document.close();
 } 
 $('previewPrescriptionBtn').onclick=prescriptionPrint;
-$('prescriptionForm').onsubmit=e=>{e.preventDefault();const prescription={code:$('prescriptionCode').textContent,patient:selectedPatient,diagnosis:currentConsultation.diagnosis,medications:meds(),instructions:$('prescriptionGeneralInstructions').value.trim(),date:new Date().toISOString()};sessionStorage.setItem('medicoAmigoLastPrescription',JSON.stringify(prescription));alert('Receta guardada durante esta sesión. El siguiente paso será Cobro.');};
+$('prescriptionForm').onsubmit=e=>{
+ e.preventDefault();
+ currentPrescription={code:$('prescriptionCode').textContent,patient:selectedPatient,diagnosis:currentConsultation.diagnosis,medications:meds(),instructions:$('prescriptionGeneralInstructions').value.trim(),date:new Date().toISOString()};
+ sessionStorage.setItem('medicoAmigoLastPrescription',JSON.stringify(currentPrescription));
+ openPayment();
+};
+
+function money(v){const n=Number(v||0);return Number.isFinite(n)?n:0}
+function openPayment(){
+ if(!selectedPatient||!currentConsultation)return;
+ $('paymentPatientName').textContent=selectedPatient.name;
+ $('paymentSelectedName').textContent=selectedPatient.name;
+ $('paymentSelectedMeta').textContent=[selectedPatient.ci?'CI: '+selectedPatient.ci:'Sin documento',selectedPatient.meta].filter(Boolean).join(' · ');
+ $('paymentAvatar').textContent=initials(selectedPatient.name);
+ $('paymentDiagnosis').textContent=currentConsultation.diagnosis||'Consulta médica';
+ $('paymentDate').textContent=new Intl.DateTimeFormat('es-BO',{dateStyle:'medium'}).format(new Date());
+ $('consultationPrice').value='';
+ $('amountPaid').value='';
+ $('paymentMethod').value='';
+ $('paymentNotes').value='';
+ updatePaymentStatus();
+ show($('paymentScreen'));
+ setTimeout(()=>$('consultationPrice').focus(),100);
+}
+function updatePaymentStatus(){
+ const price=money($('consultationPrice').value),paid=money($('amountPaid').value),balance=Math.max(price-paid,0);
+ const box=document.querySelector('.payment-status-box');
+ box.classList.remove('paid','partial');
+ let status='Pendiente';
+ if(price>0&&paid>=price){status='Pagado';box.classList.add('paid')}
+ else if(paid>0){status='Pago parcial';box.classList.add('partial')}
+ $('paymentStatusText').textContent=status;
+ $('paymentBalanceText').textContent='Saldo: Bs '+balance.toFixed(2).replace('.00','');
+}
+$('consultationPrice').oninput=updatePaymentStatus;
+$('amountPaid').oninput=updatePaymentStatus;
+$('backToPrescriptionBtn').onclick=$('paymentBackBtn').onclick=()=>show($('prescriptionScreen'));
+
+function loadSessionRecords(){
+ try{return JSON.parse(sessionStorage.getItem('medicoAmigoConsultations')||'[]')}catch{return[]}
+}
+function saveSessionRecords(records){sessionStorage.setItem('medicoAmigoConsultations',JSON.stringify(records))}
+function sameLocalDay(iso){
+ const d=new Date(iso),t=new Date();
+ return d.getFullYear()===t.getFullYear()&&d.getMonth()===t.getMonth()&&d.getDate()===t.getDate()
+}
+function updateDashboard(){
+ const records=loadSessionRecords(),today=records.filter(r=>sameLocalDay(r.finishedAt));
+ const income=today.reduce((sum,r)=>sum+money(r.payment.amountPaid),0);
+ const pending=today.filter(r=>r.payment.status!=='Pagado').length;
+ $('todayConsultations').textContent=today.length;
+ $('todayIncome').textContent='Bs '+income.toFixed(2).replace('.00','');
+ $('todayPending').textContent=pending;
+ const recent=document.querySelector('.recent-section');
+ const oldEmpty=recent.querySelector('.empty-state');
+ recent.querySelectorAll('.recent-consultation').forEach(x=>x.remove());
+ if(today.length===0){if(oldEmpty)oldEmpty.classList.remove('hidden');return}
+ if(oldEmpty)oldEmpty.classList.add('hidden');
+ today.slice().reverse().slice(0,5).forEach(r=>{
+   const item=document.createElement('div');item.className='recent-consultation';
+   const info=document.createElement('div');
+   const name=document.createElement('strong');name.textContent=r.patient.name;
+   const meta=document.createElement('small');
+   meta.textContent=r.consultation.diagnosis+' · '+new Intl.DateTimeFormat('es-BO',{hour:'2-digit',minute:'2-digit'}).format(new Date(r.finishedAt));
+   info.append(name,meta);
+   const pay=document.createElement('span');pay.className='recent-payment'+(r.payment.status==='Pagado'?'':' pending');
+   pay.textContent=r.payment.status==='Pagado'?'Bs '+money(r.payment.amountPaid).toFixed(2).replace('.00',''):r.payment.status;
+   item.append(info,pay);recent.appendChild(item);
+ });
+}
+$('paymentForm').onsubmit=e=>{
+ e.preventDefault();
+ const price=money($('consultationPrice').value),paid=money($('amountPaid').value);
+ const status=price>0&&paid>=price?'Pagado':paid>0?'Pago parcial':'Pendiente';
+ const payment={price,amountPaid:paid,method:$('paymentMethod').value,status,balance:Math.max(price-paid,0),notes:$('paymentNotes').value.trim(),date:new Date().toISOString()};
+ const record={id:'CONS-'+Date.now(),patient:selectedPatient,consultation:currentConsultation,prescription:currentPrescription,payment,finishedAt:new Date().toISOString()};
+ const records=loadSessionRecords();records.push(record);saveSessionRecords(records);
+ updateDashboard();
+ $('consultationForm').reset();
+ selectedPatient=null;currentConsultation=null;currentPrescription=null;
+ show($('homeScreen'));
+};
+updateDashboard();
+
 });

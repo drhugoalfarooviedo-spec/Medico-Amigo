@@ -1,13 +1,18 @@
-MÉDICO AMIGO v0.6.1
+MÉDICO AMIGO v0.7
 
-Corrección de la vista previa de receta:
-- Hoja A4 centrada en pantalla.
-- Botón Descargar / imprimir PDF fuera de la receta.
-- El botón no aparece al imprimir.
-- Encabezado médico y datos del paciente reorganizados.
-- Medicamentos y pauta con mejor jerarquía visual.
-- Duración numérica mostrada como días.
-- Firma preparada para usar una imagen configurada por el médico.
-- Diseño responsive para vista previa en celular.
+Novedades:
+- Paso 4: Cobro.
+- Precio de consulta y monto pagado.
+- Métodos de pago: Efectivo, QR, Transferencia, Tarjeta u Otro.
+- Estado automático: Pagado, Pago parcial o Pendiente.
+- Cálculo automático de saldo.
+- Observaciones de pago.
+- Finalización de la consulta.
+- Dashboard de la sesión actualizado con consultas, ingresos y pendientes.
+- Consultas recientes de la sesión.
 
-IMPORTANTE: prototipo. No utilizar datos clínicos reales hasta implementar autenticación real, Supabase y RLS.
+IMPORTANTE:
+Esta versión continúa siendo un prototipo front-end.
+Los datos se guardan únicamente en sessionStorage del navegador.
+NO utilizar datos clínicos reales hasta implementar autenticación real,
+Supabase y políticas RLS.
