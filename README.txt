@@ -1,9 +1,21 @@
-MÉDICO AMIGO v1.0.2 AUTH DIAGNÓSTICO
+MÉDICO AMIGO v1.0.3 AUTH FIXED
 
-- Mantiene exclusivamente Supabase Auth.
-- Añade mensaje visible de autenticación en el formulario real.
-- Muestra la causa devuelta por Supabase (credenciales, correo no confirmado o conexión).
-- No permite acceso por login simulado.
+La prueba auth-test-v2 confirmó:
+- Supabase Auth funciona.
+- La Publishable key funciona.
+- RLS permite leer el perfil correcto.
+- El usuario Dr. Hugo Alfaro carga su propio doctor_profiles.
 
-Esta versión sirve para identificar si la cuenta creada en Supabase necesita
-restablecer contraseña o confirmar correo.
+Esta versión reemplaza la integración Auth anterior por la misma conexión directa
+que funcionó en auth-test-v2.
+
+IMPLEMENTADO:
+- Login real.
+- Sesión local con token Supabase.
+- Carga de doctor_profiles según UID autenticado.
+- Logout.
+- Sin login falso.
+- Sin dependencia del CDN supabase-js.
+
+AÚN NO USAR DATOS CLÍNICOS REALES:
+pacientes, consultas, recetas y pagos siguen pendientes de migración completa a Supabase.

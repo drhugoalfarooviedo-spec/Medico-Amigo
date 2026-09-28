@@ -349,132 +349,78 @@ updateDashboard();
 
 });
 
+
 /* ============================================================
-   v1.0 AUTH - SUPABASE
-   Etapa 1: autenticación real + sesión + perfil del médico.
-   Los módulos clínicos continúan en sessionStorage hasta la
-   siguiente etapa de migración.
+   v1.0.3 AUTH - SUPABASE DIRECTO
+   Implementación basada en la prueba auth-test-v2 confirmada.
 ============================================================ */
 const SUPABASE_URL='https://kdjvsbiqjpztdugewuve.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
-
-let supabaseClient=null;
+const AUTH_STORAGE_KEY='medico_amigo_supabase_session';
 let authenticatedDoctor=null;
 
 function authMsg(message,type='error'){
- const el=$('authMessage');
- if(!el)return;
- el.textContent=message;
- el.classList.remove('hidden','success');
+ const el=$('authMessage'); if(!el)return;
+ el.textContent=message; el.classList.remove('hidden','success');
  if(type==='success')el.classList.add('success');
 }
-function clearAuthMsg(){
- const el=$('authMessage');
- if(el){el.textContent='';el.classList.add('hidden');el.classList.remove('success');}
-}
-function findLoginFields(){
- const email =
-   $('email') || $('loginEmail') || document.querySelector('input[type="email"]') ||
-   document.querySelector('input[placeholder*="Correo" i]');
- const password =
-   $('password') || $('loginPassword') || document.querySelector('input[type="password"]');
- const button =
-   document.querySelector('#loginForm button[type="submit"], #loginForm button');
- return {email,password,button};
-}
-async function loadDoctorProfile(){
- const {data:{user}}=await supabaseClient.auth.getUser();
- if(!user)return null;
- const {data,error}=await supabaseClient.from('doctor_profiles').select('*').eq('id',user.id).single();
- if(error)throw error;
- authenticatedDoctor={user,...data};
+function clearAuthMsg(){const el=$('authMessage');if(el){el.textContent='';el.classList.add('hidden');el.classList.remove('success');}}
+function authHeaders(token){return {'apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json'};}
+function getStoredSession(){try{return JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY)||'null')}catch{return null}}
+function storeSession(s){localStorage.setItem(AUTH_STORAGE_KEY,JSON.stringify(s))}
+function clearSession(){localStorage.removeItem(AUTH_STORAGE_KEY)}
 
- // Mirror the secure profile into the existing prototype UI for this stage.
+async function fetchDoctorProfile(session){
+ const uid=session.user.id;
+ const r=await fetch(SUPABASE_URL+'/rest/v1/doctor_profiles?id=eq.'+encodeURIComponent(uid)+'&select=*',{
+   headers:authHeaders(session.access_token)
+ });
+ const raw=await r.text(); let data; try{data=JSON.parse(raw)}catch{data=null}
+ if(!r.ok) throw new Error((data&&data.message)||raw||'No se pudo consultar doctor_profiles');
+ if(!Array.isArray(data)||!data.length) throw new Error('No existe un perfil médico para este usuario.');
+ const p=data[0]; authenticatedDoctor={user:session.user,...p};
  const cfg=getDoctorConfig();
- cfg.name=data.full_name||cfg.name;
- cfg.specialty=data.specialty||cfg.specialty;
- cfg.registration=data.professional_registration||cfg.registration;
- cfg.phone=data.phone||cfg.phone;
- cfg.fee=(data.usual_fee===null||data.usual_fee===undefined)?'':String(data.usual_fee);
- saveDoctorConfig(cfg);
- updateDoctorUI();
- return authenticatedDoctor;
+ cfg.name=p.full_name||cfg.name; cfg.specialty=p.specialty||cfg.specialty;
+ cfg.registration=p.professional_registration||''; cfg.phone=p.phone||'';
+ cfg.fee=(p.usual_fee===null||p.usual_fee===undefined)?'':String(p.usual_fee);
+ saveDoctorConfig(cfg); updateDoctorUI();
+ return p;
 }
-async function enterAuthenticatedApp(){
+async function enterWithSession(session){
  try{
-   await loadDoctorProfile();
+   await fetchDoctorProfile(session);
    clearAuthMsg();
    show($('homeScreen'));
- }catch(err){
-   console.error(err);
-   await supabaseClient.auth.signOut();
-   show($('loginScreen'));
-   authMsg('No se pudo cargar el perfil profesional. Verifica la configuración de Supabase.');
+ }catch(e){
+   console.error(e); clearSession(); authenticatedDoctor=null; show($('loginScreen'));
+   authMsg('La sesión inició, pero no se pudo cargar el perfil: '+e.message);
  }
 }
 async function realLogin(){
- const {email,password,button}=findLoginFields();
+ const email=$('email'), password=$('password');
  if(!email||!password)return;
  clearAuthMsg();
- if(!email.value.trim()||!password.value){
-   authMsg('Ingresa tu correo y contraseña.');
-   return;
- }
- const oldText=button?button.textContent:'';
- if(button){button.disabled=true;button.textContent='INGRESANDO...';}
- const {error}=await supabaseClient.auth.signInWithPassword({
-   email:email.value.trim(),
-   password:password.value
- });
- if(button){button.disabled=false;button.textContent=oldText||'INGRESAR';}
- if(error){
-   console.error('Supabase login error:',error);
-   const msg=(error.message||'').toLowerCase();
-   if(msg.includes('invalid login credentials')){
-     authMsg('Correo o contraseña incorrectos. Si estás seguro de la contraseña, restablécela en Supabase Authentication.');
-   }else if(msg.includes('email not confirmed')){
-     authMsg('El correo todavía no está confirmado en Supabase.');
-   }else if(msg.includes('failed to fetch') || msg.includes('network')){
-     authMsg('No se pudo conectar con Supabase. Revisa internet y vuelve a intentar.');
-   }else{
-     authMsg('Supabase respondió: '+(error.message||'Error de autenticación'));
-   }
-   return;
- }
- password.value='';
- await enterAuthenticatedApp();
+ if(!email.value.trim()||!password.value){authMsg('Ingresa tu correo y contraseña.');return}
+ const btn=$('loginForm')?.querySelector('button[type="submit"],button');
+ const old=btn?.textContent||'INICIAR SESIÓN'; if(btn){btn.disabled=true;btn.textContent='INGRESANDO...'}
+ try{
+   const r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{
+     method:'POST',
+     headers:{'Content-Type':'application/json','apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+SUPABASE_PUBLISHABLE_KEY},
+     body:JSON.stringify({email:email.value.trim(),password:password.value})
+   });
+   const raw=await r.text(); let data={}; try{data=JSON.parse(raw)}catch{}
+   if(!r.ok){authMsg('No se pudo iniciar sesión: '+(data.msg||data.message||data.error_description||raw));return}
+   storeSession(data); password.value=''; await enterWithSession(data);
+ }catch(e){authMsg('No se pudo conectar con Supabase: '+e.message)}
+ finally{if(btn){btn.disabled=false;btn.textContent=old}}
 }
-async function realLogout(){
- await supabaseClient.auth.signOut();
- authenticatedDoctor=null;
- show($('loginScreen'));
- const {password}=findLoginFields();
- if(password)password.value='';
- clearAuthMsg();
-}
-async function initSupabaseAuth(){
- if(!window.supabase){
-   show($('loginScreen'));
-   authMsg('No se pudo cargar la conexión segura. Revisa tu conexión a internet.');
-   return;
- }
- supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-
- const fields=findLoginFields();
+function realLogout(){clearSession();authenticatedDoctor=null;show($('loginScreen'));clearAuthMsg();}
+async function initDirectAuth(){
  const form=$('loginForm');
- if(form){
-   form.onsubmit=(e)=>{e.preventDefault();e.stopPropagation();realLogin();return false;};
- }
- if(fields.button){
-   fields.button.type='submit';
- }
- if($('logoutBtn'))$('logoutBtn').onclick=realLogout;
-
- const {data:{session}}=await supabaseClient.auth.getSession();
- if(session){
-   await enterAuthenticatedApp();
- }else{
-   show($('loginScreen'));
- }
+ if(form) form.onsubmit=e=>{e.preventDefault();realLogin();return false};
+ if($('logoutBtn')) $('logoutBtn').onclick=realLogout;
+ const s=getStoredSession();
+ if(s?.access_token&&s?.user?.id) await enterWithSession(s); else show($('loginScreen'));
 }
-initSupabaseAuth();
+initDirectAuth();
