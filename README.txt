@@ -1,16 +1,22 @@
-MÉDICO AMIGO v1.2.4 — GUARDADO DE CONSULTA
+MÉDICO AMIGO v1.2.6 — HISTORIA CLÍNICA COMPLETA
 
-- Corrige definitivamente el error "selectedPatient is not defined".
-- La consulta se guarda en public.consultations.
-- Después del guardado muestra confirmación y vuelve a Pacientes.
-- No intenta pasar todavía a Receta: primero verificaremos la fila en Supabase.
-- No modifica la lógica estable de Pacientes.
-- Mantiene Descargar Historia Clínica.
+Incluye:
+- Antecedentes personales patológicos.
+- Antecedentes personales no patológicos.
+- Antecedentes heredofamiliares.
+- Antecedentes gineco-obstétricos solo para sexo Femenino:
+  menarca, FUM, ritmo menstrual, gestas, partos, cesáreas, abortos,
+  método anticonceptivo y otros.
+- Persistencia en Supabase.
+- Visualización en la ficha del paciente.
+- Inclusión en la Historia Clínica descargable.
+- Mantiene consultas e historial de la v1.2.4.
 
-PRUEBA:
-1. Ctrl+F5.
-2. Paciente > + CONSULTA.
-3. Completar una consulta ficticia.
-4. Guardar.
-5. Debe aparecer "Consulta guardada correctamente en Supabase".
-6. Revisar Supabase > public.consultations.
+Requiere que ya se haya ejecutado:
+ALTER TABLE public.patients
+  ADD COLUMN IF NOT EXISTS pathological_history text,
+  ADD COLUMN IF NOT EXISTS non_pathological_history text,
+  ADD COLUMN IF NOT EXISTS family_history text,
+  ADD COLUMN IF NOT EXISTS gynecological_history jsonb;
+
+No se eliminan pacientes ni consultas existentes.

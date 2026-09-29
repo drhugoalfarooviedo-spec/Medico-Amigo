@@ -218,7 +218,27 @@ function openPatientDetail(p){
  $('detailPhone').textContent=p.phone||'Sin teléfono registrado';$('detailCi').textContent=textOr(p.ci);
  $('detailAge').textContent=p.age!=null?p.age+' años':'—';$('detailSex').textContent=textOr(p.sex);
  $('detailPhoneGrid').textContent=textOr(p.phone);$('detailAddress').textContent=textOr(p.address);
- $('detailEmergency').textContent=textOr(p.emergency);$('detailHistory').textContent=textOr(p.history,'Sin información registrada');
+ $('detailEmergency').textContent=textOr(p.emergency);
+ $('detailPathologicalHistory').textContent=textOr(p.pathologicalHistory||p.history,'Sin información registrada');
+ $('detailNonPathologicalHistory').textContent=textOr(p.nonPathologicalHistory,'Sin información registrada');
+ $('detailFamilyHistory').textContent=textOr(p.familyHistory,'Sin información registrada');
+ const gyneBlock=$('detailGyneHistoryBlock'),gyneText=$('detailGyneHistory');
+ if(gyneBlock&&gyneText){
+   const female=/femen/i.test(p.sex||'');
+   gyneBlock.classList.toggle('hidden',!female);
+   if(female){
+     const g=p.gyneHistory||{};
+     gyneText.textContent=[
+       g.menarche?'Menarca: '+g.menarche:null,g.lmp?'FUM: '+g.lmp:null,
+       g.menstrual_cycle?'Ritmo menstrual: '+g.menstrual_cycle:null,
+       g.pregnancies!==null&&g.pregnancies!==undefined&&g.pregnancies!==''?'Gestas: '+g.pregnancies:null,
+       g.births!==null&&g.births!==undefined&&g.births!==''?'Partos: '+g.births:null,
+       g.cesareans!==null&&g.cesareans!==undefined&&g.cesareans!==''?'Cesáreas: '+g.cesareans:null,
+       g.abortions!==null&&g.abortions!==undefined&&g.abortions!==''?'Abortos: '+g.abortions:null,
+       g.contraception?'Método anticonceptivo: '+g.contraception:null,g.other?'Otros: '+g.other:null
+     ].filter(Boolean).join(' · ')||'Sin información registrada';
+   }
+ }
  $('detailAllergies').textContent=textOr(p.allergies,'Sin información registrada');
  $('detailMedication').textContent=textOr(p.medication,'Sin información registrada');
  $('detailObservations').textContent=textOr(p.observations,'Sin información registrada');
@@ -487,7 +507,7 @@ document.addEventListener('DOMContentLoaded',()=>{
    return {id:p.id,name:p.full_name||'',ci:p.document_number||'',phone:p.phone||'',age:a,sex:p.sex||'',
      meta:[a!==null?a+' años':'',p.sex||''].filter(Boolean).join(' · '),
      address:p.address||'',emergency:[p.emergency_contact_name,p.emergency_contact_phone].filter(Boolean).join(' · '),
-     history:p.medical_history||'',allergies:p.allergies||'',medication:p.regular_medications||'',observations:p.observations||''};
+     pathologicalHistory:p.pathological_history||p.medical_history||'',nonPathologicalHistory:p.non_pathological_history||'',familyHistory:p.family_history||'',gyneHistory:p.gynecological_history||null,history:p.pathological_history||p.medical_history||'',allergies:p.allergies||'',medication:p.regular_medications||'',observations:p.observations||''};
  }
  async function request(path,options={}){
    const r=await fetch(URL+'/rest/v1/'+path,{...options,headers:{...headers(options.representation),...(options.headers||{})}});
@@ -522,7 +542,11 @@ document.addEventListener('DOMContentLoaded',()=>{
      address:$v('patientAddress').value.trim()||null,
      emergency_contact_name:emergency||null,
      emergency_contact_phone:null,
-     medical_history:$v('patientHistory').value.trim()||null,
+     medical_history:$v('patientPathologicalHistory')?.value.trim()||null,
+     pathological_history:$v('patientPathologicalHistory')?.value.trim()||null,
+     non_pathological_history:$v('patientNonPathologicalHistory')?.value.trim()||null,
+     family_history:$v('patientFamilyHistory')?.value.trim()||null,
+     gynecological_history:window.getGyneHistory125?.()||null,
      allergies:$v('patientAllergies').value.trim()||null,
      regular_medications:$v('patientMedication').value.trim()||null,
      observations:$v('patientObservations').value.trim()||null
@@ -750,7 +774,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <h2>Historia clínica</h2>
 <div class="box"><b>Paciente:</b> ${esc(p.name)}<br><b>CI / Documento:</b> ${esc(p.ci||'No registrado')}<br><b>Edad:</b> ${esc(p.age!=null?p.age+' años':'No registrada')}<br><b>Sexo:</b> ${esc(p.sex||'No registrado')}<br><b>Teléfono:</b> ${esc(p.phone||'No registrado')}<br><b>Dirección:</b> ${esc(p.address||'No registrada')}</div>
 <h3>Información médica</h3>
-<div class="box"><b>Antecedentes:</b> ${esc(p.history||'No registrado')}<br><b>Alergias:</b> ${esc(p.allergies||'No registrado')}<br><b>Medicación habitual:</b> ${esc(p.medication||p.meds||'No registrado')}<br><b>Observaciones:</b> ${esc(p.observations||p.obs||'No registrado')}</div>
+<div class="box"><b>Antecedentes personales patológicos:</b> ${esc(p.pathologicalHistory||p.history||'No registrado')}<br><b>Antecedentes personales no patológicos:</b> ${esc(p.nonPathologicalHistory||'No registrado')}<br><b>Antecedentes heredofamiliares:</b> ${esc(p.familyHistory||'No registrado')}${/femen/i.test(p.sex||'')?'<br><b>Antecedentes gineco-obstétricos:</b> '+esc(window.formatGyneHistory125?.(p.gyneHistory)||'No registrado'):''}<br><b>Alergias:</b> ${esc(p.allergies||'No registrado')}<br><b>Medicación habitual:</b> ${esc(p.medication||p.meds||'No registrado')}<br><b>Observaciones:</b> ${esc(p.observations||p.obs||'No registrado')}</div>
 ${blocks}
 <div class="foot"><b>${esc(cfg.name||'Médico')}</b><br>${esc(cfg.specialty||'')}<br>${cfg.registration?'Matrícula profesional: '+esc(cfg.registration)+'<br>':''}<br>_____________________________<br>Firma y sello</div>`;
  }
@@ -821,7 +845,8 @@ document.addEventListener('DOMContentLoaded',()=>{
    return {id:p.id,name:p.full_name||'',ci:p.document_number||'',phone:p.phone||'',age:a,sex:p.sex||'',
     meta:[a!==null?a+' años':'',p.sex||''].filter(Boolean).join(' · '),address:p.address||'',
     emergency:[p.emergency_contact_name,p.emergency_contact_phone].filter(Boolean).join(' · '),
-    history:p.medical_history||'',allergies:p.allergies||'',medication:p.regular_medications||'',
+    pathologicalHistory:p.pathological_history||p.medical_history||'',nonPathologicalHistory:p.non_pathological_history||'',familyHistory:p.family_history||'',gyneHistory:p.gynecological_history||null,
+    history:p.pathological_history||p.medical_history||'',allergies:p.allergies||'',medication:p.regular_medications||'',
     observations:p.observations||'',consultations:[]};
  }
  function unique(rows){
@@ -883,7 +908,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     full_name:name,document_number:$e('patientDocument')?.value.trim()||null,birth_date:$e('patientBirthDate')?.value||null,
     sex:$e('patientSex')?.value||null,phone:$e('patientPhone')?.value.trim()||null,address:$e('patientAddress')?.value.trim()||null,
     emergency_contact_name:$e('emergencyContact')?.value.trim()||null,emergency_contact_phone:null,
-    medical_history:$e('patientHistory')?.value.trim()||null,allergies:$e('patientAllergies')?.value.trim()||null,
+    medical_history:$e('patientPathologicalHistory')?.value.trim()||null,pathological_history:$e('patientPathologicalHistory')?.value.trim()||null,non_pathological_history:$e('patientNonPathologicalHistory')?.value.trim()||null,family_history:$e('patientFamilyHistory')?.value.trim()||null,gynecological_history:window.getGyneHistory125?.()||null,allergies:$e('patientAllergies')?.value.trim()||null,
     regular_medications:$e('patientMedication')?.value.trim()||null,observations:$e('patientObservations')?.value.trim()||null
    };
    const b=form.querySelector('button[type="submit"],.save-patient-button'),old=b?.textContent||'GUARDAR Y CONTINUAR →';
@@ -961,4 +986,40 @@ document.addEventListener('DOMContentLoaded',()=>{
  document.addEventListener('click',e=>{
    if(e.target.closest?.('.directory-patient-card,.patient-card'))setTimeout(refreshVisibleHistory,250);
  },true);
+});
+
+
+/* ============================================================
+   v1.2.6 — ANTECEDENTES CLÍNICOS ESTRUCTURADOS
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const el=id=>document.getElementById(id);
+ const sex=el('patientSex'),wrap=el('patientGyneHistoryWrap');
+ function isFemale(){return /femen/i.test(sex?.value||'')}
+ function toggle(){
+   if(!wrap)return;
+   wrap.classList.toggle('hidden',!isFemale());
+   if(!isFemale()) wrap.querySelectorAll('input,textarea').forEach(x=>x.value='');
+ }
+ sex?.addEventListener('change',toggle);toggle();
+
+ window.getGyneHistory125=()=>{
+   if(!isFemale())return null;
+   const v=id=>el(id)?.value?.trim?.()||null;
+   return {menarche:v('patientMenarche'),lmp:v('patientLmp'),menstrual_cycle:v('patientMenstrualCycle'),
+     pregnancies:v('patientPregnancies'),births:v('patientBirths'),cesareans:v('patientCesareans'),
+     abortions:v('patientAbortions'),contraception:v('patientContraception'),other:v('patientGyneOther')};
+ };
+ window.formatGyneHistory125=g=>{
+   if(!g)return '';
+   return [
+     g.menarche?'Menarca: '+g.menarche:null,g.lmp?'FUM: '+g.lmp:null,
+     g.menstrual_cycle?'Ritmo menstrual: '+g.menstrual_cycle:null,
+     g.pregnancies!==null&&g.pregnancies!==undefined&&g.pregnancies!==''?'Gestas: '+g.pregnancies:null,
+     g.births!==null&&g.births!==undefined&&g.births!==''?'Partos: '+g.births:null,
+     g.cesareans!==null&&g.cesareans!==undefined&&g.cesareans!==''?'Cesáreas: '+g.cesareans:null,
+     g.abortions!==null&&g.abortions!==undefined&&g.abortions!==''?'Abortos: '+g.abortions:null,
+     g.contraception?'Método anticonceptivo: '+g.contraception:null,g.other?'Otros: '+g.other:null
+   ].filter(Boolean).join(' · ');
+ };
 });

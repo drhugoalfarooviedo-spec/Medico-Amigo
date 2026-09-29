@@ -133,3 +133,7 @@
 .auth-message.success{background:#effaf4;border-color:#ccebd9;color:#24764a}
 .header-actions{display:flex;align-items:center;gap:8px}
 .logout-button{border:1px solid #dbe7ed;background:#fff;color:#637b89;border-radius:11px;padding:9px 12px;font-size:9px;font-weight:700;cursor:pointer}
+
+/* v1.2.6 */
+.gyn-history{margin:14px 0;padding:16px;border:1px solid #d7e4eb;border-radius:16px;background:#f7fbfd}
+.gyn-history .gyn-title{font-weight:800;color:#087d9e;margin-bottom:12px}
