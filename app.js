@@ -1038,13 +1038,13 @@ document.addEventListener('DOMContentLoaded',()=>{
    v1.3 — RECETA + COBRO REALES EN SUPABASE
 ============================================================ */
 document.addEventListener('DOMContentLoaded',()=>{
- const URL='https://kdjvsbiqjpztdugewuve.supabase.co';
+ const SUPABASE_URL='https://kdjvsbiqjpztdugewuve.supabase.co';
  const KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
  const SESSION='medico_amigo_supabase_session';
  const $=id=>document.getElementById(id);
  const sess=()=>{try{return JSON.parse(localStorage.getItem(SESSION)||'null')}catch{return null}};
  const head=(rep=false)=>{const s=sess();if(!s?.access_token)throw Error('No hay sesión autenticada');const h={apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'};if(rep)h.Prefer='return=representation';return h};
- async function req(path,opt={}){const r=await fetch(URL+'/rest/v1/'+path,{...opt,headers:{...head(opt.rep),...(opt.headers||{})}});const raw=await r.text();let d=null;try{d=raw?JSON.parse(raw):null}catch{d=raw}if(!r.ok)throw Error(d?.message||raw||('HTTP '+r.status));return d}
+ async function req(path,opt={}){const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{...opt,headers:{...head(opt.rep),...(opt.headers||{})}});const raw=await r.text();let d=null;try{d=raw?JSON.parse(raw):null}catch{d=raw}if(!r.ok)throw Error(d?.message||raw||('HTTP '+r.status));return d}
  const flow=()=>{try{return JSON.parse(sessionStorage.getItem('medicoAmigoFlow')||'null')}catch{return null}};
  const medRows=()=>[...document.querySelectorAll('.medication-card')].map((c,i)=>({
    medication_name:c.querySelector('.med-name')?.value.trim()||null,
@@ -1123,12 +1123,12 @@ document.addEventListener('DOMContentLoaded',()=>{
    const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
    const path=s.user.id+'/signature.'+ext;
    try{
-     const up=await fetch(URL+'/storage/v1/object/doctor-signatures/'+path,{
+     const up=await fetch(SUPABASE_URL+'/storage/v1/object/doctor-signatures/'+path,{
        method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':file.type||'image/jpeg','x-upsert':'true'},body:file
      });
      if(!up.ok)throw Error(await up.text());
      await req('doctor_profiles?id=eq.'+encodeURIComponent(s.user.id),{method:'PATCH',body:JSON.stringify({signature_url:path,updated_at:new Date().toISOString()})});
-     const blobRes=await fetch(URL+'/storage/v1/object/authenticated/doctor-signatures/'+path,{headers:{apikey:KEY,Authorization:'Bearer '+s.access_token}});
+     const blobRes=await fetch(SUPABASE_URL+'/storage/v1/object/authenticated/doctor-signatures/'+path,{headers:{apikey:KEY,Authorization:'Bearer '+s.access_token}});
      if(!blobRes.ok)throw Error(await blobRes.text());
      const objectUrl=URL.createObjectURL(await blobRes.blob());
      let cfg={};try{cfg=JSON.parse(sessionStorage.getItem('medicoAmigoDoctorConfig')||'{}')}catch{}
@@ -1145,7 +1145,7 @@ document.addEventListener('DOMContentLoaded',()=>{
    try{
      const prof=await req('doctor_profiles?id=eq.'+encodeURIComponent(s.user.id)+'&select=signature_url');
      const path=prof?.[0]?.signature_url;if(!path)return;
-     const r=await fetch(URL+'/storage/v1/object/authenticated/doctor-signatures/'+path,{headers:{apikey:KEY,Authorization:'Bearer '+s.access_token}});
+     const r=await fetch(SUPABASE_URL+'/storage/v1/object/authenticated/doctor-signatures/'+path,{headers:{apikey:KEY,Authorization:'Bearer '+s.access_token}});
      if(!r.ok)return;
      const objectUrl=URL.createObjectURL(await r.blob());
      let cfg={};try{cfg=JSON.parse(sessionStorage.getItem('medicoAmigoDoctorConfig')||'{}')}catch{}
