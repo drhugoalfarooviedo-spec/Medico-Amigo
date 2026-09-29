@@ -1,5 +1,66 @@
 
 /* ============================================================
+   v1.5.1 — CAMBIO DE SESIÓN SEGURO
+   Evita que estado clínico/caché de un médico sobreviva al logout.
+============================================================ */
+(()=>{
+ const SESSION='medico_amigo_supabase_session';
+ const CLINICAL_SESSION_KEYS=[
+   'medicoAmigoCurrentPatientId','medicoAmigoDoctorConfig','doctorConfig',
+   'medicoAmigoCurrentConsultationId','medicoAmigoCurrentPrescriptionId'
+ ];
+ function purgeClinicalState(){
+   CLINICAL_SESSION_KEYS.forEach(k=>sessionStorage.removeItem(k));
+   // Limpia únicamente estado clínico legado; no credenciales del nuevo login.
+   [
+    'medicoAmigoPatients','medicoAmigoConsultations','medicoAmigoPayments',
+    'medicoAmigoPrescriptions','medicoAmigoRecentConsultations',
+    'medicoAmigoDashboard','medicoAmigoToday','medicoAmigoState'
+   ].forEach(k=>localStorage.removeItem(k));
+   try{
+     if(window.state){
+       window.state.currentPatientId=null;
+       window.state.selectedPatient=null;
+       window.state.currentConsultationId=null;
+     }
+     window.selectedPatient=null;
+     window.detailPatient=null;
+   }catch{}
+ }
+ // Capture logout before legacy handlers run, purge state, then allow normal logout.
+ document.addEventListener('click',e=>{
+   const b=e.target.closest('#logoutBtn,.logout-button,[data-action="logout"]');
+   if(!b)return;
+   purgeClinicalState();
+ },true);
+
+ // Detect an actual account switch and force a clean reload once.
+ const originalSet=Storage.prototype.setItem;
+ Storage.prototype.setItem=function(key,value){
+   if(this===localStorage && key===SESSION){
+     let oldUid=null,newUid=null;
+     try{oldUid=JSON.parse(localStorage.getItem(SESSION)||'null')?.user?.id||null}catch{}
+     try{newUid=JSON.parse(value||'null')?.user?.id||null}catch{}
+     originalSet.call(this,key,value);
+     if(oldUid && newUid && oldUid!==newUid){
+       purgeClinicalState();
+       sessionStorage.setItem('medicoAmigoJustSwitchedUser','1');
+     }
+     return;
+   }
+   return originalSet.call(this,key,value);
+ };
+ window.addEventListener('load',()=>{
+   const flag=sessionStorage.getItem('medicoAmigoJustSwitchedUser');
+   if(flag){
+     sessionStorage.removeItem('medicoAmigoJustSwitchedUser');
+     setTimeout(()=>location.reload(),50);
+   }
+ });
+})();
+
+
+/* ============================================================
    v1.5 — AISLAMIENTO EXPLÍCITO POR MÉDICO
    Defensa adicional al RLS: toda lectura/escritura clínica REST
    queda ligada al UUID del usuario autenticado.

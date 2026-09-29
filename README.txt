@@ -1,24 +1,17 @@
-MÉDICO AMIGO v1.5 — AISLAMIENTO POR MÉDICO
+MÉDICO AMIGO v1.5.1 — CAMBIO DE SESIÓN SEGURO
 
-OBJETIVO
-Impedir que una cuenta médica consulte o modifique datos clínicos pertenecientes a otra.
+Corrección:
+- Limpia paciente seleccionado y estado clínico al cerrar sesión.
+- Limpia cachés clínicos legados del navegador.
+- Detecta cambio real de UUID entre médicos.
+- Fuerza recarga limpia al cambiar de cuenta.
+- Mantiene v1.5: filtro explícito por doctor_id.
+- Mantiene RLS de Supabase como barrera principal.
+- No requiere SQL nuevo.
 
-Cambios:
-- Pacientes: filtro obligatorio doctor_id = usuario autenticado.
-- Consultas: filtro obligatorio doctor_id = usuario autenticado.
-- Recetas: filtro obligatorio doctor_id = usuario autenticado.
-- Ítems de receta: filtro obligatorio doctor_id = usuario autenticado.
-- Pagos: filtro obligatorio doctor_id = usuario autenticado.
-- En nuevas escrituras y actualizaciones, doctor_id se fuerza al UUID autenticado.
-- Mantiene v1.4.2: editar/eliminar paciente, cascada, dashboard, firma, receta y cobro.
-
-IMPORTANTE
-Esta versión agrega defensa en el navegador, pero RLS de Supabase sigue siendo la barrera de seguridad principal.
-Antes de considerar el sistema listo para datos clínicos reales se debe verificar también RLS directamente.
-
-PRUEBA
-1. Entrar como Dr. Omar.
-2. Debe mostrar 0 consultas, Bs 0 y ningún paciente de Hugo.
-3. Crear un paciente ficticio de Omar.
-4. Cerrar sesión.
-5. Entrar como Hugo: el paciente de Omar no debe aparecer.
+PRUEBA:
+1. Entrar como Omar: debe ver solo sus datos.
+2. Salir usando el botón de la aplicación.
+3. Entrar como Hugo.
+4. Hugo NO debe ver TEST-OMAR-01 ni la consulta de Omar.
+5. Salir y volver a Omar: TEST-OMAR-01 debe reaparecer.
