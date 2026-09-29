@@ -30,6 +30,7 @@ $('newConsultationBtn').onclick=openPatients;$('searchPatientBtn').onclick=openP
 function filter(){const q=normalize($('patientSearchInput').value.trim());let n=0;cards().forEach(c=>{const ok=[c.dataset.name,c.dataset.ci,c.dataset.phone].some(v=>normalize(v).includes(q));c.style.display=ok?'flex':'none';if(ok)n++});$('patientResults').classList.toggle('hidden',n===0);$('noPatientResults').classList.toggle('hidden',n!==0)}$('patientSearchInput').oninput=filter;
 function patientFromCard(c){const small=c.querySelector('.patient-info small')?.textContent||'';return{name:c.querySelector('.patient-info strong').textContent.trim(),ci:c.dataset.ci||'',phone:c.dataset.phone||'',meta:small,history:c.dataset.history||'',allergies:c.dataset.allergies||'',medication:c.dataset.medication||''}}
 function select(c){selectedPatient=patientFromCard(c);openConsultation()}function bind(c){c.onclick=()=>select(c)}cards().forEach(bind);
+window.medicoAmigoSelectPatient=(p)=>{selectedPatient=p;openConsultation()};
 function openConsultation(){if(!selectedPatient)return;const p=selectedPatient;$('consultationPatientName').textContent=p.name;$('selectedPatientName').textContent=p.name;$('selectedPatientMeta').textContent=[p.ci?'CI: '+p.ci:'Sin documento',p.meta].filter(Boolean).join(' · ');$('consultationAvatar').textContent=initials(p.name);$('consultationDateTime').textContent=new Intl.DateTimeFormat('es-BO',{dateStyle:'medium',timeStyle:'short'}).format(new Date());const items=[];if(p.history)items.push(['Antecedentes',p.history]);if(p.allergies)items.push(['Alergias',p.allergies]);if(p.medication)items.push(['Medicación habitual',p.medication]);$('clinicalSummaryContent').innerHTML='';items.forEach(([a,b])=>{const d=document.createElement('div');d.className='clinical-item';const s=document.createElement('strong');s.textContent=a;const t=document.createElement('span');t.textContent=b;d.append(s,t);$('clinicalSummaryContent').appendChild(d)});$('patientClinicalSummary').classList.toggle('hidden',items.length===0);show($('consultationScreen'))}
 $('backToPatientsBtn').onclick=$('cancelConsultationBtn').onclick=()=>show($('patientScreen'));
 $('registerPatientBtn').onclick=()=>{$('newPatientForm').reset();$('calculatedAge').classList.add('hidden');$('formMessage').className='form-message hidden';show($('newPatientScreen'));setTimeout(()=>$('patientFullName').focus(),100)};$('backPatientSearchBtn').onclick=$('cancelNewPatientBtn').onclick=()=>show($('patientScreen'));
@@ -50,7 +51,7 @@ function prescriptionPrint(){
  const list=meds(),p=selectedPatient,c=currentConsultation,code=$('prescriptionCode').textContent;
  const cfg=getDoctorConfig();
  const signatureHtml=cfg.signature
-   ? `<div class="signature-placeholder"><img src="${cfg.signature}" alt="Firma del médico" style="max-width:190px;max-height:48px;object-fit:contain"></div>`
+   ? `<div class="signature-placeholder"><img src="${cfg.signature}" alt="Firma del médico" style="max-width:260px;max-height:105px;object-fit:contain"></div>`
    : '<div class="signature-placeholder">Firma del médico</div>';
  const when=new Intl.DateTimeFormat('es-BO',{dateStyle:'long'}).format(new Date());
  const age=(p.meta||'').split(' · ')[0]||'';
@@ -586,7 +587,7 @@ document.addEventListener('DOMContentLoaded',()=>{
    no se muestran datos clínicos heredados del navegador.
 ============================================================ */
 document.addEventListener('DOMContentLoaded',()=>{
-  function cleanDashboard(){
+  function cleanDashboard(){ return;
     // Remove legacy recent consultation cards.
     const recent = document.querySelector('#recentList, .recent-list, #recentConsultations');
     if(recent) recent.innerHTML = '';
@@ -1153,4 +1154,105 @@ document.addEventListener('DOMContentLoaded',()=>{
    }catch(err){console.error('Firma:',err)}
  }
  setTimeout(loadPrivateSignature,800);
+});
+
+
+/* ============================================================
+   v1.3.3 — BÚSQUEDA SUPABASE + DASHBOARD REAL + COBRO VERIFICADO
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const BASE='https://kdjvsbiqjpztdugewuve.supabase.co';
+ const KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
+ const SESSION='medico_amigo_supabase_session';
+ const $=id=>document.getElementById(id);
+ const session=()=>{try{return JSON.parse(localStorage.getItem(SESSION)||'null')}catch{return null}};
+ const headers=(rep=false)=>{const s=session();if(!s?.access_token)throw Error('No hay sesión autenticada.');const h={apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'};if(rep)h.Prefer='return=representation';return h};
+ async function req(path,opt={}){const r=await fetch(BASE+'/rest/v1/'+path,{...opt,headers:{...headers(opt.rep),...(opt.headers||{})}});const raw=await r.text();let d=null;try{d=raw?JSON.parse(raw):null}catch{d=raw}if(!r.ok)throw Error(d?.message||raw||('HTTP '+r.status));return d}
+ const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ function age(date){if(!date)return null;const b=new Date(date+'T00:00:00'),t=new Date();let a=t.getFullYear()-b.getFullYear();if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate()))a--;return a}
+ function map(p){const a=age(p.birth_date);return{id:p.id,name:p.full_name||'',ci:p.document_number||'',phone:p.phone||'',age:a,sex:p.sex||'',meta:[a!==null?a+' años':'',p.sex||''].filter(Boolean).join(' · '),address:p.address||'',emergency:[p.emergency_contact_name,p.emergency_contact_phone].filter(Boolean).join(' · '),pathologicalHistory:p.pathological_history||p.medical_history||'',nonPathologicalHistory:p.non_pathological_history||'',familyHistory:p.family_history||'',gyneHistory:p.gynecological_history||null,history:p.pathological_history||p.medical_history||'',allergies:p.allergies||'',medication:p.regular_medications||'',observations:p.observations||'',consultations:[]}}
+ async function patients(){return (await req('patients?select=*&order=full_name.asc')||[]).map(map)}
+
+ async function renderSearch(){
+   if(!session()?.access_token)return;
+   const box=$('patientResults'),empty=$('noPatientResults'),input=$('patientSearchInput');
+   if(!box||!input)return;
+   let rows=[];try{rows=await patients()}catch(e){console.error('Pacientes:',e);return}
+   sessionStorage.setItem('medicoAmigoPatients',JSON.stringify(rows));
+   const q=norm(input.value.trim());
+   const shown=q?rows.filter(p=>[p.name,p.ci,p.phone].some(v=>norm(v).includes(q))):rows;
+   box.innerHTML='';
+   shown.forEach(p=>{
+     const a=document.createElement('article');a.className='patient-result';
+     a.dataset.name=p.name;a.dataset.ci=p.ci;a.dataset.phone=p.phone;
+     const ini=(p.name||'?').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();
+     a.innerHTML=`<div class="patient-avatar">${ini}</div><div class="patient-info"><strong></strong><span></span><small></small></div><span class="result-arrow">›</span>`;
+     a.querySelector('strong').textContent=p.name;
+     a.querySelector('.patient-info span').textContent=p.ci?'CI: '+p.ci:'Sin documento';
+     a.querySelector('small').textContent=[p.meta,p.phone].filter(Boolean).join(' · ');
+     a.onclick=()=>{sessionStorage.setItem('medicoAmigoCurrentPatientId',p.id);if(window.state)state.currentPatientId=p.id;window.medicoAmigoSelectPatient?.(p)};
+     box.appendChild(a);
+   });
+   box.classList.toggle('hidden',shown.length===0);
+   empty?.classList.toggle('hidden',shown.length!==0);
+ }
+ $('patientSearchInput')?.addEventListener('input',()=>renderSearch());
+ $('newConsultationBtn')?.addEventListener('click',()=>setTimeout(renderSearch,80));
+ $('searchPatientBtn')?.addEventListener('click',()=>setTimeout(renderSearch,80));
+
+ function localDateISO(){const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`}
+ async function dashboard(){
+   if(!session()?.access_token)return;
+   try{
+     const day=localDateISO(), start=day+'T00:00:00', end=day+'T23:59:59.999';
+     const cs=await req('consultations?select=id,patient_id,diagnosis,consultation_date&consultation_date=gte.'+encodeURIComponent(start)+'&consultation_date=lte.'+encodeURIComponent(end)+'&order=consultation_date.desc');
+     const ps=await req('payments?select=id,consultation_id,amount_paid,payment_status,payment_date&payment_date=gte.'+encodeURIComponent(start)+'&payment_date=lte.'+encodeURIComponent(end));
+     $('todayConsultations').textContent=cs.length;
+     const income=ps.reduce((s,p)=>s+Number(p.amount_paid||0),0);
+     $('todayIncome').textContent='Bs '+income.toFixed(2).replace('.00','');
+     $('todayPending').textContent=ps.filter(p=>String(p.payment_status||'').toLowerCase()!=='pagado').length;
+     const recent=document.querySelector('.recent-section'),empty=recent?.querySelector('.empty-state');
+     recent?.querySelectorAll('.recent-consultation').forEach(x=>x.remove());
+     if(!cs.length){empty?.classList.remove('hidden');return}
+     empty?.classList.add('hidden');
+     const pats=await patients(), byId=new Map(pats.map(p=>[p.id,p]));
+     cs.slice(0,5).forEach(c=>{
+       const p=byId.get(c.patient_id), item=document.createElement('div');item.className='recent-consultation';
+       const info=document.createElement('div'), name=document.createElement('strong'), meta=document.createElement('small');
+       name.textContent=p?.name||'Paciente';meta.textContent=(c.diagnosis||'Consulta')+' · '+new Intl.DateTimeFormat('es-BO',{hour:'2-digit',minute:'2-digit'}).format(new Date(c.consultation_date));
+       info.append(name,meta);item.append(info);recent?.appendChild(item);
+     });
+   }catch(e){console.error('Dashboard:',e)}
+ }
+ window.medicoAmigoRefreshDashboard=dashboard;
+ setTimeout(()=>{renderSearch();dashboard()},1000);
+
+ // Replace only the final payment submit with a verified Supabase save.
+ const pay=$('paymentForm');
+ if(pay)pay.onsubmit=async e=>{
+   e.preventDefault();e.stopImmediatePropagation();
+   let f=null;try{f=JSON.parse(sessionStorage.getItem('medicoAmigoFlow')||'null')}catch{}
+   if(!f?.patient?.id||!f?.consultation?.id){alert('No se encontró la consulta activa.');return false}
+   const price=Number($('consultationPrice').value||0),paid=Number($('amountPaid').value||0);
+   const status=price>0&&paid>=price?'Pagado':paid>0?'Pago parcial':'Pendiente';
+   const btn=pay.querySelector('button[type="submit"]'),old=btn?.textContent||'FINALIZAR';
+   if(btn){btn.disabled=true;btn.textContent='GUARDANDO...'}
+   try{
+     const saved=await req('payments',{method:'POST',rep:true,body:JSON.stringify({
+       patient_id:f.patient.id,consultation_id:f.consultation.id,
+       consultation_price:Number.isFinite(price)?price:0,amount_paid:Number.isFinite(paid)?paid:0,
+       payment_method:$('paymentMethod').value||null,payment_status:status,
+       notes:$('paymentNotes').value.trim()||null,payment_date:new Date().toISOString()
+     })});
+     if(!Array.isArray(saved)||!saved[0]?.id)throw Error('Supabase no confirmó el registro del cobro.');
+     sessionStorage.removeItem('medicoAmigoFlow');
+     $('consultationForm')?.reset();$('prescriptionForm')?.reset();pay.reset();
+     await dashboard();
+     alert('Atención finalizada correctamente. Cobro guardado en Supabase.');
+     $('backHomeBtn')?.click();
+     const home=$('homeScreen');if(home){document.querySelectorAll('main.app > section').forEach(x=>x.classList.add('hidden'));home.classList.remove('hidden');window.scrollTo(0,0)}
+   }catch(err){console.error(err);alert('No se pudo guardar el cobro: '+err.message)}
+   finally{if(btn){btn.disabled=false;btn.textContent=old}}
+   return false;
+ };
 });
