@@ -1,11 +1,17 @@
-MÉDICO AMIGO v1.4.1 — ELIMINACIÓN VERIFICADA
+MÉDICO AMIGO v1.4.2 — IDENTIFICACIÓN DE PACIENTE
 
-Corrección puntual:
-- Eliminar paciente solicita a Supabase devolver el registro eliminado.
-- Luego consulta nuevamente la base para confirmar que ya no existe.
-- Solo muestra “Paciente eliminado correctamente” después de ambas verificaciones.
-- La misma verificación se aplica a eliminar consultas.
-- Mantiene edición, búsqueda, dashboard, receta, cobro y firma.
-- No requiere SQL nuevo (el ON DELETE CASCADE ya fue aplicado).
+Corrección puntual sobre v1.4.1:
+- Corrige “No se encontró el paciente seleccionado”.
+- Al abrir una ficha guarda inmediatamente el UUID real del paciente.
+- Para fichas abiertas desde componentes antiguos, recupera el UUID desde Supabase usando CI y, como respaldo, nombre.
+- Editar y Eliminar usan ese UUID real.
+- La eliminación continúa verificándose contra Supabase.
+- No requiere SQL nuevo.
+- Mantiene dashboard, receta, cobro, firma y demás funciones de v1.4.1.
 
-Prueba primero con un paciente ficticio/de prueba.
+Prueba recomendada:
+1. Ctrl+F5.
+2. Abrir Pacientes.
+3. Abrir un paciente ficticio.
+4. Eliminar paciente.
+5. Confirmar dos veces.

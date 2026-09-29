@@ -216,6 +216,10 @@ function openPatientsDirectory(){
 function textOr(v,fallback='—'){return String(v||'').trim()||fallback}
 function openPatientDetail(p){
  detailPatient=p;
+ if(p?.id){
+   sessionStorage.setItem('medicoAmigoCurrentPatientId',p.id);
+   if(window.state)window.state.currentPatientId=p.id;
+ }
  $('detailHeaderName').textContent=p.name;$('detailName').textContent=p.name;$('detailAvatar').textContent=initials(p.name);
  $('detailMeta').textContent=[p.ci?'CI: '+p.ci:'Sin documento',p.meta].filter(Boolean).join(' · ');
  $('detailPhone').textContent=p.phone||'Sin teléfono registrado';$('detailCi').textContent=textOr(p.ci);
@@ -1309,7 +1313,29 @@ document.addEventListener('DOMContentLoaded',()=>{
  const pid=()=>sessionStorage.getItem('medicoAmigoCurrentPatientId')||window.state?.currentPatientId||null;
  const set=(id,v)=>{if($(id))$(id).value=v??''};
  const show=id=>{document.querySelectorAll('main.app > section').forEach(x=>x.classList.add('hidden'));$(id)?.classList.remove('hidden');scrollTo(0,0)};
- async function patient(){const id=pid();if(!id)throw Error('No se encontró el paciente seleccionado.');const r=await req('patients?id=eq.'+encodeURIComponent(id)+'&select=*');if(!r?.[0])throw Error('Paciente no encontrado.');return r[0]}
+ async function patient(){
+   let id=pid();
+   if(id){
+     const r=await req('patients?id=eq.'+encodeURIComponent(id)+'&select=*');
+     if(r?.[0])return r[0];
+   }
+   // Compatibility with older directory cards that opened the detail without persisting the UUID.
+   const shownCi=(document.getElementById('detailCi')?.textContent||'').trim();
+   const shownName=(document.getElementById('detailName')?.textContent||'').trim();
+   let r=[];
+   if(shownCi && shownCi!=='—'){
+     r=await req('patients?document_number=eq.'+encodeURIComponent(shownCi)+'&select=*');
+   }
+   if(!r?.[0] && shownName){
+     r=await req('patients?full_name=eq.'+encodeURIComponent(shownName)+'&select=*');
+   }
+   if(!r?.[0])throw Error('No se pudo identificar este paciente en Supabase.');
+   id=r[0].id;
+   sessionStorage.setItem('medicoAmigoCurrentPatientId',id);
+   if(window.state)window.state.currentPatientId=id;
+   if(window.detailPatient)window.detailPatient.id=id;
+   return r[0];
+ }
  function gyne(){ $('editGyneWrap')?.classList.toggle('hidden',!/femen/i.test($('editSex')?.value||'')) }
  $('editSex')?.addEventListener('change',gyne);
 
