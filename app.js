@@ -600,3 +600,121 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
   },1200);
 });
+
+
+/* ============================================================
+   v1.2 — CONSULTAS EN SUPABASE + HISTORIA CLÍNICA IMPRIMIBLE
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const URL='https://kdjvsbiqjpztdugewuve.supabase.co';
+ const KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
+ const SESSION='medico_amigo_supabase_session';
+ const $i=id=>document.getElementById(id);
+ const sess=()=>{try{return JSON.parse(localStorage.getItem(SESSION)||'null')}catch{return null}};
+ const headers=(rep=false)=>{const s=sess();if(!s?.access_token)throw Error('No hay sesión autenticada');const h={apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'};if(rep)h.Prefer='return=representation';return h};
+ async function req(path,opt={}){const r=await fetch(URL+'/rest/v1/'+path,{...opt,headers:{...headers(opt.rep),...(opt.headers||{})}});const raw=await r.text();let d=null;try{d=raw?JSON.parse(raw):null}catch{d=raw}if(!r.ok)throw Error(d?.message||raw||('HTTP '+r.status));return d}
+ const val=(...ids)=>{for(const id of ids){const e=$i(id);if(e)return e.value||''}return ''};
+ const num=(...ids)=>{const v=val(...ids).trim();return v===''?null:Number(v)};
+ const currentPatient=()=>{
+   const id=(window.state&&state.currentPatientId)||sessionStorage.getItem('medicoAmigoCurrentPatientId');
+   let arr=[];try{arr=JSON.parse(sessionStorage.getItem('medicoAmigoPatients')||'[]')}catch{}
+   return arr.find(p=>p.id===id)||arr.find(p=>p.name===($i('consultPatientName')?.textContent||'').trim())||null;
+ };
+ const mapConsult=c=>({
+   id:c.id,date:c.consultation_date,reason:c.reason||'',illness:c.current_illness||'',history:c.relevant_history||'',
+   bp:c.blood_pressure||'',hr:c.heart_rate,spo2:c.oxygen_saturation,temp:c.temperature,rr:c.respiratory_rate,
+   weight:c.weight,height:c.height,exam:c.physical_exam||'',studies:c.complementary_studies||'',diagnosis:c.diagnosis||'',
+   plan:c.indications||'',notes:c.observations||'',followUp:c.follow_up||''
+ });
+ async function consultationsFor(patientId){
+   return (await req('consultations?patient_id=eq.'+encodeURIComponent(patientId)+'&select=*&order=consultation_date.desc')||[]).map(mapConsult);
+ }
+ async function hydratePatientHistory(patient){
+   if(!patient?.id)return [];
+   const cs=await consultationsFor(patient.id); patient.consultations=cs;
+   let arr=[];try{arr=JSON.parse(sessionStorage.getItem('medicoAmigoPatients')||'[]')}catch{}
+   const x=arr.find(p=>p.id===patient.id);if(x)x.consultations=cs;
+   sessionStorage.setItem('medicoAmigoPatients',JSON.stringify(arr));
+   return cs;
+ }
+ window.loadConsultationsFromSupabase=hydratePatientHistory;
+
+ // Capture the existing consultation form and replace local persistence.
+ const form=$i('consultationForm');
+ if(form) form.onsubmit=async e=>{
+   e.preventDefault();e.stopImmediatePropagation();
+   const p=currentPatient();
+   if(!p?.id){alert('Selecciona un paciente antes de guardar la consulta.');return false}
+   const payload={
+     patient_id:p.id,
+     reason:val('consultReason','reason').trim()||null,
+     current_illness:val('currentIllness','consultIllness').trim()||null,
+     relevant_history:val('relevantHistory','consultRelevantHistory').trim()||null,
+     blood_pressure:val('bloodPressure','bp').trim()||null,
+     heart_rate:num('heartRate','hr'),
+     oxygen_saturation:num('oxygenSaturation','spo2'),
+     temperature:num('temperature','temp'),
+     respiratory_rate:num('respiratoryRate','rr'),
+     weight:num('weight'),
+     height:num('height'),
+     physical_exam:val('physicalExam','exam').trim()||null,
+     complementary_studies:val('complementaryStudies','studies').trim()||null,
+     diagnosis:val('diagnosis').trim()||null,
+     indications:val('plan','indications').trim()||null,
+     observations:val('consultObservations','observations').trim()||null,
+     follow_up:val('followUp').trim()||null
+   };
+   const b=form.querySelector('button[type="submit"]'),old=b?.textContent||'CONTINUAR';
+   if(b){b.disabled=true;b.textContent='GUARDANDO...'}
+   try{
+     await req('consultations',{method:'POST',body:JSON.stringify(payload),rep:true});
+     await hydratePatientHistory(p);
+     // Continue to prescription screen using existing navigation if available.
+     const prescription=$i('prescriptionScreen');
+     if(prescription){document.querySelectorAll('main.app > section').forEach(x=>x.classList.add('hidden'));prescription.classList.remove('hidden');window.scrollTo(0,0)}
+     else alert('Consulta guardada correctamente en Supabase.');
+   }catch(err){console.error(err);alert('No se pudo guardar la consulta: '+err.message)}
+   finally{if(b){b.disabled=false;b.textContent=old}}
+   return false;
+ };
+
+ // When patient detail is opened, hydrate its history shortly after.
+ document.addEventListener('click',e=>{
+   const card=e.target.closest?.('.patient-card,.patient-item');
+   if(card) setTimeout(async()=>{
+      const p=currentPatient(); if(p) try{await hydratePatientHistory(p); if(typeof window.renderPatientDetail==='function')window.renderPatientDetail(p)}catch(err){console.error(err)}
+   },250);
+ },true);
+
+ function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+ function fmt(d){if(!d)return '';try{return new Intl.DateTimeFormat('es-BO',{dateStyle:'long',timeStyle:'short'}).format(new Date(d))}catch{return d}}
+ async function printHistory(){
+   const p=currentPatient(); if(!p?.id){alert('Abre primero la ficha de un paciente.');return}
+   let cs;try{cs=await hydratePatientHistory(p)}catch(e){alert('No se pudo cargar la historia clínica: '+e.message);return}
+   let cfg={};try{cfg=JSON.parse(sessionStorage.getItem('medicoAmigoDoctorConfig')||'{}')}catch{}
+   const blocks=cs.length?cs.map((c,i)=>`<section><h3>Consulta ${cs.length-i} — ${esc(fmt(c.date))}</h3>
+   <p><b>Motivo:</b> ${esc(c.reason||'No registrado')}</p><p><b>Enfermedad actual:</b> ${esc(c.illness||'No registrado')}</p>
+   <p><b>Antecedentes relevantes:</b> ${esc(c.history||'No registrado')}</p>
+   <p><b>Signos vitales:</b> PA ${esc(c.bp||'—')} · FC ${esc(c.hr??'—')} · SpO₂ ${esc(c.spo2??'—')} · T° ${esc(c.temp??'—')} · FR ${esc(c.rr??'—')} · Peso ${esc(c.weight??'—')} · Talla ${esc(c.height??'—')}</p>
+   <p><b>Examen físico:</b> ${esc(c.exam||'No registrado')}</p><p><b>Estudios complementarios revisados:</b> ${esc(c.studies||'No registrado')}</p>
+   <p><b>Diagnóstico / impresión:</b> ${esc(c.diagnosis||'No registrado')}</p><p><b>Indicaciones:</b> ${esc(c.plan||'No registrado')}</p>
+   <p><b>Observaciones:</b> ${esc(c.notes||'No registrado')}</p><p><b>Seguimiento:</b> ${esc(c.followUp||'No registrado')}</p></section>`).join(''):'<p>No existen consultas registradas.</p>';
+   const w=window.open('','_blank');
+   w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Historia clínica - ${esc(p.name)}</title><style>
+   @page{size:A4;margin:16mm}body{font:12px Arial;color:#17344a;max-width:800px;margin:auto}header{text-align:center;border-bottom:2px solid #0b789b;padding-bottom:12px}h1{margin:0;color:#073f68}h2{font-size:17px}h3{font-size:14px;color:#087d9e;border-bottom:1px solid #ccdce4;padding-bottom:6px}section{page-break-inside:avoid;margin:20px 0}p{line-height:1.45}.box{background:#f5f9fb;padding:12px;border-radius:8px}.foot{margin-top:35px;text-align:center}@media print{button{display:none}}</style></head><body>
+   <header><h1>MÉDICO AMIGO</h1><div>ATENCIÓN MÉDICA INTEGRAL</div></header>
+   <h2>Historia clínica</h2><div class="box"><b>Paciente:</b> ${esc(p.name)}<br><b>CI:</b> ${esc(p.ci||'No registrado')}<br><b>Teléfono:</b> ${esc(p.phone||'No registrado')}<br><b>Sexo:</b> ${esc(p.sex||'No registrado')}<br><b>Antecedentes:</b> ${esc(p.history||'No registrado')}<br><b>Alergias:</b> ${esc(p.allergies||'No registrado')}<br><b>Medicación habitual:</b> ${esc(p.medication||p.meds||'No registrado')}</div>
+   ${blocks}<div class="foot"><b>${esc(cfg.name||'Médico')}</b><br>${esc(cfg.specialty||'')}<br>Matrícula profesional: ${esc(cfg.registration||'')}<br><br>_____________________________<br>Firma y sello</div>
+   <script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`);w.document.close();
+ }
+ window.printClinicalHistory=printHistory;
+
+ // Inject history button into patient detail when that screen becomes visible.
+ const observer=new MutationObserver(()=>{
+   const screen=$i('patientDetailScreen'); if(!screen||screen.classList.contains('hidden')||screen.querySelector('#downloadHistoryBtn'))return;
+   const btn=document.createElement('button');btn.id='downloadHistoryBtn';btn.type='button';btn.className='primary-button';btn.textContent='⬇ DESCARGAR / IMPRIMIR HISTORIA CLÍNICA';btn.onclick=printHistory;
+   const target=screen.querySelector('.patient-actions,.detail-actions')||screen.querySelector('.screen-content,.content')||screen;
+   target.appendChild(btn);
+ });
+ observer.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+});
