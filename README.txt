@@ -1,17 +1,16 @@
-MÉDICO AMIGO v1.5.1 — CAMBIO DE SESIÓN SEGURO
+MÉDICO AMIGO v1.5.2 — DASHBOARD POR SESIÓN
 
-Corrección:
-- Limpia paciente seleccionado y estado clínico al cerrar sesión.
-- Limpia cachés clínicos legados del navegador.
-- Detecta cambio real de UUID entre médicos.
-- Fuerza recarga limpia al cambiar de cuenta.
-- Mantiene v1.5: filtro explícito por doctor_id.
-- Mantiene RLS de Supabase como barrera principal.
-- No requiere SQL nuevo.
+Corrección puntual sobre v1.5.1:
+- Al iniciar sesión, pone el dashboard visual en cero antes de mostrarlo.
+- Después del perfil, vuelve a consultar Supabase usando la sesión/JWT del médico recién autenticado.
+- Al cerrar sesión elimina también del DOM las consultas recientes y pone contadores en cero.
+- Mantiene el filtro explícito doctor_id de v1.5.
+- Mantiene la limpieza de sesión de v1.5.1.
+- No requiere SQL nuevo. No modificar las 23 políticas RLS.
 
 PRUEBA:
-1. Entrar como Omar: debe ver solo sus datos.
-2. Salir usando el botón de la aplicación.
-3. Entrar como Hugo.
-4. Hugo NO debe ver TEST-OMAR-01 ni la consulta de Omar.
-5. Salir y volver a Omar: TEST-OMAR-01 debe reaparecer.
+1. Entrar como Hugo: debe ver únicamente los datos de Hugo.
+2. Salir.
+3. Entrar como Omar: debe ver únicamente TEST-OMAR-01 y sus propios importes.
+4. Salir.
+5. Volver a Hugo: TEST-OMAR-01 no debe aparecer.

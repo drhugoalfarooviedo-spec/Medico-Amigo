@@ -563,7 +563,22 @@ document.addEventListener('DOMContentLoaded',()=>{
  async function enter(session){
    try{
      await profile(session);
-     clearMsg();screen(home);
+     clearMsg();
+     // v1.5.2: nunca mostrar cifras/listados de la sesión anterior.
+     const tc=document.getElementById('todayConsultations');
+     const ti=document.getElementById('todayIncome');
+     const tp=document.getElementById('todayPending');
+     if(tc)tc.textContent='0';
+     if(ti)ti.textContent='Bs 0';
+     if(tp)tp.textContent='0';
+     const recent=document.querySelector('.recent-section');
+     recent?.querySelectorAll('.recent-consultation').forEach(x=>x.remove());
+     recent?.querySelector('.empty-state')?.classList.remove('hidden');
+     screen(home);
+     // La sesión nueva ya está guardada: consultar Supabase otra vez con su JWT.
+     if(typeof window.medicoAmigoRefreshDashboard==='function'){
+       await window.medicoAmigoRefreshDashboard();
+     }
    }catch(e){
      localStorage.removeItem(SESSION);screen(login);
      msg('Login correcto, pero falló el perfil: '+e.message);
@@ -588,7 +603,15 @@ document.addEventListener('DOMContentLoaded',()=>{
  },true);
 
  if(logout)logout.addEventListener('click',()=>{
-   localStorage.removeItem(SESSION);screen(login);clearMsg();
+   localStorage.removeItem(SESSION);
+   const tc=document.getElementById('todayConsultations');
+   const ti=document.getElementById('todayIncome');
+   const tp=document.getElementById('todayPending');
+   if(tc)tc.textContent='0'; if(ti)ti.textContent='Bs 0'; if(tp)tp.textContent='0';
+   const recent=document.querySelector('.recent-section');
+   recent?.querySelectorAll('.recent-consultation').forEach(x=>x.remove());
+   recent?.querySelector('.empty-state')?.classList.remove('hidden');
+   screen(login);clearMsg();
  },true);
 
  let s=null;try{s=JSON.parse(localStorage.getItem(SESSION)||'null')}catch{}
