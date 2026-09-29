@@ -1,23 +1,23 @@
-MÉDICO AMIGO v1.1 — PACIENTES EN SUPABASE
+MÉDICO AMIGO v1.1.1 — LIMPIEZA
 
-Base: v1.0.4, cuyo login real ya fue validado.
+OBJETIVO
+Dejar la aplicación en un estado clínico limpio antes de continuar la migración.
 
 CAMBIOS
-- Se eliminaron María Fernández y Carlos Mamani del directorio.
-- Pacientes se sincroniza desde public.patients.
-- Nuevo paciente se guarda mediante la API de Supabase.
-- El navegador NO envía doctor_id: PostgreSQL usa DEFAULT auth.uid().
-- Las políticas RLS existentes limitan los registros al médico autenticado.
-- El directorio y su búsqueda trabajan con los pacientes sincronizados.
+- Elimina una sola vez los datos clínicos/demo heredados de sessionStorage.
+- NO elimina la sesión de Supabase ni la configuración del médico.
+- María Fernández y Carlos Mamani ya no forman parte de la aplicación.
+- Pacientes se inicializa vacío y luego se sincroniza únicamente desde public.patients.
+- El dashboard deja de mostrar consultas/ingresos locales antiguos mientras esos módulos no estén migrados.
+- Mantiene el login real y el perfil por UID de v1.0.4.
+- Mantiene el registro de pacientes en Supabase de v1.1.
 
-PRUEBA DE ESTA ETAPA
-1. Iniciar sesión como Dr. Hugo.
-2. Pacientes > + NUEVO.
-3. Registrar SOLO un paciente ficticio.
-4. Confirmar que aparece en Supabase > Table Editor > patients.
-5. Luego probaremos la separación entrando como Dr. Omar.
+PRUEBA
+1. Reemplazar los cuatro archivos en GitHub.
+2. Ctrl+F5.
+3. Iniciar sesión como Dr. Hugo.
+4. Confirmar: Pacientes = 0 si public.patients está vacío.
+5. Confirmar que ya no aparecen María Fernández, Carlos Mamani ni la consulta local anterior.
+6. Luego crear UN paciente ficticio y verificarlo en Supabase.
 
-NOTA
-En v1.1 estamos migrando el módulo Pacientes. La selección de paciente para iniciar
-una consulta, consultas, recetas y pagos se conectarán en las siguientes etapas.
-Todavía no usar información clínica real.
+Todavía no usar datos clínicos reales. Consultas, recetas y pagos aún deben migrarse.

@@ -1,3 +1,26 @@
+/* ============================================================
+   v1.1.1 — LIMPIEZA ÚNICA DE DATOS DEMO/LOCALES
+   Mantiene autenticación y configuración del médico.
+============================================================ */
+(function(){
+  const CLEAN_KEY='medico_amigo_clean_111';
+  if(localStorage.getItem(CLEAN_KEY)==='1') return;
+
+  // Remove only legacy clinical/demo state. Do NOT clear auth/session/profile config.
+  [
+    'medicoAmigoPatients',
+    'medicoAmigoConsultations',
+    'medicoAmigoPayments',
+    'medicoAmigoPrescriptions',
+    'medicoAmigoRecentConsultations',
+    'medicoAmigoDashboard',
+    'medicoAmigoToday',
+    'medicoAmigoState'
+  ].forEach(k=>sessionStorage.removeItem(k));
+
+  localStorage.setItem(CLEAN_KEY,'1');
+})();
+
 document.addEventListener('DOMContentLoaded',()=>{
 const $=id=>document.getElementById(id),screens=[$('loginScreen'),$('homeScreen'),$('patientScreen'),$('newPatientScreen'),$('consultationScreen'),$('prescriptionScreen'),$('paymentScreen'),$('patientsScreen'),$('patientDetailScreen'),$('settingsScreen')];let selectedPatient=null,currentConsultation=null,currentPrescription=null;
 const show=s=>{screens.forEach(x=>x.classList.add('hidden'));s.classList.remove('hidden');scrollTo(0,0)};
@@ -522,4 +545,58 @@ document.addEventListener('DOMContentLoaded',()=>{
  $v('patientsNavBtn')?.addEventListener('click',()=>{
    setTimeout(()=>syncPatients().catch(e=>console.error(e)),100);
  },{passive:true});
+});
+
+
+/* ============================================================
+   v1.1.1 — DASHBOARD LIMPIO
+   Consultas/pagos aún no están migrados a Supabase, por lo que
+   no se muestran datos clínicos heredados del navegador.
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+  function cleanDashboard(){
+    // Remove legacy recent consultation cards.
+    const recent = document.querySelector('#recentList, .recent-list, #recentConsultations');
+    if(recent) recent.innerHTML = '';
+
+    // Target the visible dashboard cards by their labels.
+    document.querySelectorAll('body *').forEach(el=>{
+      const t=(el.textContent||'').trim();
+      if(t==='Consultas'){
+        const card=el.closest('.stat-card,.summary-card,.metric-card,.today-card');
+        if(card){
+          const nums=card.querySelectorAll('.stat-value,.summary-value,.metric-value,strong,b');
+          if(nums.length) nums[0].textContent='0';
+        }
+      }
+      if(t==='Ingresos'){
+        const card=el.closest('.stat-card,.summary-card,.metric-card,.today-card');
+        if(card){
+          const nums=card.querySelectorAll('.stat-value,.summary-value,.metric-value,strong,b');
+          if(nums.length) nums[0].textContent='Bs 0';
+        }
+      }
+      if(t==='Pendientes'){
+        const card=el.closest('.stat-card,.summary-card,.metric-card,.today-card');
+        if(card){
+          const nums=card.querySelectorAll('.stat-value,.summary-value,.metric-value,strong,b');
+          if(nums.length) nums[0].textContent='0';
+        }
+      }
+    });
+  }
+  cleanDashboard();
+  setTimeout(cleanDashboard,400);
+  setTimeout(cleanDashboard,1200);
+});
+
+
+document.addEventListener('DOMContentLoaded',()=>{
+  // Patients must originate only from Supabase from this version onward.
+  sessionStorage.setItem('medicoAmigoPatients','[]');
+  setTimeout(()=>{
+    if(typeof window.syncPatientsFromSupabase==='function'){
+      window.syncPatientsFromSupabase().catch(console.error);
+    }
+  },1200);
 });
