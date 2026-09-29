@@ -133,12 +133,7 @@ $('paymentForm').onsubmit=e=>{
 ========================================= */
 let detailPatient=null;
 
-function basePatients(){
- return [
-  {name:'María Fernández',ci:'4587214',phone:'71234567',age:68,sex:'Femenino',meta:'68 años · Femenino',address:'',emergency:'',history:'',allergies:'',medication:'',observations:''},
-  {name:'Carlos Mamani',ci:'6843210',phone:'76543210',age:42,sex:'Masculino',meta:'42 años · Masculino',address:'',emergency:'',history:'',allergies:'',medication:'',observations:''}
- ];
-}
+function basePatients(){ return []; }
 function storedPatients(){
  try{
   const saved=JSON.parse(sessionStorage.getItem('medicoAmigoPatients')||'null');
@@ -433,4 +428,98 @@ document.addEventListener('DOMContentLoaded',()=>{
 
  let s=null;try{s=JSON.parse(localStorage.getItem(SESSION)||'null')}catch{}
  if(s?.access_token&&s?.user?.id)enter(s);else screen(login);
+});
+
+
+/* ============================================================
+   v1.1 — PACIENTES REALES EN SUPABASE
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const URL='https://kdjvsbiqjpztdugewuve.supabase.co';
+ const KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
+ const SESSION='medico_amigo_supabase_session';
+ const $v=id=>document.getElementById(id);
+
+ function session(){try{return JSON.parse(localStorage.getItem(SESSION)||'null')}catch{return null}}
+ function headers(representation=false){
+   const s=session(); if(!s?.access_token)throw new Error('No hay una sesión autenticada.');
+   const h={apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'};
+   if(representation)h.Prefer='return=representation';
+   return h;
+ }
+ function calcAge(date){
+   if(!date)return null; const b=new Date(date+'T00:00:00'),t=new Date();
+   let a=t.getFullYear()-b.getFullYear();
+   if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate()))a--;
+   return a;
+ }
+ function localPatient(p){
+   const a=calcAge(p.birth_date);
+   return {id:p.id,name:p.full_name||'',ci:p.document_number||'',phone:p.phone||'',age:a,sex:p.sex||'',
+     meta:[a!==null?a+' años':'',p.sex||''].filter(Boolean).join(' · '),
+     address:p.address||'',emergency:[p.emergency_contact_name,p.emergency_contact_phone].filter(Boolean).join(' · '),
+     history:p.medical_history||'',allergies:p.allergies||'',medication:p.regular_medications||'',observations:p.observations||''};
+ }
+ async function request(path,options={}){
+   const r=await fetch(URL+'/rest/v1/'+path,{...options,headers:{...headers(options.representation),...(options.headers||{})}});
+   const raw=await r.text(); let data=null; try{data=raw?JSON.parse(raw):null}catch{data=raw}
+   if(!r.ok)throw new Error(data?.message||raw||('HTTP '+r.status));
+   return data;
+ }
+ async function syncPatients(){
+   if(!session()?.access_token)return;
+   const rows=await request('patients?select=*&order=full_name.asc');
+   sessionStorage.setItem('medicoAmigoPatients',JSON.stringify((rows||[]).map(localPatient)));
+   // Update count/list if the Patients screen is currently open.
+   if(!$v('patientsScreen').classList.contains('hidden')) $v('patientsNavBtn').click();
+ }
+ window.syncPatientsFromSupabase=syncPatients;
+
+ // Replace the prototype local-only registration.
+ const form=$v('newPatientForm');
+ if(form)form.onsubmit=async e=>{
+   e.preventDefault(); e.stopImmediatePropagation();
+   const name=$v('patientFullName').value.trim();
+   if(!name){alert('Ingresa el nombre completo del paciente.');return false}
+   const birth=$v('patientBirthDate').value||null;
+   if(birth && new Date(birth+'T00:00:00')>new Date()){alert('Revisa la fecha de nacimiento.');return false}
+   const emergency=($v('emergencyContact').value||'').trim();
+   const payload={
+     full_name:name,
+     document_number:$v('patientDocument').value.trim()||null,
+     birth_date:birth,
+     sex:$v('patientSex').value||null,
+     phone:$v('patientPhone').value.trim()||null,
+     address:$v('patientAddress').value.trim()||null,
+     emergency_contact_name:emergency||null,
+     emergency_contact_phone:null,
+     medical_history:$v('patientHistory').value.trim()||null,
+     allergies:$v('patientAllergies').value.trim()||null,
+     regular_medications:$v('patientMedication').value.trim()||null,
+     observations:$v('patientObservations').value.trim()||null
+   };
+   const button=form.querySelector('button.save-patient-button');
+   const old=button?.textContent||'GUARDAR Y CONTINUAR →';
+   if(button){button.disabled=true;button.textContent='GUARDANDO...'}
+   try{
+     await request('patients',{method:'POST',body:JSON.stringify(payload),representation:true});
+     await syncPatients();
+     form.reset();
+     $v('patientsNavBtn').click();
+   }catch(err){
+     console.error(err);
+     alert('No se pudo registrar el paciente: '+err.message);
+   }finally{
+     if(button){button.disabled=false;button.textContent=old}
+   }
+   return false;
+ };
+
+ // Sync after authentication has had time to restore its session.
+ setTimeout(()=>syncPatients().catch(e=>console.error('Sincronización pacientes:',e)),1000);
+
+ // Refresh from Supabase before opening the directory.
+ $v('patientsNavBtn')?.addEventListener('click',()=>{
+   setTimeout(()=>syncPatients().catch(e=>console.error(e)),100);
+ },{passive:true});
 });

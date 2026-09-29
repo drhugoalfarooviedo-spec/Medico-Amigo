@@ -1,10 +1,23 @@
-MÉDICO AMIGO v1.0.4
+MÉDICO AMIGO v1.1 — PACIENTES EN SUPABASE
 
-Corrección del problema identificado en v1.0.3:
-- Los campos reales de correo y contraseña no tenían IDs, por lo que el login no leía sus valores.
-- El bloque de autenticación anterior estaba fuera del DOMContentLoaded y no podía usar las utilidades internas de la app.
-- v1.0.4 usa selectores DOM propios y la conexión REST directa que auth-test-v2 confirmó como funcional.
-- El formulario captura el submit antes que cualquier controlador antiguo.
-- Carga doctor_profiles por UID y muestra el nombre del médico autenticado.
+Base: v1.0.4, cuyo login real ya fue validado.
 
-Todavía no usar datos clínicos reales: la migración de pacientes/consultas/recetas/pagos viene después.
+CAMBIOS
+- Se eliminaron María Fernández y Carlos Mamani del directorio.
+- Pacientes se sincroniza desde public.patients.
+- Nuevo paciente se guarda mediante la API de Supabase.
+- El navegador NO envía doctor_id: PostgreSQL usa DEFAULT auth.uid().
+- Las políticas RLS existentes limitan los registros al médico autenticado.
+- El directorio y su búsqueda trabajan con los pacientes sincronizados.
+
+PRUEBA DE ESTA ETAPA
+1. Iniciar sesión como Dr. Hugo.
+2. Pacientes > + NUEVO.
+3. Registrar SOLO un paciente ficticio.
+4. Confirmar que aparece en Supabase > Table Editor > patients.
+5. Luego probaremos la separación entrando como Dr. Omar.
+
+NOTA
+En v1.1 estamos migrando el módulo Pacientes. La selección de paciente para iniciar
+una consulta, consultas, recetas y pagos se conectarán en las siguientes etapas.
+Todavía no usar información clínica real.
