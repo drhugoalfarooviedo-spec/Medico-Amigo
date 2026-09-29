@@ -268,7 +268,13 @@ $('patientsBackHomeBtn').onclick=()=>show($('homeScreen'));
 $('patientsDirectorySearch').oninput=renderPatientsDirectory;
 $('patientsAddBtn').onclick=()=>{$('newPatientForm').reset();show($('newPatientScreen'));setTimeout(()=>$('patientFullName').focus(),100)};
 $('patientDetailBackBtn').onclick=openPatientsDirectory;
-$('startConsultationFromDetailBtn').onclick=()=>{if(detailPatient)selectPatient(detailPatient)};
+$('startConsultationFromDetailBtn').onclick=()=>{
+ if(!detailPatient)return;
+ selectedPatient=detailPatient;
+ sessionStorage.setItem('medicoAmigoCurrentPatientId',detailPatient.id||'');
+ $('consultationForm').reset();
+ openConsultation();
+};
 $('closeHistoryModalBtn').onclick=()=>$('consultationHistoryModal').classList.add('hidden');
 $('consultationHistoryModal').onclick=e=>{if(e.target===$('consultationHistoryModal'))$('consultationHistoryModal').classList.add('hidden')};
 
@@ -639,8 +645,8 @@ document.addEventListener('DOMContentLoaded',()=>{
    if(!p?.id){alert('Selecciona un paciente antes de guardar la consulta.');return false}
    const payload={
      patient_id:p.id,
-     reason:val('consultReason','reason').trim()||null,
-     current_illness:val('currentIllness','consultIllness').trim()||null,
+     reason:val('consultationReason').trim()||null,
+     current_illness:val('currentIllness').trim()||null,
      relevant_history:val('relevantHistory','consultRelevantHistory').trim()||null,
      blood_pressure:val('bloodPressure','bp').trim()||null,
      heart_rate:num('heartRate','hr'),
@@ -652,8 +658,8 @@ document.addEventListener('DOMContentLoaded',()=>{
      physical_exam:val('physicalExam','exam').trim()||null,
      complementary_studies:val('complementaryStudies','studies').trim()||null,
      diagnosis:val('diagnosis').trim()||null,
-     indications:val('plan','indications').trim()||null,
-     observations:val('consultObservations','observations').trim()||null,
+     indications:val('consultationIndications').trim()||null,
+     observations:val('consultationNotes').trim()||null,
      follow_up:val('followUp').trim()||null
    };
    const b=form.querySelector('button[type="submit"]'),old=b?.textContent||'CONTINUAR';
@@ -662,9 +668,14 @@ document.addEventListener('DOMContentLoaded',()=>{
      await req('consultations',{method:'POST',body:JSON.stringify(payload),rep:true});
      await hydratePatientHistory(p);
      // Continue to prescription screen using existing navigation if available.
-     const prescription=$i('prescriptionScreen');
-     if(prescription){document.querySelectorAll('main.app > section').forEach(x=>x.classList.add('hidden'));prescription.classList.remove('hidden');window.scrollTo(0,0)}
-     else alert('Consulta guardada correctamente en Supabase.');
+     currentConsultation={
+       patient:selectedPatient,date:new Date().toISOString(),
+       reason:payload.reason||'',currentIllness:payload.current_illness||'',
+       vitals:{bloodPressure:payload.blood_pressure||'',heartRate:payload.heart_rate||'',spo2:payload.oxygen_saturation||'',temperature:payload.temperature||'',respiratoryRate:payload.respiratory_rate||'',weight:payload.weight||'',height:payload.height||''},
+       physicalExam:payload.physical_exam||'',complementaryStudies:payload.complementary_studies||'',
+       diagnosis:payload.diagnosis||'',indications:payload.indications||'',notes:payload.observations||'',followUp:payload.follow_up||''
+     };
+     openPrescription();
    }catch(err){console.error(err);alert('No se pudo guardar la consulta: '+err.message)}
    finally{if(b){b.disabled=false;b.textContent=old}}
    return false;
@@ -773,8 +784,7 @@ ${blocks}
    if(screen.querySelector('#historyActions121'))return;
    const wrap=document.createElement('div');wrap.id='historyActions121';wrap.style.cssText='display:grid;gap:10px;margin:18px 0 8px';
    const d=document.createElement('button');d.type='button';d.className='primary-button';d.textContent='⬇ DESCARGAR HISTORIA CLÍNICA';d.onclick=download;
-   const p=document.createElement('button');p.type='button';p.className='secondary-button';p.textContent='🖨 IMPRIMIR HISTORIA CLÍNICA';p.onclick=printNow;
-   wrap.append(d,p);
+   wrap.append(d);
    const target=screen.querySelector('.patient-actions,.detail-actions')||screen.querySelector('.screen-content,.content')||screen;
    target.appendChild(wrap);
  }
@@ -892,4 +902,66 @@ document.addEventListener('DOMContentLoaded',()=>{
 
  // Initial sync only once.
  setTimeout(refresh,900);
+});
+
+
+/* ============================================================
+   v1.2.3 — FICHA -> CONSULTA + HISTORIAL DESDE SUPABASE
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const btn=document.getElementById('startConsultationFromDetailBtn');
+ // Extra guard in case another legacy handler was attached.
+ if(btn) btn.addEventListener('click',()=>{
+   const id=sessionStorage.getItem('medicoAmigoCurrentPatientId');
+   if(id) sessionStorage.setItem('medicoAmigoCurrentPatientId',id);
+ },true);
+
+ async function refreshVisibleHistory(){
+   const screen=document.getElementById('patientDetailScreen');
+   if(!screen || screen.classList.contains('hidden')) return;
+   let patients=[];try{patients=JSON.parse(sessionStorage.getItem('medicoAmigoPatients')||'[]')}catch{}
+   const id=sessionStorage.getItem('medicoAmigoCurrentPatientId');
+   const p=patients.find(x=>x.id===id);
+   if(!p || typeof window.loadConsultationsFromSupabase!=='function')return;
+   try{
+     const cs=await window.loadConsultationsFromSupabase(p);
+     const count=document.getElementById('detailHistoryCount');
+     const box=document.getElementById('patientHistoryList');
+     const empty=document.getElementById('patientHistoryEmpty');
+     if(count)count.textContent=cs.length;
+     if(empty)empty.classList.toggle('hidden',cs.length>0);
+     if(!box)return;
+     box.innerHTML='';
+     cs.forEach(c=>{
+       const card=document.createElement('article');card.className='history-card';
+       const main=document.createElement('div');main.className='history-card-main';
+       const title=document.createElement('strong');title.textContent=c.diagnosis||'Consulta médica';
+       const date=document.createElement('span');date.textContent=new Intl.DateTimeFormat('es-BO',{dateStyle:'medium',timeStyle:'short'}).format(new Date(c.date));
+       const reason=document.createElement('small');reason.textContent=c.reason||'Sin motivo registrado';
+       main.append(title,date,reason);card.append(main);
+       card.onclick=()=>{
+         const modal=document.getElementById('consultationHistoryModal'),mt=document.getElementById('historyModalTitle'),mc=document.getElementById('historyModalContent');
+         if(mt)mt.textContent=c.diagnosis||'Consulta médica';
+         const safe=v=>String(v??'').trim()||'No registrado';
+         const esc=v=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+         if(mc)mc.innerHTML=`<div class="history-detail-block"><h3>Motivo de consulta</h3><p>${esc(safe(c.reason))}</p></div>
+<div class="history-detail-block"><h3>Enfermedad actual</h3><p>${esc(safe(c.illness))}</p></div>
+<div class="history-detail-block"><h3>Signos vitales</h3><p>PA: ${esc(safe(c.bp))} · FC: ${esc(safe(c.hr))} · SpO₂: ${esc(safe(c.spo2))} · T°: ${esc(safe(c.temp))} · FR: ${esc(safe(c.rr))} · Peso: ${esc(safe(c.weight))} · Talla: ${esc(safe(c.height))}</p></div>
+<div class="history-detail-block"><h3>Examen físico</h3><p>${esc(safe(c.exam))}</p></div>
+<div class="history-detail-block"><h3>Estudios complementarios revisados</h3><p>${esc(safe(c.studies))}</p></div>
+<div class="history-detail-block"><h3>Diagnóstico / impresión clínica</h3><p>${esc(safe(c.diagnosis))}</p></div>
+<div class="history-detail-block"><h3>Indicaciones</h3><p>${esc(safe(c.plan))}</p></div>
+<div class="history-detail-block"><h3>Observaciones</h3><p>${esc(safe(c.notes))}</p></div>
+<div class="history-detail-block"><h3>Seguimiento</h3><p>${esc(safe(c.followUp))}</p></div>`;
+         modal?.classList.remove('hidden');
+       };
+       box.appendChild(card);
+     });
+   }catch(e){console.error('Historial Supabase:',e)}
+ }
+ const obs=new MutationObserver(()=>setTimeout(refreshVisibleHistory,80));
+ obs.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+ document.addEventListener('click',e=>{
+   if(e.target.closest?.('.directory-patient-card,.patient-card'))setTimeout(refreshVisibleHistory,250);
+ },true);
 });

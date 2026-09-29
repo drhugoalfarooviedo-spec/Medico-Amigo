@@ -1,18 +1,20 @@
-MÉDICO AMIGO v1.2.2 — PACIENTES ESTABLE
+MÉDICO AMIGO v1.2.3 — CONSULTA ESTABLE
 
-CORRECCIÓN
-- Supabase public.patients es la única fuente de pacientes.
-- Se eliminó la recarga recursiva que podía duplicar tarjetas.
-- Deduplicación adicional por UUID.
-- + NUEVO y el formulario de paciente vuelven a estar disponibles.
-- Un solo INSERT por envío del formulario.
-- No se elimina ni modifica ninguna fila existente de Supabase.
-- Se conservan Auth, RLS, Consultas v1.2 e Historia Clínica v1.2.1.
+CORRECCIONES:
+- + CONSULTA desde la ficha ahora abre el formulario clínico completo.
+- Se conserva el paciente seleccionado y su UUID.
+- El formulario incluye motivo, enfermedad actual, signos vitales, examen físico,
+  estudios complementarios, diagnóstico, indicaciones, observaciones y seguimiento.
+- Al guardar, la consulta se envía a public.consultations y continúa a Receta.
+- El historial de la ficha se actualiza desde Supabase.
+- Se eliminó el botón IMPRIMIR HISTORIA CLÍNICA.
+- Se mantiene únicamente DESCARGAR HISTORIA CLÍNICA.
+- No se modifica la lógica estable de pacientes ni se borra información de Supabase.
 
-PRUEBA CONTROLADA
-1. Ctrl+F5.
-2. Entrar como Dr. Hugo.
-3. Pacientes: Jaquelin debe aparecer UNA sola vez.
-4. Pulsar + NUEVO.
-5. Verificar que todos los campos puedan llenarse.
-6. NO guardar un segundo paciente todavía.
+PRUEBA:
+1. Entrar como Dr. Hugo.
+2. Abrir un paciente.
+3. Pulsar + CONSULTA.
+4. Confirmar que aparece el formulario clínico completo.
+5. Registrar una consulta ficticia y pulsar Guardar y continuar.
+6. No completar receta/cobro todavía: comprobar primero public.consultations.
