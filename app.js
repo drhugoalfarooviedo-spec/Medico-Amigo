@@ -710,11 +710,83 @@ document.addEventListener('DOMContentLoaded',()=>{
  window.printClinicalHistory=printHistory;
 
  // Inject history button into patient detail when that screen becomes visible.
- const observer=new MutationObserver(()=>{
-   const screen=$i('patientDetailScreen'); if(!screen||screen.classList.contains('hidden')||screen.querySelector('#downloadHistoryBtn'))return;
-   const btn=document.createElement('button');btn.id='downloadHistoryBtn';btn.type='button';btn.className='primary-button';btn.textContent='⬇ DESCARGAR / IMPRIMIR HISTORIA CLÍNICA';btn.onclick=printHistory;
+ /* v1.2.1 reemplaza el botón anterior por acciones separadas y fiables. */
+});
+
+
+/* ============================================================
+   v1.2.1 — HISTORIA CLÍNICA: DESCARGA + IMPRESIÓN SIN POPUP ASYNC
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const $x=id=>document.getElementById(id);
+
+ function currentPatient(){
+   const id=(window.state&&state.currentPatientId)||sessionStorage.getItem('medicoAmigoCurrentPatientId');
+   let arr=[];try{arr=JSON.parse(sessionStorage.getItem('medicoAmigoPatients')||'[]')}catch{}
+   return arr.find(p=>p.id===id)||arr[0]||null;
+ }
+ function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+ function fmt(d){if(!d)return '';try{return new Intl.DateTimeFormat('es-BO',{dateStyle:'long',timeStyle:'short'}).format(new Date(d))}catch{return d}}
+ async function data(){
+   const p=currentPatient(); if(!p?.id)throw Error('No se pudo identificar al paciente.');
+   let cs=[];
+   if(typeof window.loadConsultationsFromSupabase==='function')cs=await window.loadConsultationsFromSupabase(p);
+   let cfg={};try{cfg=JSON.parse(sessionStorage.getItem('medicoAmigoDoctorConfig')||'{}')}catch{}
+   return {p,cs:cs||[],cfg};
+ }
+ function body({p,cs,cfg}){
+   const blocks=cs.length?cs.map((c,i)=>`<section><h3>Consulta ${cs.length-i} — ${esc(fmt(c.date))}</h3>
+<p><b>Motivo de consulta:</b> ${esc(c.reason||'No registrado')}</p>
+<p><b>Enfermedad actual:</b> ${esc(c.illness||'No registrado')}</p>
+<p><b>Antecedentes relevantes:</b> ${esc(c.history||'No registrado')}</p>
+<p><b>Signos vitales:</b> PA ${esc(c.bp||'—')} · FC ${esc(c.hr??'—')} · SpO₂ ${esc(c.spo2??'—')} · T° ${esc(c.temp??'—')} · FR ${esc(c.rr??'—')} · Peso ${esc(c.weight??'—')} · Talla ${esc(c.height??'—')}</p>
+<p><b>Examen físico:</b> ${esc(c.exam||'No registrado')}</p>
+<p><b>Estudios complementarios revisados:</b> ${esc(c.studies||'No registrado')}</p>
+<p><b>Diagnóstico / impresión:</b> ${esc(c.diagnosis||'No registrado')}</p>
+<p><b>Indicaciones:</b> ${esc(c.plan||'No registrado')}</p>
+<p><b>Observaciones:</b> ${esc(c.notes||'No registrado')}</p>
+<p><b>Seguimiento:</b> ${esc(c.followUp||'No registrado')}</p></section>`).join(''):`<section><h3>Historial de consultas</h3><p>Sin consultas registradas.</p></section>`;
+   return `<header><h1>MÉDICO AMIGO</h1><div>ATENCIÓN MÉDICA INTEGRAL</div></header>
+<h2>Historia clínica</h2>
+<div class="box"><b>Paciente:</b> ${esc(p.name)}<br><b>CI / Documento:</b> ${esc(p.ci||'No registrado')}<br><b>Edad:</b> ${esc(p.age!=null?p.age+' años':'No registrada')}<br><b>Sexo:</b> ${esc(p.sex||'No registrado')}<br><b>Teléfono:</b> ${esc(p.phone||'No registrado')}<br><b>Dirección:</b> ${esc(p.address||'No registrada')}</div>
+<h3>Información médica</h3>
+<div class="box"><b>Antecedentes:</b> ${esc(p.history||'No registrado')}<br><b>Alergias:</b> ${esc(p.allergies||'No registrado')}<br><b>Medicación habitual:</b> ${esc(p.medication||p.meds||'No registrado')}<br><b>Observaciones:</b> ${esc(p.observations||p.obs||'No registrado')}</div>
+${blocks}
+<div class="foot"><b>${esc(cfg.name||'Médico')}</b><br>${esc(cfg.specialty||'')}<br>${cfg.registration?'Matrícula profesional: '+esc(cfg.registration)+'<br>':''}<br>_____________________________<br>Firma y sello</div>`;
+ }
+ function doc(inner,autoPrint=false){
+   return `<!doctype html><html><head><meta charset="utf-8"><title>Historia clínica</title><style>
+@page{size:A4;margin:16mm}*{box-sizing:border-box}body{font:12px Arial,sans-serif;color:#17344a;max-width:800px;margin:0 auto;padding:12px}header{text-align:center;border-bottom:2px solid #0b789b;padding-bottom:12px}h1{margin:0;color:#073f68}h2{font-size:18px}h3{font-size:14px;color:#087d9e;border-bottom:1px solid #ccdce4;padding-bottom:6px}section{page-break-inside:avoid;margin:20px 0}p{line-height:1.5;white-space:pre-wrap}.box{background:#f5f9fb;padding:12px;border-radius:8px;line-height:1.7}.foot{margin-top:38px;text-align:center}</style></head><body>${inner}${autoPrint?'<script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script>':''}</body></html>`;
+ }
+ async function download(){
+   try{
+     const d=await data(), content=doc(body(d),false);
+     const blob=new Blob([content],{type:'text/html;charset=utf-8'});
+     const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+     const safe=(d.p.name||'paciente').replace(/[^\p{L}\p{N}]+/gu,'_').replace(/^_+|_+$/g,'');
+     a.download='Historia_Clinica_'+safe+'.html';
+     document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+   }catch(e){alert('No se pudo descargar la historia clínica: '+e.message)}
+ }
+ async function printNow(){
+   // Open synchronously on the user click so popup blockers do not reject it.
+   const w=window.open('about:blank','_blank');
+   if(!w){alert('El navegador bloqueó la ventana de impresión. Habilita ventanas emergentes para este sitio.');return}
+   w.document.write('<p style="font-family:Arial;padding:30px">Preparando historia clínica…</p>');
+   try{const d=await data();w.document.open();w.document.write(doc(body(d),true));w.document.close()}
+   catch(e){w.close();alert('No se pudo preparar la historia clínica: '+e.message)}
+ }
+ function inject(){
+   const screen=$x('patientDetailScreen'); if(!screen||screen.classList.contains('hidden'))return;
+   if(screen.querySelector('#historyActions121'))return;
+   const wrap=document.createElement('div');wrap.id='historyActions121';wrap.style.cssText='display:grid;gap:10px;margin:18px 0 8px';
+   const d=document.createElement('button');d.type='button';d.className='primary-button';d.textContent='⬇ DESCARGAR HISTORIA CLÍNICA';d.onclick=download;
+   const p=document.createElement('button');p.type='button';p.className='secondary-button';p.textContent='🖨 IMPRIMIR HISTORIA CLÍNICA';p.onclick=printNow;
+   wrap.append(d,p);
    const target=screen.querySelector('.patient-actions,.detail-actions')||screen.querySelector('.screen-content,.content')||screen;
-   target.appendChild(btn);
- });
- observer.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+   target.appendChild(wrap);
+ }
+ const ob=new MutationObserver(inject);ob.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+ document.addEventListener('click',()=>setTimeout(inject,80),true);
+ inject();
 });
