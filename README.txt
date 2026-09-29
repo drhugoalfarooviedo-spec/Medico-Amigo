@@ -1,14 +1,18 @@
-MÉDICO AMIGO v1.2.1 — CORRECCIÓN HISTORIA CLÍNICA
+MÉDICO AMIGO v1.2.2 — PACIENTES ESTABLE
 
-- Reemplaza el botón combinado por:
-  1. Descargar Historia Clínica
-  2. Imprimir Historia Clínica
-- La descarga ya no depende de una ventana emergente.
-- La impresión abre la ventana inmediatamente al clic y luego carga los datos, evitando el bloqueo por popup.
-- Funciona incluso si el paciente todavía tiene 0 consultas.
-- Mantiene consultas y pacientes conectados a Supabase.
+CORRECCIÓN
+- Supabase public.patients es la única fuente de pacientes.
+- Se eliminó la recarga recursiva que podía duplicar tarjetas.
+- Deduplicación adicional por UUID.
+- + NUEVO y el formulario de paciente vuelven a estar disponibles.
+- Un solo INSERT por envío del formulario.
+- No se elimina ni modifica ninguna fila existente de Supabase.
+- Se conservan Auth, RLS, Consultas v1.2 e Historia Clínica v1.2.1.
 
-NOTA DE ESTA ETAPA:
-La descarga se entrega como documento HTML imprimible, compatible con navegador.
-Para obtener PDF: usar Imprimir > Guardar como PDF.
-La generación de un PDF binario directo se puede incorporar posteriormente.
+PRUEBA CONTROLADA
+1. Ctrl+F5.
+2. Entrar como Dr. Hugo.
+3. Pacientes: Jaquelin debe aparecer UNA sola vez.
+4. Pulsar + NUEVO.
+5. Verificar que todos los campos puedan llenarse.
+6. NO guardar un segundo paciente todavía.
