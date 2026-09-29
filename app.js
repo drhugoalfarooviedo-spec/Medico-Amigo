@@ -1336,8 +1336,17 @@ document.addEventListener('DOMContentLoaded',()=>{
   let p;try{p=await patient()}catch(e){alert(e.message);return}
   if(!confirm(`¿Eliminar a ${p.full_name}?\n\nSe eliminarán sus consultas, recetas y cobros asociados.`))return;
   if(!confirm('CONFIRMACIÓN FINAL\n\nEsta acción no se puede deshacer. ¿Eliminar definitivamente?'))return;
-  try{await req('patients?id=eq.'+encodeURIComponent(p.id),{method:'DELETE'});sessionStorage.removeItem('medicoAmigoCurrentPatientId');alert('Paciente eliminado correctamente.');$('patientsNavBtn')?.click();window.medicoAmigoRefreshDashboard?.()}
-  catch(e){alert('No se pudo eliminar: '+e.message)}
+  try{
+   const deleted=await req('patients?id=eq.'+encodeURIComponent(p.id),{method:'DELETE',rep:true,headers:{Prefer:'return=representation'}});
+   if(!Array.isArray(deleted)||!deleted.some(x=>x.id===p.id))throw Error('Supabase no confirmó la eliminación del paciente.');
+   const check=await req('patients?id=eq.'+encodeURIComponent(p.id)+'&select=id');
+   if(Array.isArray(check)&&check.length)throw Error('El paciente todavía existe en la base de datos.');
+   sessionStorage.removeItem('medicoAmigoCurrentPatientId');
+   if(window.state){window.state.currentPatientId=null;window.state.selectedPatient=null}
+   alert('Paciente eliminado correctamente.');
+   $('patientsNavBtn')?.click();
+   window.medicoAmigoRefreshDashboard?.();
+  }catch(e){console.error('Eliminar paciente:',e);alert('No se pudo eliminar el paciente: '+e.message)}
  });
 
  // Consultation cards created by the history renderer get a safe delete button.
@@ -1347,8 +1356,13 @@ document.addEventListener('DOMContentLoaded',()=>{
    const id=card.dataset.consultationId||card.dataset.id;if(!id)return;
    const b=document.createElement('button');b.type='button';b.className='delete-consultation-btn';b.textContent='🗑 Eliminar consulta';
    b.onclick=async ev=>{ev.preventDefault();ev.stopPropagation();if(!confirm('¿Eliminar esta consulta? También se eliminarán su receta y cobro asociados.'))return;
-    try{await req('consultations?id=eq.'+encodeURIComponent(id),{method:'DELETE'});card.remove();alert('Consulta eliminada correctamente.');window.medicoAmigoRefreshDashboard?.()}
-    catch(e){alert('No se pudo eliminar la consulta: '+e.message)}
+    try{
+     const deleted=await req('consultations?id=eq.'+encodeURIComponent(id),{method:'DELETE',rep:true,headers:{Prefer:'return=representation'}});
+     if(!Array.isArray(deleted)||!deleted.some(x=>x.id===id))throw Error('Supabase no confirmó la eliminación de la consulta.');
+     const check=await req('consultations?id=eq.'+encodeURIComponent(id)+'&select=id');
+     if(Array.isArray(check)&&check.length)throw Error('La consulta todavía existe en la base de datos.');
+     card.remove();alert('Consulta eliminada correctamente.');window.medicoAmigoRefreshDashboard?.();
+    }catch(e){console.error('Eliminar consulta:',e);alert('No se pudo eliminar la consulta: '+e.message)}
    };card.appendChild(b);
   });
  };
