@@ -522,7 +522,11 @@ document.addEventListener('DOMContentLoaded',()=>{
      address:$v('patientAddress').value.trim()||null,
      emergency_contact_name:emergency||null,
      emergency_contact_phone:null,
-     medical_history:$v('patientHistory').value.trim()||null,
+     medical_history:$v('patientHistory').value.trim()||null,,
+      pathological_history:(window.medicoAmigoStructuredHistory?.().pathological_history)||null,
+      non_pathological_history:(window.medicoAmigoStructuredHistory?.().non_pathological_history)||null,
+      family_history:(window.medicoAmigoStructuredHistory?.().family_history)||null,
+      gynecological_history:(window.medicoAmigoStructuredHistory?.().gynecological_history)||null
      allergies:$v('patientAllergies').value.trim()||null,
      regular_medications:$v('patientMedication').value.trim()||null,
      observations:$v('patientObservations').value.trim()||null
@@ -961,4 +965,47 @@ document.addEventListener('DOMContentLoaded',()=>{
  document.addEventListener('click',e=>{
    if(e.target.closest?.('.directory-patient-card,.patient-card'))setTimeout(refreshVisibleHistory,250);
  },true);
+});
+
+
+/* ============================================================
+   v1.2.5 — ANTECEDENTES CLÍNICOS ESTRUCTURADOS
+   La persistencia completa en Supabase requiere ejecutar el SQL
+   incluido en README antes de usar datos reales.
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+  const $=id=>document.getElementById(id);
+  const sex=$('patientSex'), gyn=$('patientGyneHistoryWrap');
+  const toggleGyn=()=>{
+    if(!sex||!gyn)return;
+    const female=/femen|female|mujer/i.test(sex.value||'');
+    gyn.classList.toggle('hidden',!female);
+    if(!female) gyn.querySelectorAll('input,textarea').forEach(el=>el.value='');
+  };
+  sex?.addEventListener('change',toggleGyn); toggleGyn();
+
+  // Keep the legacy medical_history field synchronized for backward compatibility.
+  const syncLegacy=()=>{
+    const old=$('patientHistory'), pathological=$('patientPathologicalHistory');
+    if(old&&pathological) old.value=pathological.value;
+  };
+  $('patientPathologicalHistory')?.addEventListener('input',syncLegacy);
+
+  // Helper exposed for the Supabase patient payload module.
+  window.medicoAmigoStructuredHistory=()=>({
+    pathological_history:$('patientPathologicalHistory')?.value.trim()||null,
+    non_pathological_history:$('patientNonPathologicalHistory')?.value.trim()||null,
+    family_history:$('patientFamilyHistory')?.value.trim()||null,
+    gynecological_history: /femen|female|mujer/i.test(sex?.value||'') ? {
+      menarche:$('patientMenarche')?.value.trim()||null,
+      lmp:$('patientLmp')?.value||null,
+      menstrual_cycle:$('patientMenstrualCycle')?.value.trim()||null,
+      pregnancies:$('patientPregnancies')?.value||null,
+      births:$('patientBirths')?.value||null,
+      cesareans:$('patientCesareans')?.value||null,
+      abortions:$('patientAbortions')?.value||null,
+      contraception:$('patientContraception')?.value.trim()||null,
+      other:$('patientGyneOther')?.value.trim()||null
+    } : null
+  });
 });
