@@ -38,6 +38,8 @@ function initials(n){const w=n.trim().split(/\s+/);return((w[0]?.[0]||'P')+(w[1]
 $('newPatientForm').onsubmit=e=>{e.preventDefault();const name=$('patientFullName').value.trim(),ci=$('patientDocument').value.trim(),phone=$('patientPhone').value.trim();if(!name)return msg('Ingresa el nombre completo del paciente.');if(birth.value&&(age()===null))return msg('Revisa la fecha de nacimiento. Debe estar entre 1900 y la fecha actual.');if(ci&&[...cards()].some(c=>c.dataset.ci===ci))return msg('Ya existe un paciente registrado con ese CI / documento.');const a=age(),sex=$('patientSex').value,art=document.createElement('article');art.className='patient-result';Object.assign(art.dataset,{name,ci,phone,history:$('patientHistory').value.trim(),allergies:$('patientAllergies').value.trim(),medication:$('patientMedication').value.trim()});const details=[a!==null?a+(a===1?' año':' años'):'',sex].filter(Boolean).join(' · ')||'Datos básicos registrados';art.innerHTML=`<div class="patient-avatar">${initials(name)}</div><div class="patient-info"><strong></strong><span></span><small></small></div><span class="result-arrow">›</span>`;art.querySelector('strong').textContent=name;art.querySelector('.patient-info span').textContent=ci?'CI: '+ci:'Sin documento';art.querySelector('small').textContent=details;$('patientResults').prepend(art);bind(art);select(art)};
 $('consultationForm').onsubmit=e=>{e.preventDefault();if(!$('consultationReason').value.trim()){$('consultationReason').focus();return}if(!$('diagnosis').value.trim()){$('diagnosis').focus();return}currentConsultation={patient:selectedPatient,date:new Date().toISOString(),reason:$('consultationReason').value.trim(),currentIllness:$('currentIllness').value.trim(),vitals:{bloodPressure:$('bloodPressure').value.trim(),heartRate:$('heartRate').value,spo2:$('oxygenSaturation').value,temperature:$('temperature').value,respiratoryRate:$('respiratoryRate').value,weight:$('weight').value,height:$('height').value},physicalExam:$('physicalExam').value.trim(),complementaryStudies:$('complementaryStudies').value.trim(),diagnosis:$('diagnosis').value.trim(),indications:$('consultationIndications').value.trim(),notes:$('consultationNotes').value.trim(),followUp:$('followUp').value.trim()};openPrescription()};
 function prescriptionId(){const d=new Date(),pad=n=>String(n).padStart(2,'0');return 'RX-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+String(Date.now()).slice(-5)}
+window.medicoAmigoOpenPrescription=(p,c)=>{selectedPatient=p;currentConsultation=c;openPrescription()};
+window.medicoAmigoOpenPayment=()=>openPayment();
 function openPrescription(){if(!selectedPatient||!currentConsultation)return;$('prescriptionPatientName').textContent=selectedPatient.name;$('prescriptionSelectedName').textContent=selectedPatient.name;$('prescriptionSelectedMeta').textContent=[selectedPatient.ci?'CI: '+selectedPatient.ci:'Sin documento',selectedPatient.meta].filter(Boolean).join(' · ');$('prescriptionAvatar').textContent=initials(selectedPatient.name);$('prescriptionDiagnosis').textContent=currentConsultation.diagnosis;$('prescriptionCode').textContent=prescriptionId();$('prescriptionGeneralInstructions').value=currentConsultation.indications||'';$('medicationsList').innerHTML='';addMedication();show($('prescriptionScreen'))}
 function addMedication(data={}){const n=$('medicationsList').children.length+1,c=document.createElement('div');c.className='medication-card';c.innerHTML=`<div class="medication-card-header"><strong>Medicamento ${n}</strong><button class="remove-medication" type="button" title="Eliminar">×</button></div><div class="form-group"><label>Medicamento</label><input class="med-name" placeholder="Ej. Paracetamol" value=""></div><div class="medication-grid"><div class="form-group"><label>Presentación / concentración</label><input class="med-presentation" placeholder="Ej. 500 mg"></div><div class="form-group"><label>Dosis</label><input class="med-dose" placeholder="Ej. 1 tableta"></div><div class="form-group"><label>Vía</label><select class="med-route"><option value="">Seleccionar</option><option>Oral</option><option>Sublingual</option><option>Tópica</option><option>Inhalatoria</option><option>Intramuscular</option><option>Intravenosa</option><option>Subcutánea</option><option>Rectal</option><option>Oftálmica</option><option>Ótica</option><option>Otra</option></select></div><div class="form-group"><label>Frecuencia</label><input class="med-frequency" placeholder="Ej. cada 8 horas"></div><div class="form-group"><label>Duración</label><input class="med-duration" placeholder="Ej. 5 días"></div></div><div class="form-group"><label>Instrucciones adicionales</label><textarea class="med-instructions" rows="2" placeholder="Ej. tomar después de las comidas"></textarea></div>`;c.querySelector('.med-name').value=data.name||'';c.querySelector('.med-presentation').value=data.presentation||'';c.querySelector('.med-dose').value=data.dose||'';c.querySelector('.med-frequency').value=data.frequency||'';c.querySelector('.med-duration').value=data.duration||'';c.querySelector('.med-instructions').value=data.instructions||'';c.querySelector('.med-route').value=data.route||'';c.querySelector('.remove-medication').onclick=()=>{c.remove();renumberMeds()};$('medicationsList').appendChild(c)}
 function renumberMeds(){[...document.querySelectorAll('.medication-card')].forEach((c,i)=>c.querySelector('.medication-card-header strong').textContent='Medicamento '+(i+1))}
@@ -689,14 +691,21 @@ document.addEventListener('DOMContentLoaded',()=>{
    const b=form.querySelector('button[type="submit"]'),old=b?.textContent||'CONTINUAR';
    if(b){b.disabled=true;b.textContent='GUARDANDO...'}
    try{
-     await req('consultations',{method:'POST',body:JSON.stringify(payload),rep:true});
+     const inserted=await req('consultations',{method:'POST',body:JSON.stringify(payload),rep:true});
+     const saved=Array.isArray(inserted)?inserted[0]:inserted;
+     if(!saved?.id)throw Error('La consulta se guardó, pero no se recibió su identificador.');
      await hydratePatientHistory(p);
-     // v1.2.4: no usamos variables del flujo legado fuera de su ámbito.
-     // Primero confirmamos el guardado real en Supabase; Receta se conectará en la siguiente etapa.
-     alert('Consulta guardada correctamente en Supabase.');
-     form.reset();
-     const patientsNav=document.getElementById('patientsNavBtn');
-     if(patientsNav) patientsNav.click();
+     const flowConsultation={
+       id:saved.id,patient:p,date:saved.consultation_date||new Date().toISOString(),
+       reason:payload.reason||'',currentIllness:payload.current_illness||'',
+       vitals:{bloodPressure:payload.blood_pressure||'',heartRate:payload.heart_rate,spo2:payload.oxygen_saturation,
+         temperature:payload.temperature,respiratoryRate:payload.respiratory_rate,weight:payload.weight,height:payload.height},
+       physicalExam:payload.physical_exam||'',complementaryStudies:payload.complementary_studies||'',
+       diagnosis:payload.diagnosis||'',indications:payload.indications||'',notes:payload.observations||'',followUp:payload.follow_up||''
+     };
+     sessionStorage.setItem('medicoAmigoFlow',JSON.stringify({patient:p,consultation:flowConsultation}));
+     if(typeof window.medicoAmigoOpenPrescription==='function')window.medicoAmigoOpenPrescription(p,flowConsultation);
+     else throw Error('No se pudo abrir el módulo de receta.');
    }catch(err){console.error(err);alert('No se pudo guardar la consulta: '+err.message)}
    finally{if(b){b.disabled=false;b.textContent=old}}
    return false;
@@ -1022,4 +1031,126 @@ document.addEventListener('DOMContentLoaded',()=>{
      g.contraception?'Método anticonceptivo: '+g.contraception:null,g.other?'Otros: '+g.other:null
    ].filter(Boolean).join(' · ');
  };
+});
+
+
+/* ============================================================
+   v1.3 — RECETA + COBRO REALES EN SUPABASE
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const URL='https://kdjvsbiqjpztdugewuve.supabase.co';
+ const KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
+ const SESSION='medico_amigo_supabase_session';
+ const $=id=>document.getElementById(id);
+ const sess=()=>{try{return JSON.parse(localStorage.getItem(SESSION)||'null')}catch{return null}};
+ const head=(rep=false)=>{const s=sess();if(!s?.access_token)throw Error('No hay sesión autenticada');const h={apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'};if(rep)h.Prefer='return=representation';return h};
+ async function req(path,opt={}){const r=await fetch(URL+'/rest/v1/'+path,{...opt,headers:{...head(opt.rep),...(opt.headers||{})}});const raw=await r.text();let d=null;try{d=raw?JSON.parse(raw):null}catch{d=raw}if(!r.ok)throw Error(d?.message||raw||('HTTP '+r.status));return d}
+ const flow=()=>{try{return JSON.parse(sessionStorage.getItem('medicoAmigoFlow')||'null')}catch{return null}};
+ const medRows=()=>[...document.querySelectorAll('.medication-card')].map((c,i)=>({
+   medication_name:c.querySelector('.med-name')?.value.trim()||null,
+   presentation:c.querySelector('.med-presentation')?.value.trim()||null,
+   dose:c.querySelector('.med-dose')?.value.trim()||null,
+   route:c.querySelector('.med-route')?.value||null,
+   frequency:c.querySelector('.med-frequency')?.value.trim()||null,
+   duration:c.querySelector('.med-duration')?.value.trim()||null,
+   instructions:c.querySelector('.med-instructions')?.value.trim()||null,item_order:i+1
+ })).filter(x=>Object.values(x).some(v=>v!==null&&v!==''&&v!==x.item_order));
+
+ // Save prescription to Supabase, then continue to payment.
+ const pf=$('prescriptionForm');
+ if(pf)pf.onsubmit=async e=>{
+   e.preventDefault();e.stopImmediatePropagation();
+   const f=flow();if(!f?.patient?.id||!f?.consultation?.id){alert('No se encontró la consulta activa.');return false}
+   const btn=pf.querySelector('button[type="submit"]'),old=btn?.textContent||'GUARDAR Y CONTINUAR →';
+   if(btn){btn.disabled=true;btn.textContent='GUARDANDO...'}
+   let rx=null;
+   try{
+     const code=$('prescriptionCode').textContent||('RX-'+Date.now());
+     const rows=await req('prescriptions',{method:'POST',rep:true,body:JSON.stringify({
+       patient_id:f.patient.id,consultation_id:f.consultation.id,prescription_code:code,
+       diagnosis:f.consultation.diagnosis||null,general_instructions:$('prescriptionGeneralInstructions').value.trim()||null
+     })});
+     rx=rows?.[0]; if(!rx?.id)throw Error('No se recibió el identificador de la receta.');
+     const items=medRows().map(x=>({...x,prescription_id:rx.id}));
+     if(items.length)await req('prescription_items',{method:'POST',body:JSON.stringify(items)});
+     f.prescription={id:rx.id,code,items};sessionStorage.setItem('medicoAmigoFlow',JSON.stringify(f));
+     if(typeof window.medicoAmigoOpenPayment==='function')window.medicoAmigoOpenPayment();
+   }catch(err){
+     console.error(err);
+     if(rx?.id)try{await req('prescriptions?id=eq.'+encodeURIComponent(rx.id),{method:'DELETE'})}catch{}
+     alert('No se pudo guardar la receta: '+err.message);
+   }finally{if(btn){btn.disabled=false;btn.textContent=old}}
+   return false;
+ };
+
+ $('skipPrescriptionBtn')?.addEventListener('click',()=>{
+   const f=flow();if(f){f.prescription=null;sessionStorage.setItem('medicoAmigoFlow',JSON.stringify(f))}
+   if(typeof window.medicoAmigoOpenPayment==='function')window.medicoAmigoOpenPayment();
+ });
+
+ // Save payment to Supabase and finish the attention.
+ const pay=$('paymentForm');
+ if(pay)pay.onsubmit=async e=>{
+   e.preventDefault();e.stopImmediatePropagation();
+   const f=flow();if(!f?.patient?.id||!f?.consultation?.id){alert('No se encontró la consulta activa.');return false}
+   const price=Number($('consultationPrice').value||0),paid=Number($('amountPaid').value||0);
+   const status=price>0&&paid>=price?'Pagado':paid>0?'Pago parcial':'Pendiente';
+   const btn=pay.querySelector('button[type="submit"]'),old=btn?.textContent||'FINALIZAR';
+   if(btn){btn.disabled=true;btn.textContent='GUARDANDO...'}
+   try{
+     await req('payments',{method:'POST',body:JSON.stringify({
+       patient_id:f.patient.id,consultation_id:f.consultation.id,
+       consultation_price:Number.isFinite(price)?price:0,amount_paid:Number.isFinite(paid)?paid:0,
+       payment_method:$('paymentMethod').value||null,payment_status:status,
+       notes:$('paymentNotes').value.trim()||null,payment_date:new Date().toISOString()
+     })});
+     sessionStorage.removeItem('medicoAmigoFlow');
+     $('consultationForm')?.reset();$('prescriptionForm')?.reset();pay.reset();
+     alert('Atención finalizada correctamente.');
+     $('backHomeBtn')?.click();
+     const home=$('homeScreen'); if(home){document.querySelectorAll('main.app > section').forEach(x=>x.classList.add('hidden'));home.classList.remove('hidden');window.scrollTo(0,0)}
+   }catch(err){console.error(err);alert('No se pudo guardar el cobro: '+err.message)}
+   finally{if(btn){btn.disabled=false;btn.textContent=old}}
+   return false;
+ };
+
+ // Private signature upload: the file never goes to GitHub.
+ const sig=$('doctorSignature');
+ if(sig)sig.onchange=async e=>{
+   const file=e.target.files?.[0];if(!file)return;
+   if(file.size>2000000){alert('Usa una imagen de firma de hasta 2 MB.');e.target.value='';return}
+   const s=sess();if(!s?.user?.id){alert('Debes iniciar sesión.');return}
+   const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+   const path=s.user.id+'/signature.'+ext;
+   try{
+     const up=await fetch(URL+'/storage/v1/object/doctor-signatures/'+path,{
+       method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':file.type||'image/jpeg','x-upsert':'true'},body:file
+     });
+     if(!up.ok)throw Error(await up.text());
+     await req('doctor_profiles?id=eq.'+encodeURIComponent(s.user.id),{method:'PATCH',body:JSON.stringify({signature_url:path,updated_at:new Date().toISOString()})});
+     const blobRes=await fetch(URL+'/storage/v1/object/authenticated/doctor-signatures/'+path,{headers:{apikey:KEY,Authorization:'Bearer '+s.access_token}});
+     if(!blobRes.ok)throw Error(await blobRes.text());
+     const objectUrl=URL.createObjectURL(await blobRes.blob());
+     let cfg={};try{cfg=JSON.parse(sessionStorage.getItem('medicoAmigoDoctorConfig')||'{}')}catch{}
+     cfg.signature=objectUrl;sessionStorage.setItem('medicoAmigoDoctorConfig',JSON.stringify(cfg));
+     const box=$('signaturePreview');if(box){box.innerHTML='';const im=document.createElement('img');im.src=objectUrl;im.alt='Firma del médico';box.appendChild(im)}
+     $('removeSignatureBtn')?.classList.remove('hidden');
+     alert('Firma guardada de forma privada.');
+   }catch(err){console.error(err);alert('No se pudo guardar la firma: '+err.message)}
+ };
+
+ // Load private signature for the authenticated doctor.
+ async function loadPrivateSignature(){
+   const s=sess();if(!s?.user?.id)return;
+   try{
+     const prof=await req('doctor_profiles?id=eq.'+encodeURIComponent(s.user.id)+'&select=signature_url');
+     const path=prof?.[0]?.signature_url;if(!path)return;
+     const r=await fetch(URL+'/storage/v1/object/authenticated/doctor-signatures/'+path,{headers:{apikey:KEY,Authorization:'Bearer '+s.access_token}});
+     if(!r.ok)return;
+     const objectUrl=URL.createObjectURL(await r.blob());
+     let cfg={};try{cfg=JSON.parse(sessionStorage.getItem('medicoAmigoDoctorConfig')||'{}')}catch{}
+     cfg.signature=objectUrl;sessionStorage.setItem('medicoAmigoDoctorConfig',JSON.stringify(cfg));
+   }catch(err){console.error('Firma:',err)}
+ }
+ setTimeout(loadPrivateSignature,800);
 });
