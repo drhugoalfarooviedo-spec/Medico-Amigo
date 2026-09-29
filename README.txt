@@ -1,16 +1,21 @@
-MÉDICO AMIGO v1.5.2 — DASHBOARD POR SESIÓN
+MÉDICO AMIGO v1.5.3 — DASHBOARD DEFINITIVO
 
-Corrección puntual sobre v1.5.1:
-- Al iniciar sesión, pone el dashboard visual en cero antes de mostrarlo.
-- Después del perfil, vuelve a consultar Supabase usando la sesión/JWT del médico recién autenticado.
-- Al cerrar sesión elimina también del DOM las consultas recientes y pone contadores en cero.
-- Mantiene el filtro explícito doctor_id de v1.5.
-- Mantiene la limpieza de sesión de v1.5.1.
-- No requiere SQL nuevo. No modificar las 23 políticas RLS.
+CAUSA IDENTIFICADA
+La aplicación todavía conservaba un dashboard antiguo que leía
+`medicoAmigoConsultations` desde sessionStorage. Al cambiar de médico,
+ese módulo podía volver a dibujar los datos de la sesión anterior encima
+del dashboard real de Supabase.
 
-PRUEBA:
-1. Entrar como Hugo: debe ver únicamente los datos de Hugo.
-2. Salir.
-3. Entrar como Omar: debe ver únicamente TEST-OMAR-01 y sus propios importes.
-4. Salir.
-5. Volver a Hugo: TEST-OMAR-01 no debe aparecer.
+CORRECCIÓN
+- Se deshabilitó el dashboard local/legado.
+- Supabase queda como única fuente de verdad para las estadísticas y consultas recientes.
+- Al salir se limpian también los datos clínicos legados de sessionStorage.
+- Se mantienen el filtro explícito por doctor_id y las políticas RLS.
+- No requiere SQL nuevo.
+
+PRUEBA
+1. Subir los cuatro archivos.
+2. Ctrl + Shift + R.
+3. Salir e ingresar como Omar: 1 consulta / Bs 50 / TEST-OMAR-01.
+4. Salir e ingresar como Hugo: deben volver únicamente los registros de Hugo.
+5. Volver a Omar: debe reaparecer únicamente su información.

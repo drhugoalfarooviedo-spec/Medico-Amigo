@@ -15,8 +15,12 @@
    [
     'medicoAmigoPatients','medicoAmigoConsultations','medicoAmigoPayments',
     'medicoAmigoPrescriptions','medicoAmigoRecentConsultations',
-    'medicoAmigoDashboard','medicoAmigoToday','medicoAmigoState'
-   ].forEach(k=>localStorage.removeItem(k));
+    'medicoAmigoDashboard','medicoAmigoToday','medicoAmigoState',
+    'medicoAmigoLastPrescription','medicoAmigoFlow'
+   ].forEach(k=>{
+     localStorage.removeItem(k);
+     sessionStorage.removeItem(k);
+   });
    try{
      if(window.state){
        window.state.currentPatientId=null;
@@ -223,6 +227,8 @@ function sameLocalDay(iso){
  return d.getFullYear()===t.getFullYear()&&d.getMonth()===t.getMonth()&&d.getDate()===t.getDate()
 }
 function updateDashboard(){
+ // v1.5.3: dashboard local legado deshabilitado. Supabase es la única fuente de verdad.
+ return;
  const records=loadSessionRecords(),today=records.filter(r=>sameLocalDay(r.finishedAt));
  const income=today.reduce((sum,r)=>sum+money(r.payment.amountPaid),0);
  const pending=today.filter(r=>r.payment.status!=='Pagado').length;
