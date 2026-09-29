@@ -1,3 +1,51 @@
+
+/* ============================================================
+   v1.5 — AISLAMIENTO EXPLÍCITO POR MÉDICO
+   Defensa adicional al RLS: toda lectura/escritura clínica REST
+   queda ligada al UUID del usuario autenticado.
+============================================================ */
+(()=>{
+ const BASE='https://kdjvsbiqjpztdugewuve.supabase.co/rest/v1/';
+ const SESSION='medico_amigo_supabase_session';
+ const OWNED=new Set(['patients','consultations','prescriptions','prescription_items','payments']);
+ const nativeFetch=window.fetch.bind(window);
+ const getSession=()=>{try{return JSON.parse(localStorage.getItem(SESSION)||'null')}catch{return null}};
+ const tableOf=url=>{
+   try{
+     const u=new URL(typeof url==='string'?url:url.url,location.href);
+     if(!u.href.startsWith(BASE))return null;
+     return u.pathname.split('/rest/v1/')[1]?.split('/')[0]||null;
+   }catch{return null}
+ };
+ const bodyWithDoctor=(body,uid)=>{
+   if(!body)return body;
+   try{
+     const parsed=typeof body==='string'?JSON.parse(body):body;
+     if(Array.isArray(parsed)) return JSON.stringify(parsed.map(x=>({...x,doctor_id:uid})));
+     if(parsed && typeof parsed==='object') return JSON.stringify({...parsed,doctor_id:uid});
+   }catch{}
+   return body;
+ };
+ window.fetch=async function(input,init={}){
+   const table=tableOf(input);
+   if(!table||!OWNED.has(table))return nativeFetch(input,init);
+   const s=getSession(),uid=s?.user?.id;
+   if(!uid)return nativeFetch(input,init);
+
+   let raw=typeof input==='string'?input:input.url;
+   const u=new URL(raw,location.href);
+   const method=(init.method||'GET').toUpperCase();
+
+   // Every clinical operation is scoped to the authenticated doctor.
+   if(!u.searchParams.has('doctor_id'))u.searchParams.append('doctor_id','eq.'+uid);
+
+   const next={...init};
+   if(['POST','PATCH'].includes(method) && next.body) next.body=bodyWithDoctor(next.body,uid);
+
+   return nativeFetch(u.toString(),next);
+ };
+})();
+
 /* ============================================================
    v1.1.1 — LIMPIEZA ÚNICA DE DATOS DEMO/LOCALES
    Mantiene autenticación y configuración del médico.

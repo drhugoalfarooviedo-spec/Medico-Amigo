@@ -1,17 +1,24 @@
-MÉDICO AMIGO v1.4.2 — IDENTIFICACIÓN DE PACIENTE
+MÉDICO AMIGO v1.5 — AISLAMIENTO POR MÉDICO
 
-Corrección puntual sobre v1.4.1:
-- Corrige “No se encontró el paciente seleccionado”.
-- Al abrir una ficha guarda inmediatamente el UUID real del paciente.
-- Para fichas abiertas desde componentes antiguos, recupera el UUID desde Supabase usando CI y, como respaldo, nombre.
-- Editar y Eliminar usan ese UUID real.
-- La eliminación continúa verificándose contra Supabase.
-- No requiere SQL nuevo.
-- Mantiene dashboard, receta, cobro, firma y demás funciones de v1.4.1.
+OBJETIVO
+Impedir que una cuenta médica consulte o modifique datos clínicos pertenecientes a otra.
 
-Prueba recomendada:
-1. Ctrl+F5.
-2. Abrir Pacientes.
-3. Abrir un paciente ficticio.
-4. Eliminar paciente.
-5. Confirmar dos veces.
+Cambios:
+- Pacientes: filtro obligatorio doctor_id = usuario autenticado.
+- Consultas: filtro obligatorio doctor_id = usuario autenticado.
+- Recetas: filtro obligatorio doctor_id = usuario autenticado.
+- Ítems de receta: filtro obligatorio doctor_id = usuario autenticado.
+- Pagos: filtro obligatorio doctor_id = usuario autenticado.
+- En nuevas escrituras y actualizaciones, doctor_id se fuerza al UUID autenticado.
+- Mantiene v1.4.2: editar/eliminar paciente, cascada, dashboard, firma, receta y cobro.
+
+IMPORTANTE
+Esta versión agrega defensa en el navegador, pero RLS de Supabase sigue siendo la barrera de seguridad principal.
+Antes de considerar el sistema listo para datos clínicos reales se debe verificar también RLS directamente.
+
+PRUEBA
+1. Entrar como Dr. Omar.
+2. Debe mostrar 0 consultas, Bs 0 y ningún paciente de Hugo.
+3. Crear un paciente ficticio de Omar.
+4. Cerrar sesión.
+5. Entrar como Hugo: el paciente de Omar no debe aparecer.
