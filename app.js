@@ -667,15 +667,12 @@ document.addEventListener('DOMContentLoaded',()=>{
    try{
      await req('consultations',{method:'POST',body:JSON.stringify(payload),rep:true});
      await hydratePatientHistory(p);
-     // Continue to prescription screen using existing navigation if available.
-     currentConsultation={
-       patient:selectedPatient,date:new Date().toISOString(),
-       reason:payload.reason||'',currentIllness:payload.current_illness||'',
-       vitals:{bloodPressure:payload.blood_pressure||'',heartRate:payload.heart_rate||'',spo2:payload.oxygen_saturation||'',temperature:payload.temperature||'',respiratoryRate:payload.respiratory_rate||'',weight:payload.weight||'',height:payload.height||''},
-       physicalExam:payload.physical_exam||'',complementaryStudies:payload.complementary_studies||'',
-       diagnosis:payload.diagnosis||'',indications:payload.indications||'',notes:payload.observations||'',followUp:payload.follow_up||''
-     };
-     openPrescription();
+     // v1.2.4: no usamos variables del flujo legado fuera de su ámbito.
+     // Primero confirmamos el guardado real en Supabase; Receta se conectará en la siguiente etapa.
+     alert('Consulta guardada correctamente en Supabase.');
+     form.reset();
+     const patientsNav=document.getElementById('patientsNavBtn');
+     if(patientsNav) patientsNav.click();
    }catch(err){console.error(err);alert('No se pudo guardar la consulta: '+err.message)}
    finally{if(b){b.disabled=false;b.textContent=old}}
    return false;

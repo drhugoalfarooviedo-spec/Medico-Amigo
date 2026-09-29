@@ -1,20 +1,16 @@
-MÉDICO AMIGO v1.2.3 — CONSULTA ESTABLE
+MÉDICO AMIGO v1.2.4 — GUARDADO DE CONSULTA
 
-CORRECCIONES:
-- + CONSULTA desde la ficha ahora abre el formulario clínico completo.
-- Se conserva el paciente seleccionado y su UUID.
-- El formulario incluye motivo, enfermedad actual, signos vitales, examen físico,
-  estudios complementarios, diagnóstico, indicaciones, observaciones y seguimiento.
-- Al guardar, la consulta se envía a public.consultations y continúa a Receta.
-- El historial de la ficha se actualiza desde Supabase.
-- Se eliminó el botón IMPRIMIR HISTORIA CLÍNICA.
-- Se mantiene únicamente DESCARGAR HISTORIA CLÍNICA.
-- No se modifica la lógica estable de pacientes ni se borra información de Supabase.
+- Corrige definitivamente el error "selectedPatient is not defined".
+- La consulta se guarda en public.consultations.
+- Después del guardado muestra confirmación y vuelve a Pacientes.
+- No intenta pasar todavía a Receta: primero verificaremos la fila en Supabase.
+- No modifica la lógica estable de Pacientes.
+- Mantiene Descargar Historia Clínica.
 
 PRUEBA:
-1. Entrar como Dr. Hugo.
-2. Abrir un paciente.
-3. Pulsar + CONSULTA.
-4. Confirmar que aparece el formulario clínico completo.
-5. Registrar una consulta ficticia y pulsar Guardar y continuar.
-6. No completar receta/cobro todavía: comprobar primero public.consultations.
+1. Ctrl+F5.
+2. Paciente > + CONSULTA.
+3. Completar una consulta ficticia.
+4. Guardar.
+5. Debe aparecer "Consulta guardada correctamente en Supabase".
+6. Revisar Supabase > public.consultations.
