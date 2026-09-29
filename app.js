@@ -1256,3 +1256,102 @@ document.addEventListener('DOMContentLoaded',()=>{
    return false;
  };
 });
+
+
+/* ============================================================
+   v1.3.4 — FIRMA PRIVADA EN HISTORIA CLÍNICA
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const BASE='https://kdjvsbiqjpztdugewuve.supabase.co';
+ const KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
+ const SESSION='medico_amigo_supabase_session';
+ const sess=()=>{try{return JSON.parse(localStorage.getItem(SESSION)||'null')}catch{return null}};
+ async function loadHistorySignature(){
+   const s=sess(); if(!s?.access_token||!s?.user?.id)return;
+   try{
+     const h={apikey:KEY,Authorization:'Bearer '+s.access_token};
+     const pr=await fetch(BASE+'/rest/v1/doctor_profiles?id=eq.'+encodeURIComponent(s.user.id)+'&select=full_name,specialty,professional_registration,signature_url',{headers:h});
+     if(!pr.ok)return;
+     const rows=await pr.json(), p=rows?.[0]; if(!p)return;
+     let signature='';
+     if(p.signature_url){
+       const sr=await fetch(BASE+'/storage/v1/object/authenticated/doctor-signatures/'+p.signature_url,{headers:h});
+       if(sr.ok) signature=URL.createObjectURL(await sr.blob());
+     }
+     const doctor={
+       name:p.full_name||'Dr. Hugo Alfaro Oviedo',
+       specialty:p.specialty||'Medicina General',
+       registration:p.professional_registration||'A-4833274',
+       signature
+     };
+     // Keep both configuration keys synchronized because different document
+     // modules in the existing app read different legacy keys.
+     let a={}; try{a=JSON.parse(sessionStorage.getItem('medicoAmigoDoctorConfig')||'{}')}catch{}
+     Object.assign(a,doctor); sessionStorage.setItem('medicoAmigoDoctorConfig',JSON.stringify(a));
+     let b={}; try{b=JSON.parse(sessionStorage.getItem('doctorConfig')||'{}')}catch{}
+     Object.assign(b,doctor); sessionStorage.setItem('doctorConfig',JSON.stringify(b));
+   }catch(e){console.error('Firma historia clínica:',e)}
+ }
+ loadHistorySignature();
+ setTimeout(loadHistorySignature,900);
+});
+
+
+/* ============================================================
+   v1.4 — GESTIÓN DE REGISTROS
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const BASE='https://kdjvsbiqjpztdugewuve.supabase.co', KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp', SESSION='medico_amigo_supabase_session';
+ const $=id=>document.getElementById(id);
+ const sess=()=>{try{return JSON.parse(localStorage.getItem(SESSION)||'null')}catch{return null}};
+ const heads=(rep=false)=>{const s=sess();if(!s?.access_token)throw Error('No hay sesión autenticada.');const h={apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'};if(rep)h.Prefer='return=representation';return h};
+ async function req(path,opt={}){const r=await fetch(BASE+'/rest/v1/'+path,{...opt,headers:{...heads(opt.rep),...(opt.headers||{})}});const t=await r.text();let d=null;try{d=t?JSON.parse(t):null}catch{d=t}if(!r.ok)throw Error(d?.message||t||('HTTP '+r.status));return d}
+ const pid=()=>sessionStorage.getItem('medicoAmigoCurrentPatientId')||window.state?.currentPatientId||null;
+ const set=(id,v)=>{if($(id))$(id).value=v??''};
+ const show=id=>{document.querySelectorAll('main.app > section').forEach(x=>x.classList.add('hidden'));$(id)?.classList.remove('hidden');scrollTo(0,0)};
+ async function patient(){const id=pid();if(!id)throw Error('No se encontró el paciente seleccionado.');const r=await req('patients?id=eq.'+encodeURIComponent(id)+'&select=*');if(!r?.[0])throw Error('Paciente no encontrado.');return r[0]}
+ function gyne(){ $('editGyneWrap')?.classList.toggle('hidden',!/femen/i.test($('editSex')?.value||'')) }
+ $('editSex')?.addEventListener('change',gyne);
+
+ $('editPatientBtn')?.addEventListener('click',async()=>{
+  try{const p=await patient(),g=p.gynecological_history||{};
+   set('editFullName',p.full_name);set('editDocument',p.document_number);set('editBirthDate',p.birth_date);set('editSex',p.sex);set('editPhone',p.phone);set('editAddress',p.address);
+   set('editPathological',p.pathological_history||p.medical_history);set('editNonPathological',p.non_pathological_history);set('editFamily',p.family_history);
+   set('editMenarche',g.menarche);set('editLmp',g.lmp);set('editCycle',g.menstrual_cycle);set('editPregnancies',g.pregnancies);set('editBirths',g.births);set('editCesareans',g.cesareans);set('editAbortions',g.abortions);set('editContraception',g.contraception);set('editGyneOther',g.other);
+   set('editAllergies',p.allergies);set('editMedication',p.regular_medications);set('editObservations',p.observations);gyne();show('editPatientScreen');
+  }catch(e){alert('No se pudo abrir la edición: '+e.message)}
+ });
+ const cancel=()=>{$('patientsNavBtn')?.click()};
+ $('editPatientBackBtn')?.addEventListener('click',cancel);$('cancelEditPatientBtn')?.addEventListener('click',cancel);
+
+ $('editPatientForm')?.addEventListener('submit',async e=>{
+  e.preventDefault();e.stopImmediatePropagation();const id=pid(),female=/femen/i.test($('editSex').value||'');
+  const g=female?{menarche:$('editMenarche').value.trim()||null,lmp:$('editLmp').value||null,menstrual_cycle:$('editCycle').value.trim()||null,pregnancies:$('editPregnancies').value||null,births:$('editBirths').value||null,cesareans:$('editCesareans').value||null,abortions:$('editAbortions').value||null,contraception:$('editContraception').value.trim()||null,other:$('editGyneOther').value.trim()||null}:null;
+  const b={full_name:$('editFullName').value.trim(),document_number:$('editDocument').value.trim()||null,birth_date:$('editBirthDate').value||null,sex:$('editSex').value||null,phone:$('editPhone').value.trim()||null,address:$('editAddress').value.trim()||null,pathological_history:$('editPathological').value.trim()||null,medical_history:$('editPathological').value.trim()||null,non_pathological_history:$('editNonPathological').value.trim()||null,family_history:$('editFamily').value.trim()||null,gynecological_history:g,allergies:$('editAllergies').value.trim()||null,regular_medications:$('editMedication').value.trim()||null,observations:$('editObservations').value.trim()||null,updated_at:new Date().toISOString()};
+  try{const r=await req('patients?id=eq.'+encodeURIComponent(id),{method:'PATCH',rep:true,body:JSON.stringify(b)});if(!r?.[0]?.id)throw Error('Supabase no confirmó los cambios.');alert('Paciente actualizado correctamente.');$('patientsNavBtn')?.click()}
+  catch(err){alert('No se pudo actualizar: '+err.message)}
+ });
+
+ $('deletePatientBtn')?.addEventListener('click',async()=>{
+  let p;try{p=await patient()}catch(e){alert(e.message);return}
+  if(!confirm(`¿Eliminar a ${p.full_name}?\n\nSe eliminarán sus consultas, recetas y cobros asociados.`))return;
+  if(!confirm('CONFIRMACIÓN FINAL\n\nEsta acción no se puede deshacer. ¿Eliminar definitivamente?'))return;
+  try{await req('patients?id=eq.'+encodeURIComponent(p.id),{method:'DELETE'});sessionStorage.removeItem('medicoAmigoCurrentPatientId');alert('Paciente eliminado correctamente.');$('patientsNavBtn')?.click();window.medicoAmigoRefreshDashboard?.()}
+  catch(e){alert('No se pudo eliminar: '+e.message)}
+ });
+
+ // Consultation cards created by the history renderer get a safe delete button.
+ const addDeleteButtons=()=>{
+  document.querySelectorAll('#patientHistoryList [data-id],#patientHistoryList [data-consultation-id]').forEach(card=>{
+   if(card.querySelector('.delete-consultation-btn'))return;
+   const id=card.dataset.consultationId||card.dataset.id;if(!id)return;
+   const b=document.createElement('button');b.type='button';b.className='delete-consultation-btn';b.textContent='🗑 Eliminar consulta';
+   b.onclick=async ev=>{ev.preventDefault();ev.stopPropagation();if(!confirm('¿Eliminar esta consulta? También se eliminarán su receta y cobro asociados.'))return;
+    try{await req('consultations?id=eq.'+encodeURIComponent(id),{method:'DELETE'});card.remove();alert('Consulta eliminada correctamente.');window.medicoAmigoRefreshDashboard?.()}
+    catch(e){alert('No se pudo eliminar la consulta: '+e.message)}
+   };card.appendChild(b);
+  });
+ };
+ new MutationObserver(addDeleteButtons).observe(document.getElementById('patientHistoryList')||document.body,{childList:true,subtree:true});
+ addDeleteButtons();
+});
