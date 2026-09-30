@@ -1,22 +1,18 @@
-MÉDICO AMIGO v1.0.11 — FIX DEFINITIVO DE CONTEXTO EN RECETA INDEPENDIENTE
+MÉDICO AMIGO v1.0.12 — SESIÓN AUTOMÁTICA
 
-Error observado:
-Cannot read properties of null (reading 'meta')
+Corrige el error: JWT expired.
 
-Causa encontrada:
-No era un problema del campo meta del paciente.
-El generador profesional de receta utilizaba las variables internas
-selectedPatient/currentConsultation del flujo de consulta.
-La receta independiente, en cambio, guardaba su contexto en
-window.selectedPatient/window.currentConsultation.
+La aplicación ahora:
+- revisa si el token está próximo a vencer;
+- renueva la sesión mediante el refresh_token de Supabase;
+- actualiza la sesión guardada;
+- revisa la sesión al volver a la app;
+- revisa periódicamente mientras permanece abierta;
+- si una petición REST/Storage recibe JWT expired, renueva y reintenta una vez;
+- si el refresh_token tampoco es válido, pide iniciar sesión nuevamente.
 
-Por eso la receta podía guardarse en Supabase, pero al construir el documento
-el generador recibía selectedPatient = null y fallaba al leer p.meta.
+También se fuerza una sesión vigente antes de registrar un paciente rápido
+y antes de guardar una receta independiente.
 
-Corrección:
-- prescriptionPrint usa primero el contexto clínico normal;
-- si no existe, utiliza el contexto de receta independiente;
-- valida paciente y contexto antes de generar el documento;
-- no modifica consultas, historia clínica, cobros, RLS ni base de datos.
-
+No cambia la base de datos, RLS, historia clínica, consultas ni cobros.
 No requiere SQL.

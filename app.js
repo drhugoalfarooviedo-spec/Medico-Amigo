@@ -1867,7 +1867,8 @@ document.addEventListener('DOMContentLoaded',()=>{
    if(btn){btn.disabled=true;btn.textContent='GUARDANDO…'}
 
    try{
-     const a=session();
+     const a=window.medicoAmigoEnsureSession?await window.medicoAmigoEnsureSession(false):session();
+     if(!a?.access_token||!a?.user?.id)throw Error('Tu sesión venció. Vuelve a iniciar sesión.');
      const makeCode=()=>`RX-${new Date().toISOString().slice(0,10).replaceAll('-','')}-${(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()).replaceAll('-','').replace('.','').slice(-12).toUpperCase()}`;
      let code=makeCode();if($('prescriptionCode'))$('prescriptionCode').textContent=code;
      const general=$('prescriptionGeneralInstructions')?.value?.trim()||null;
@@ -1944,6 +1945,87 @@ document.addEventListener('DOMContentLoaded',()=>{
 /* v1.0.8: módulo v1.0.5 retirado por conflicto de navegación. */
 
 /* ============================================================
+   v1.0.12 — RENOVACIÓN AUTOMÁTICA DE SESIÓN SUPABASE
+   Evita "JWT expired" al dejar Médico Amigo abierto.
+============================================================ */
+(()=>{
+ const BASE='https://kdjvsbiqjpztdugewuve.supabase.co';
+ const KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
+ const STORAGE='medico_amigo_supabase_session';
+ let refreshing=null;
+
+ const read=()=>{try{return JSON.parse(localStorage.getItem(STORAGE)||'null')}catch{return null}};
+ const write=x=>{if(x)localStorage.setItem(STORAGE,JSON.stringify(x))};
+ const expiring=(x,margin=90)=>{
+   if(!x?.access_token)return true;
+   try{
+     const payload=JSON.parse(atob(x.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+     return !payload.exp || (payload.exp*1000-Date.now()) < margin*1000;
+   }catch{return true}
+ };
+
+ async function renew(force=false){
+   const cur=read();
+   if(!cur?.refresh_token)throw new Error('SESSION_RELOGIN');
+   if(!force && !expiring(cur))return cur;
+   if(refreshing)return refreshing;
+   refreshing=(async()=>{
+     const r=await fetch(BASE+'/auth/v1/token?grant_type=refresh_token',{
+       method:'POST',
+       headers:{apikey:KEY,'Content-Type':'application/json'},
+       body:JSON.stringify({refresh_token:cur.refresh_token})
+     });
+     const data=await r.json().catch(()=>null);
+     if(!r.ok || !data?.access_token)throw new Error('SESSION_RELOGIN');
+     const next={...cur,...data,user:data.user||cur.user};
+     write(next);
+     return next;
+   })().finally(()=>refreshing=null);
+   return refreshing;
+ }
+ window.medicoAmigoEnsureSession=renew;
+
+ // Refresh proactively while the app remains open and whenever the user returns to it.
+ setInterval(()=>renew(false).catch(()=>{}),4*60*1000);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)renew(false).catch(()=>{})});
+ window.addEventListener('focus',()=>renew(false).catch(()=>{}));
+
+ // Protect all Supabase REST/Storage requests. If Supabase says JWT expired,
+ // renew once and transparently retry the original request.
+ const nativeFetch=window.fetch.bind(window);
+ window.fetch=async function(input,init={}){
+   const url=typeof input==='string'?input:(input?.url||'');
+   const protectedCall=url.startsWith(BASE+'/rest/v1/') || url.startsWith(BASE+'/storage/v1/');
+   if(!protectedCall)return nativeFetch(input,init);
+
+   let cur;
+   try{cur=await renew(false)}catch(e){cur=read()}
+   const makeInit=(token)=>{
+     const headers=new Headers(init.headers || (typeof input!=='string' ? input.headers : undefined) || {});
+     if(token?.access_token)headers.set('Authorization','Bearer '+token.access_token);
+     if(!headers.has('apikey'))headers.set('apikey',KEY);
+     return {...init,headers};
+   };
+
+   let response=await nativeFetch(input,makeInit(cur));
+   if(response.status===401){
+     const probe=response.clone();
+     const msg=await probe.text().catch(()=>'');
+     if(/jwt.*expired|token.*expired|invalid.*jwt/i.test(msg)){
+       try{
+         cur=await renew(true);
+         response=await nativeFetch(input,makeInit(cur));
+       }catch(e){
+         // Keep the 401 response path predictable for the caller.
+         throw new Error('Tu sesión venció y no pudo renovarse. Cierra sesión e inicia nuevamente.');
+       }
+     }
+   }
+   return response;
+ };
+})(); 
+
+/* ============================================================
    v1.0.9 — NUEVA RECETA: PACIENTE EXISTENTE O NUEVO
 ============================================================ */
 document.addEventListener('DOMContentLoaded',()=>{
@@ -1976,7 +2058,8 @@ document.addEventListener('DOMContentLoaded',()=>{
  }
 
  async function saveQuick(form){
-   const a=sess();if(!a?.access_token||!a?.user?.id)throw Error('Sesión no válida.');
+   const a=window.medicoAmigoEnsureSession?await window.medicoAmigoEnsureSession(false):sess();
+   if(!a?.access_token||!a?.user?.id)throw Error('Sesión no válida.');
    const fd=new FormData(form), body={
      doctor_id:a.user.id,full_name:(fd.get('full_name')||'').trim(),
      document_number:(fd.get('document_number')||'').trim()||null,
