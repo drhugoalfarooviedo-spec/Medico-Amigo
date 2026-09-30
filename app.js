@@ -915,31 +915,84 @@ document.addEventListener('DOMContentLoaded',()=>{
    let cs=[];
    if(typeof window.loadConsultationsFromSupabase==='function')cs=await window.loadConsultationsFromSupabase(p);
    let cfg={};try{cfg=JSON.parse(sessionStorage.getItem('medicoAmigoDoctorConfig')||'{}')}catch{}
+   const s=(()=>{try{return JSON.parse(localStorage.getItem('medico_amigo_supabase_session')||'null')}catch{return null}})();
+   const h=s?.access_token?{apikey:'sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp',Authorization:'Bearer '+s.access_token}:{};
+   for(const c of (cs||[])){
+     c.rx=null;
+     if(!c.id||!s?.access_token)continue;
+     try{
+       const rr=await fetch('https://kdjvsbiqjpztdugewuve.supabase.co/rest/v1/prescriptions?consultation_id=eq.'+encodeURIComponent(c.id)+'&select=*&order=created_at.desc',{headers:h});
+       const rxs=rr.ok?await rr.json():[];
+       if(rxs[0]){
+         const rx=rxs[0];
+         const ir=await fetch('https://kdjvsbiqjpztdugewuve.supabase.co/rest/v1/prescription_items?prescription_id=eq.'+encodeURIComponent(rx.id)+'&select=*&order=item_order.asc',{headers:h});
+         rx.items=ir.ok?await ir.json():[];
+         c.rx=rx;
+       }
+     }catch(e){console.warn('Receta en historia:',e)}
+   }
    return {p,cs:cs||[],cfg};
  }
  function body({p,cs,cfg}){
-   const blocks=cs.length?cs.map((c,i)=>`<section><h3>Consulta ${cs.length-i} — ${esc(fmt(c.date))}</h3>
-<p><b>Motivo de consulta:</b> ${esc(c.reason||'No registrado')}</p>
-<p><b>Enfermedad actual:</b> ${esc(c.illness||'No registrado')}</p>
-<p><b>Antecedentes relevantes:</b> ${esc(c.history||'No registrado')}</p>
-<p><b>Signos vitales:</b> PA ${esc(c.bp||'—')} · FC ${esc(c.hr??'—')} · SpO₂ ${esc(c.spo2??'—')} · T° ${esc(c.temp??'—')} · FR ${esc(c.rr??'—')} · Peso ${esc(c.weight??'—')} · Talla ${esc(c.height??'—')}</p>
-<p><b>Examen físico:</b> ${esc(c.exam||'No registrado')}</p>
-<p><b>Estudios complementarios revisados:</b> ${esc(c.studies||'No registrado')}</p>
-<p><b>Diagnóstico / impresión:</b> ${esc(c.diagnosis||'No registrado')}</p>
-<p><b>Indicaciones:</b> ${esc(c.plan||'No registrado')}</p>
-<p><b>Observaciones:</b> ${esc(c.notes||'No registrado')}</p>
-<p><b>Seguimiento:</b> ${esc(c.followUp||'No registrado')}</p></section>`).join(''):`<section><h3>Historial de consultas</h3><p>Sin consultas registradas.</p></section>`;
-   return `<header><h1>MÉDICO AMIGO</h1><div>ATENCIÓN MÉDICA INTEGRAL</div></header>
-<h2>Historia clínica</h2>
-<div class="box"><b>Paciente:</b> ${esc(p.name)}<br><b>CI / Documento:</b> ${esc(p.ci||'No registrado')}<br><b>Edad:</b> ${esc(p.age!=null?p.age+' años':'No registrada')}<br><b>Sexo:</b> ${esc(p.sex||'No registrado')}<br><b>Teléfono:</b> ${esc(p.phone||'No registrado')}<br><b>Dirección:</b> ${esc(p.address||'No registrada')}</div>
-<h3>Información médica</h3>
-<div class="box"><b>Antecedentes personales patológicos:</b> ${esc(p.pathologicalHistory||p.history||'No registrado')}<br><b>Antecedentes personales no patológicos:</b> ${esc(p.nonPathologicalHistory||'No registrado')}<br><b>Antecedentes heredofamiliares:</b> ${esc(p.familyHistory||'No registrado')}${/femen/i.test(p.sex||'')?'<br><b>Antecedentes gineco-obstétricos:</b> '+esc(window.formatGyneHistory125?.(p.gyneHistory)||'No registrado'):''}<br><b>Alergias:</b> ${esc(p.allergies||'No registrado')}<br><b>Medicación habitual:</b> ${esc(p.medication||p.meds||'No registrado')}<br><b>Observaciones:</b> ${esc(p.observations||p.obs||'No registrado')}</div>
-${blocks}
-<div class="foot"><b>${esc(cfg.name||'Médico')}</b><br>${esc(cfg.specialty||'')}<br>${cfg.registration?'Matrícula profesional: '+esc(cfg.registration)+'<br>':''}<br>_____________________________<br>Firma y sello</div>`;
+   const line=(label,value)=>value&&String(value).trim()?`<div class="hc-row"><b>${label}</b><div>${esc(value)}</div></div>`:'';
+   const vitals=c=>[
+     c.bp?'PA '+c.bp:null,c.hr!=null&&c.hr!==''?'FC '+c.hr:null,c.spo2!=null&&c.spo2!==''?'SpO₂ '+c.spo2+'%':null,
+     c.temp!=null&&c.temp!==''?'T° '+c.temp+' °C':null,c.rr!=null&&c.rr!==''?'FR '+c.rr:null,
+     c.weight!=null&&c.weight!==''?'Peso '+c.weight+' kg':null,c.height!=null&&c.height!==''?'Talla '+c.height+' cm':null
+   ].filter(Boolean).join(' · ');
+   const rxBlock=rx=>{
+     if(!rx?.items?.length && !rx?.general_instructions)return '';
+     const meds=(rx.items||[]).map((m,i)=>`<div class="med"><div class="med-title">${i+1}. ${esc(m.medication_name||'Medicamento')}${m.presentation?` <span>${esc(m.presentation)}</span>`:''}</div>
+       ${[m.dose,m.route,m.frequency,m.duration].filter(Boolean).length?`<div class="med-meta">${[m.dose,m.route,m.frequency,m.duration].filter(Boolean).map(esc).join(' · ')}</div>`:''}
+       ${m.instructions?`<div class="med-note">${esc(m.instructions)}</div>`:''}</div>`).join('');
+     return `<div class="treatment"><div class="subhead">Tratamiento prescrito</div>${meds}${rx.general_instructions?`<div class="general"><b>Indicaciones generales:</b> ${esc(rx.general_instructions)}</div>`:''}</div>`;
+   };
+   const blocks=cs.length?cs.map(c=>`<section class="visit">
+     <div class="visit-head"><div><b>${esc(fmt(c.date))}</b><span>Consulta médica</span></div>${c.diagnosis?`<div class="diagnosis">${esc(c.diagnosis)}</div>`:''}</div>
+     <div class="visit-body">
+       ${line('Motivo de consulta',c.reason)}
+       ${line('Enfermedad actual',c.illness)}
+       ${line('Antecedentes relevantes',c.history)}
+       ${vitals(c)?line('Signos vitales',vitals(c)):''}
+       ${line('Examen físico',c.exam)}
+       ${line('Estudios complementarios revisados',c.studies)}
+       ${line('Diagnóstico / impresión clínica',c.diagnosis)}
+       ${line('Indicaciones',c.plan)}
+       ${line('Observaciones',c.notes)}
+       ${line('Seguimiento',c.followUp)}
+       ${rxBlock(c.rx)}
+     </div></section>`).join(''):`<div class="empty">Sin consultas registradas.</div>`;
+   const medical=[
+     line('Antecedentes personales patológicos',p.pathologicalHistory||p.history),
+     line('Antecedentes personales no patológicos',p.nonPathologicalHistory),
+     line('Antecedentes heredofamiliares',p.familyHistory),
+     /femen/i.test(p.sex||'')?line('Antecedentes gineco-obstétricos',window.formatGyneHistory125?.(p.gyneHistory)): '',
+     line('Alergias',p.allergies),line('Medicación habitual',p.medication||p.meds),line('Observaciones',p.observations||p.obs)
+   ].filter(Boolean).join('');
+   return `<header><div><h1>MÉDICO <span>AMIGO</span></h1><small>ATENCIÓN MÉDICA INTEGRAL</small></div>
+     <div class="doctor"><b>${esc(cfg.name||'')}</b>${cfg.specialty?`<span>${esc(cfg.specialty)}</span>`:''}${cfg.registration?`<span>Mat. ${esc(cfg.registration)}</span>`:''}</div></header>
+   <div class="title"><h2>Historia clínica</h2><div>Documento clínico del paciente</div></div>
+   <div class="patient-card"><div><small>Paciente</small><b>${esc(p.name)}</b></div><div><small>CI / Documento</small><b>${esc(p.ci||'—')}</b></div><div><small>Edad</small><b>${esc(p.age!=null?p.age+' años':'—')}</b></div><div><small>Sexo</small><b>${esc(p.sex||'—')}</b></div><div><small>Teléfono</small><b>${esc(p.phone||'—')}</b></div><div class="wide"><small>Dirección</small><b>${esc(p.address||'—')}</b></div></div>
+   ${medical?`<div class="section-title">Antecedentes e información médica</div><div class="medical-card">${medical}</div>`:''}
+   <div class="section-title">Evolución clínica</div>${blocks}
+   <div class="foot"><div class="signature-line"></div><b>${esc(cfg.name||'Médico')}</b>${cfg.specialty?`<span>${esc(cfg.specialty)}</span>`:''}${cfg.registration?`<span>Matrícula profesional: ${esc(cfg.registration)}</span>`:''}</div>`;
  }
  function doc(inner,autoPrint=false){
-   return `<!doctype html><html><head><meta charset="utf-8"><title>Historia clínica</title><style>
-@page{size:A4;margin:16mm}*{box-sizing:border-box}body{font:12px Arial,sans-serif;color:#17344a;max-width:800px;margin:0 auto;padding:12px}header{text-align:center;border-bottom:2px solid #0b789b;padding-bottom:12px}h1{margin:0;color:#073f68}h2{font-size:18px}h3{font-size:14px;color:#087d9e;border-bottom:1px solid #ccdce4;padding-bottom:6px}section{page-break-inside:avoid;margin:20px 0}p{line-height:1.5;white-space:pre-wrap}.box{background:#f5f9fb;padding:12px;border-radius:8px;line-height:1.7}.foot{margin-top:38px;text-align:center}</style></head><body>${inner}${autoPrint?'<script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script>':''}</body></html>`;
+   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Historia clínica</title><style>
+@page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#18364b;max-width:900px;margin:0 auto;padding:18px;background:#fff;font-size:12px}
+header{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;border-bottom:3px solid #16a4b8;padding:0 0 12px}h1{margin:0;color:#073f68;font-size:24px}h1 span{color:#13a6b8}header small{font-size:9px;letter-spacing:.4px}.doctor{text-align:right;display:grid;gap:3px}.doctor span{font-size:10px}
+.title{display:flex;justify-content:space-between;align-items:end;margin:20px 0 10px}.title h2{margin:0;font-size:20px;color:#073f68}.title div{color:#718696;font-size:10px}
+.patient-card{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;background:#f3f8fa;border:1px solid #dce9ee;border-radius:10px;padding:14px}.patient-card div{display:grid;gap:3px}.patient-card small{color:#6e8595}.patient-card b{font-size:12px}.patient-card .wide{grid-column:span 2}
+.section-title{font-size:14px;font-weight:bold;color:#087d9e;margin:20px 0 8px;border-bottom:1px solid #bcdbe3;padding-bottom:6px}
+.medical-card,.visit{border:1px solid #dce8ed;border-radius:10px;overflow:hidden;background:#fff}.medical-card{padding:5px 14px}
+.hc-row{display:grid;grid-template-columns:190px 1fr;gap:12px;padding:8px 0;border-bottom:1px solid #edf2f4;line-height:1.45}.hc-row:last-child{border-bottom:0}.hc-row b{color:#294a5e}
+.visit{margin:0 0 14px;page-break-inside:avoid}.visit-head{display:flex;justify-content:space-between;gap:15px;align-items:center;background:#f3f8fa;padding:10px 14px;border-bottom:1px solid #dce8ed}.visit-head>div:first-child{display:grid;gap:2px}.visit-head span{font-size:10px;color:#718696}.diagnosis{font-weight:bold;color:#087d9e;text-align:right}.visit-body{padding:5px 14px}
+.treatment{margin:10px 0 6px;border-left:4px solid #12a6b8;background:#f4fbfc;padding:10px 12px}.subhead{font-weight:bold;color:#087d9e;margin-bottom:8px}.med{padding:7px 0;border-bottom:1px solid #d9ecef}.med:last-of-type{border-bottom:0}.med-title{font-weight:bold}.med-title span{font-weight:normal;color:#5f7787}.med-meta{margin-top:3px}.med-note{margin-top:3px;color:#5f7787;font-style:italic}.general{margin-top:9px}
+.foot{text-align:center;margin:38px auto 5px;display:grid;gap:3px;width:260px}.foot span{font-size:10px}.signature-line{border-top:1px solid #466273;margin-bottom:5px}.empty{padding:18px;text-align:center;color:#718696}
+.no-print{text-align:center;margin:24px 0}.no-print button{padding:12px 20px;border:0;border-radius:9px;background:#073f68;color:#fff;font-weight:bold}
+@media(max-width:600px){body{padding:10px}.patient-card{grid-template-columns:1fr 1fr}.patient-card .wide{grid-column:1/-1}.hc-row{grid-template-columns:1fr;gap:3px}.visit-head{align-items:flex-start;flex-direction:column}.diagnosis{text-align:left}.doctor{font-size:9px}}
+@media print{body{padding:0}.no-print{display:none!important}}
+</style></head><body>${inner}${autoPrint?'<script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script>':''}</body></html>`;
  }
  async function download(){
    const w=window.open('about:blank','_blank');
@@ -1683,5 +1736,36 @@ document.addEventListener('DOMContentLoaded',()=>{
      }
      rxMode=null;$('patientsNavBtn')?.click();
    }catch(err){console.error(err);alert('No se pudo guardar la receta: '+err.message)}
+ },true);
+});
+
+
+/* v1.0.2 — APERTURA ROBUSTA DE RECETA */
+document.addEventListener('DOMContentLoaded',()=>{
+ const $=id=>document.getElementById(id);
+ function patient(){
+   const id=sessionStorage.getItem('medicoAmigoCurrentPatientId')||(window.state&&state.currentPatientId);
+   let a=[];try{a=JSON.parse(sessionStorage.getItem('medicoAmigoPatients')||'[]')}catch{}
+   return a.find(x=>x.id===id)||window.detailPatient||null;
+ }
+ function openRx(p,consultation=null){
+   if(!p?.id){alert('No se pudo identificar al paciente. Vuelve a abrir su ficha.');return}
+   window.selectedPatient=p;
+   window.currentConsultation=consultation||{id:null,diagnosis:'',indications:''};
+   const set=(id,t)=>{const e=$(id);if(e)e.textContent=t||''};
+   set('prescriptionPatientName',p.name);set('prescriptionSelectedName',p.name);
+   set('prescriptionSelectedMeta',[p.ci?'CI: '+p.ci:'Sin documento',p.meta].filter(Boolean).join(' · '));
+   set('prescriptionAvatar',(p.name||'P').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase());
+   set('prescriptionDiagnosis',consultation?.diagnosis||'Receta independiente');
+   set('prescriptionCode','RX-'+new Date().toISOString().slice(0,10).replaceAll('-','')+'-'+String(Date.now()).slice(-5));
+   if($('prescriptionGeneralInstructions'))$('prescriptionGeneralInstructions').value=consultation?.plan||consultation?.indications||'';
+   if($('medicationsList')){$('medicationsList').innerHTML=''; if(typeof window.addMedication==='function')window.addMedication()}
+   if(typeof window.show==='function')window.show($('prescriptionScreen'));else{$('prescriptionScreen')?.classList.remove('hidden');$('patientDetailScreen')?.classList.add('hidden')}
+   sessionStorage.setItem('medicoAmigoRxStandalone',JSON.stringify({patientId:p.id,consultationId:consultation?.id||null}));
+ }
+ document.addEventListener('click',e=>{
+   const b=e.target.closest('#standalonePrescriptionFromDetailBtn');
+   if(!b)return;
+   e.preventDefault();e.stopImmediatePropagation();openRx(patient(),null);
  },true);
 });

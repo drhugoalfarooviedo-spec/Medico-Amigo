@@ -1,23 +1,20 @@
-MÉDICO AMIGO v1.0.1 — CORRECCIONES
+MÉDICO AMIGO v1.0.2 — RECETA + HISTORIA CLÍNICA
 
-Incluye:
-- Interfaz móvil separada de escritorio: una pantalla a la vez y formularios adaptables.
-- Edición completa del paciente, incluido contacto de emergencia y antecedentes clínicos.
-- Acceso a consulta guardada y edición del mismo registro (PATCH; no duplica consulta).
-- Ver/editar/regenerar receta asociada desde historial.
-- Receta independiente sin crear una nueva consulta.
-- Firma privada convertida a imagen embebida para mayor compatibilidad en documentos móviles.
-- Historia clínica deja de descargarse como .html: abre documento imprimible/guardable como PDF.
-- Tratamiento/receta visible al abrir una consulta del historial.
-- PWA actualizada a caché v1.0.1.
+Correcciones sobre v1.0.1:
+- Historia clínica rediseñada en formato A4 más ordenado y profesional.
+- Omite bloques vacíos innecesarios en vez de repetir “No registrado”.
+- Cada consulta consulta su receta asociada por consultation_id.
+- La historia clínica muestra medicamentos, presentación, dosis, vía, frecuencia,
+  duración, instrucciones e indicaciones generales de la receta.
+- Apertura reforzada de “Rx RECETA” desde la ficha del paciente.
+- Mantiene edición de consulta, edición de paciente, PWA y aislamiento por médico.
+- Cache PWA actualizado a v1.0.2.
 
-No requiere SQL nuevo y no modifica las políticas RLS existentes.
+No requiere SQL nuevo ni cambios en RLS.
 
-PRUEBAS RECOMENDADAS:
-1) Android/iPhone: editar paciente.
-2) Abrir consulta antigua > Editar consulta > guardar.
-3) Abrir consulta antigua > Ver/editar receta > reimprimir.
-4) Generar receta independiente.
-5) Ver historia clínica y Guardar/Compartir como PDF.
-6) Confirmar firma en receta.
-7) Cambiar Hugo/Omar y confirmar aislamiento.
+Después de subir los 8 archivos:
+1. Esperar el deployment.
+2. Cerrar por completo la PWA.
+3. Abrir nuevamente.
+4. Probar Rx RECETA desde la ficha.
+5. Abrir una historia clínica de una consulta que ya tenga receta y verificar tratamiento.
