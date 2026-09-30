@@ -1,27 +1,25 @@
-MÉDICO AMIGO v1.0.4 — FLUJO ESTABLE
+MÉDICO AMIGO v1.0.5 — NUEVA RECETA DIRECTA
 
-CORRECCIONES:
-- Corrige la superposición Pacientes + Editar paciente.
-- Volver desde Editar paciente retorna a la ficha del mismo paciente.
-- Volver desde una CONSULTA EN EDICIÓN retorna a la ficha del paciente y cancela el modo edición.
-- Conserva la Historia Clínica ordenada con tratamiento/receta asociada.
-- Conserva receta independiente.
+Cambio específico:
+Inicio > Nueva receta > Seleccionar paciente > Formulario de receta.
 
-IMPORTANTE — UNA MIGRACIÓN SQL:
-La captura de error confirmó que Supabase tiene prescriptions.consultation_id como NOT NULL.
-Eso impide, a nivel de base de datos, guardar una receta independiente.
+- Elimina el aviso que decía que había que entrar manualmente a la ficha.
+- Al pulsar Nueva receta se abre Pacientes en modo selección.
+- Al tocar el paciente se abre directamente el formulario Rx.
+- La receta queda marcada como independiente (consultation_id = NULL).
+- No crea una consulta ni un cobro.
+- El botón Rx RECETA de la ficha utiliza el mismo flujo.
+- Conserva las correcciones de navegación de v1.0.4.
+- Conserva la Historia Clínica mejorada.
 
-Ejecutar una sola vez el archivo:
-MIGRACION_RECETA_INDEPENDIENTE.sql
-
-La migración únicamente permite que consultation_id sea NULL.
-No elimina datos, no cambia RLS y no afecta las recetas vinculadas a consultas.
+REQUISITO:
+La migración de v1.0.4 (DROP NOT NULL de prescriptions.consultation_id)
+debe estar aplicada. Si ya mostró Success, NO volver a ejecutarla.
 
 PRUEBA:
-1. Ejecutar la migración SQL.
-2. Subir los archivos web a GitHub.
-3. Esperar deployment y cerrar/reabrir PWA.
-4. Paciente > Rx RECETA > llenar > GUARDAR Y CONTINUAR.
-5. Confirmar que la receta se guarda sin aumentar el número de consultas.
-6. Abrir consulta histórica > EDITAR CONSULTA > flecha atrás.
-7. Debe volver a Ficha del paciente sin mostrar dos pantallas.
+1. Inicio > Nueva receta.
+2. Debe aparecer Pacientes sin alerta.
+3. Tocar William Alfaro.
+4. Debe abrir inmediatamente el formulario de receta.
+5. Completar medicamento > Guardar y continuar.
+6. Confirmar que no aumenta el número de consultas.

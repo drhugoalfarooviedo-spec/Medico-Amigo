@@ -210,3 +210,7 @@ html,body{max-width:100%;overflow-x:hidden}
 #consultationScreen.hidden,#prescriptionScreen.hidden,#paymentScreen.hidden,
 #patientsScreen.hidden,#patientDetailScreen.hidden,#editPatientScreen.hidden,
 #settingsScreen.hidden{display:none!important;visibility:hidden!important}
+
+/* v1.0.5 */
+#rxPatientPickerBanner{gap:3px}
+#rxPatientPickerBanner span{font-size:13px;color:#5f7787}

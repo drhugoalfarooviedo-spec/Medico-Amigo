@@ -1927,3 +1927,110 @@ document.addEventListener('DOMContentLoaded',()=>{
  $('patientsNavBtn')?.addEventListener('click',()=>setTimeout(()=>only('patientsScreen'),0));
  $('backHomeBtn')?.addEventListener('click',()=>setTimeout(()=>only('homeScreen'),0));
 });
+
+
+/* ============================================================
+   v1.0.5 — NUEVA RECETA DIRECTA
+   Inicio > Nueva receta > seleccionar paciente > formulario Rx
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const $=id=>document.getElementById(id);
+ const RX_PICK='medicoAmigoSelectingPatientForRx';
+
+ function allPatients(){
+   try{return JSON.parse(sessionStorage.getItem('medicoAmigoPatients')||'[]')}catch{return []}
+ }
+ function currentPatient(){
+   const id=sessionStorage.getItem('medicoAmigoCurrentPatientId')||(window.state&&state.currentPatientId);
+   return allPatients().find(p=>p.id===id)||window.detailPatient||window.selectedPatient||null;
+ }
+ function exclusive(id){
+   document.querySelectorAll(
+    '#loginScreen,#homeScreen,#patientScreen,#newPatientScreen,#consultationScreen,#prescriptionScreen,#paymentScreen,#patientsScreen,#patientDetailScreen,#editPatientScreen,#settingsScreen'
+   ).forEach(el=>el.classList.add('hidden'));
+   $(id)?.classList.remove('hidden');
+   window.scrollTo({top:0,left:0,behavior:'auto'});
+ }
+ function prepareStandaloneRx(p){
+   if(!p?.id){alert('No se pudo identificar al paciente seleccionado.');return}
+   sessionStorage.removeItem(RX_PICK);
+   sessionStorage.setItem('medicoAmigoCurrentPatientId',p.id);
+   sessionStorage.setItem('medicoAmigoRxStandalone',JSON.stringify({patientId:p.id,consultationId:null}));
+   window.selectedPatient=p;
+   window.currentConsultation={id:null,diagnosis:'',indications:''};
+
+   const text=(id,v)=>{if($(id))$(id).textContent=v||''};
+   text('prescriptionPatientName',p.name);
+   text('prescriptionSelectedName',p.name);
+   text('prescriptionSelectedMeta',[p.ci?'CI: '+p.ci:'Sin documento',p.meta].filter(Boolean).join(' · '));
+   text('prescriptionAvatar',(p.name||'P').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase());
+   text('prescriptionDiagnosis','Receta independiente');
+   text('prescriptionCode','RX-'+new Date().toISOString().slice(0,10).replaceAll('-','')+'-'+String(Date.now()).slice(-5));
+   if($('prescriptionGeneralInstructions'))$('prescriptionGeneralInstructions').value='';
+   if($('medicationsList')){
+     $('medicationsList').innerHTML='';
+     if(typeof window.addMedication==='function')window.addMedication();
+   }
+   exclusive('prescriptionScreen');
+ }
+
+ // Replace the old Home shortcut behavior BEFORE its legacy click listener.
+ $('quickPrescriptionBtn')?.addEventListener('click',e=>{
+   e.preventDefault();
+   e.stopImmediatePropagation();
+   sessionStorage.setItem(RX_PICK,'1');
+   // Reuse existing patients navigation/loading.
+   $('patientsNavBtn')?.click();
+   setTimeout(()=>{
+     exclusive('patientsScreen');
+     const title=$('patientsScreen')?.querySelector('.screen-header h1,.patient-header h1,h1');
+     // no intrusive alert; user simply chooses a patient.
+   },30);
+ },true);
+
+ // While in Rx-selection mode, clicking a patient card goes directly to Rx.
+ $('patientsList')?.addEventListener('click',e=>{
+   if(sessionStorage.getItem(RX_PICK)!=='1')return;
+   const card=e.target.closest('.patient-card');
+   if(!card)return;
+   e.preventDefault();e.stopImmediatePropagation();
+
+   const cards=[...$('patientsList').querySelectorAll('.patient-card')];
+   const idx=cards.indexOf(card);
+   let p=allPatients()[idx];
+
+   // Fallback: match visible name/CI if ordering differs.
+   if(!p){
+     const txt=card.textContent||'';
+     p=allPatients().find(x=>(x.name&&txt.includes(x.name))||(x.ci&&txt.includes(x.ci)));
+   }
+   if(!p){alert('No se pudo identificar al paciente. Abre nuevamente Nueva receta.');return}
+   prepareStandaloneRx(p);
+ },true);
+
+ // If user backs out while selecting Rx patient, cancel special mode.
+ $('backHomeBtn')?.addEventListener('click',()=>sessionStorage.removeItem(RX_PICK),true);
+
+ // Ensure Rx button in patient detail uses exactly same preparation.
+ $('standalonePrescriptionFromDetailBtn')?.addEventListener('click',e=>{
+   e.preventDefault();e.stopImmediatePropagation();
+   prepareStandaloneRx(currentPatient());
+ },true);
+});
+
+
+document.addEventListener('DOMContentLoaded',()=>{
+ const list=document.getElementById('patientsList');
+ const screen=document.getElementById('patientsScreen');
+ if(!list||!screen)return;
+ const banner=document.createElement('div');
+ banner.id='rxPatientPickerBanner';
+ banner.innerHTML='<b>💊 Selecciona el paciente</b><span>La receta se generará sin crear una nueva consulta.</span>';
+ banner.style.cssText='display:none;margin:0 28px 16px;padding:12px 14px;border-radius:12px;background:#eefafd;border:1px solid #bfe8ef;color:#073f68';
+ list.parentNode.insertBefore(banner,list);
+ const obs=new MutationObserver(()=>{
+   banner.style.display=sessionStorage.getItem('medicoAmigoSelectingPatientForRx')==='1'?'grid':'none';
+ });
+ obs.observe(screen,{attributes:true,attributeFilter:['class']});
+ document.getElementById('quickPrescriptionBtn')?.addEventListener('click',()=>setTimeout(()=>banner.style.display='grid',40),true);
+});
