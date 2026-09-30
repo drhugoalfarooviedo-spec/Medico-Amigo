@@ -229,3 +229,5 @@ html,body{max-width:100%;overflow-x:hidden}
 .rx-picker-patient span:nth-child(2){display:grid;gap:4px}.rx-picker-patient b{font-size:16px}.rx-picker-patient small{font-size:12px;color:#688091}.rx-picker-patient i{font-style:normal;font-size:27px;color:#8ba2b0}
 .rx-picker-empty{text-align:center;padding:28px;color:#718695}
 @media(max-width:600px){#rxPickerOverlay{padding:0;align-items:stretch}.rx-picker-card{width:100%;max-height:none;height:100%;border-radius:0}.rx-picker-head{padding-top:max(22px,env(safe-area-inset-top))}}
+
+/* v1.0.8: selector Rx independiente es el único flujo de Nueva receta */

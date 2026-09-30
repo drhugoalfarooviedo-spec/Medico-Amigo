@@ -1,35 +1,31 @@
-MÉDICO AMIGO v1.0.7 — RECETA INDEPENDIENTE
+MÉDICO AMIGO v1.0.8 — MÓDULO DE RECETAS LIMPIO
 
-Corrección del conflicto real detectado en v1.0.6:
+Esta versión corrige la causa observada en el video, no agrega otro parche encima.
 
-Había DOS manejadores distintos para el botón "Nueva receta".
-El manejador viejo (v1.0.5) se ejecutaba primero y enviaba a la pantalla Pacientes,
-por lo que el selector independiente de v1.0.6 nunca llegaba a ejecutarse.
-Ese bloque fue retirado.
+SE RETIRÓ:
+- El manejador antiguo de "Nueva receta" que enviaba a Pacientes.
+- El módulo v1.0.5 que competía con el selector nuevo.
+- La dependencia de una consulta activa para recetas independientes.
 
-FLUJO CORRECTO:
-Inicio > Nueva receta
-→ aparece un selector flotante de paciente
-→ elegir paciente
-→ abre directamente Receta
-→ Guardar y continuar
-→ guarda prescriptions con consultation_id = NULL
-→ guarda prescription_items
-→ abre la receta profesional / PDF.
+RECETA INDEPENDIENTE:
+Inicio > Nueva receta > selector flotante > paciente > receta > Guardar.
+- consultation_id = NULL
+- no crea consulta
+- no crea cobro
+- guarda prescriptions
+- guarda prescription_items
+- abre el documento profesional al terminar
 
-NO CREA:
-- consulta
-- cobro
-- paciente nuevo
+DOCUMENTO PROFESIONAL:
+La ventana del PDF se reserva antes de esperar a Supabase para evitar que
+Chrome/Safari la bloqueen como popup después del guardado.
+Conserva datos del médico, matrícula, teléfono, paciente, código, medicamentos,
+pauta, indicaciones y firma configurada.
 
-La receta independiente sigue necesitando identificar al paciente, pero ya NO obliga
-a iniciar una consulta ni a navegar por la ficha clínica.
+RECETA VINCULADA A CONSULTA:
+Sigue usando el flujo clínico normal y conserva consultation_id.
 
-Se conservan:
-- Historia Clínica mejorada
-- edición de paciente corregida
-- navegación corregida
-- RLS y aislamiento por médico
-- migración consultation_id nullable ya aplicada
+VOLVER:
+Desde una receta independiente vuelve a Inicio, no a Consulta.
 
-No requiere SQL adicional.
+No requiere SQL nuevo. La migración consultation_id nullable ya aplicada se conserva.
