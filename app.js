@@ -1647,6 +1647,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  $('editHistoryConsultationBtn')?.addEventListener('click',()=>{
    const c=modalConsultation;if(!c)return;
    editConsultationId=c.id;
+   sessionStorage.setItem('medicoAmigoEditingConsultation',c.id);
    const set=(id,v)=>{if($(id))$(id).value=v??''};
    set('consultationReason',c.reason);set('currentIllness',c.illness);set('bloodPressure',c.bp);set('heartRate',c.hr);set('oxygenSaturation',c.spo2);
    set('temperature',c.temp);set('respiratoryRate',c.rr);set('weight',c.weight);set('height',c.height);set('physicalExam',c.exam);
@@ -1669,6 +1670,7 @@ document.addEventListener('DOMContentLoaded',()=>{
      const rows=await req('consultations?id=eq.'+encodeURIComponent(editConsultationId),{method:'PATCH',rep:true,body:JSON.stringify(payload)});
      if(!rows?.[0]?.id)throw Error('Supabase no confirmó la actualización.');
      editConsultationId=null;
+     sessionStorage.removeItem('medicoAmigoEditingConsultation');
      const b=$('consultationForm')?.querySelector('button[type="submit"]');if(b)b.textContent='GUARDAR Y CONTINUAR →';
      alert('Consulta actualizada correctamente.');
      $('patientsNavBtn')?.click();
@@ -1813,7 +1815,13 @@ document.addEventListener('DOMContentLoaded',()=>{
  async function api(path,opt={}){
    const r=await fetch(BASE+'/rest/v1/'+path,{...opt,headers:{...hdr(opt.prefer),...(opt.headers||{})}});
    const raw=await r.text();let d=null;try{d=raw?JSON.parse(raw):null}catch{d=raw}
-   if(!r.ok)throw Error(d?.message||raw||('HTTP '+r.status));return d;
+   if(!r.ok){
+     const msg=d?.message||raw||('HTTP '+r.status);
+     if(String(msg).includes('consultation_id')&&String(msg).includes('not-null')){
+       throw Error('Falta habilitar recetas independientes en Supabase (consultation_id aún es obligatorio). Ejecuta la migración incluida en README.');
+     }
+     throw Error(msg);
+   }return d;
  }
  function patient(){
    const id=sessionStorage.getItem('medicoAmigoCurrentPatientId')||(window.state&&state.currentPatientId);
@@ -1877,4 +1885,45 @@ document.addEventListener('DOMContentLoaded',()=>{
      if(btn){btn.disabled=false;btn.textContent=old||'GUARDAR RECETA'}
    }
  },true);
+});
+
+
+/* ============================================================
+   v1.0.4 — FLUJO DE PANTALLAS Y RETORNO DESDE EDICIÓN
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const $=id=>document.getElementById(id);
+ const allScreens=()=>document.querySelectorAll(
+   '#loginScreen,#homeScreen,#patientScreen,#newPatientScreen,#consultationScreen,#prescriptionScreen,#paymentScreen,#patientsScreen,#patientDetailScreen,#editPatientScreen,#settingsScreen'
+ );
+ function only(id){
+   allScreens().forEach(x=>x.classList.add('hidden'));
+   $(id)?.classList.remove('hidden');
+   window.scrollTo({top:0,left:0,behavior:'auto'});
+ }
+ // Edit patient: the old module has its own private show(), so enforce exclusivity after it runs.
+ $('editPatientBtn')?.addEventListener('click',()=>setTimeout(()=>only('editPatientScreen'),0));
+ // Back from edit patient must return to the same patient's detail, not reopen/list beside it.
+ $('editPatientBackBtn')?.addEventListener('click',e=>{
+   e.preventDefault();e.stopImmediatePropagation();only('patientDetailScreen');
+ },true);
+ $('cancelEditPatientBtn')?.addEventListener('click',e=>{
+   e.preventDefault();e.stopImmediatePropagation();only('patientDetailScreen');
+ },true);
+
+ // When a historical consultation is being corrected, Back returns to patient detail.
+ const backFromConsult=e=>{
+   if(!sessionStorage.getItem('medicoAmigoEditingConsultation'))return;
+   e.preventDefault();e.stopImmediatePropagation();
+   sessionStorage.removeItem('medicoAmigoEditingConsultation');
+   const form=$('consultationForm'); form?.reset();
+   const b=form?.querySelector('button[type="submit"]'); if(b)b.textContent='GUARDAR Y CONTINUAR →';
+   only('patientDetailScreen');
+ };
+ $('backToPatientsBtn')?.addEventListener('click',backFromConsult,true);
+ $('cancelConsultationBtn')?.addEventListener('click',backFromConsult,true);
+
+ // Defensive cleanup when navigating to the directory/home.
+ $('patientsNavBtn')?.addEventListener('click',()=>setTimeout(()=>only('patientsScreen'),0));
+ $('backHomeBtn')?.addEventListener('click',()=>setTimeout(()=>only('homeScreen'),0));
 });

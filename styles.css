@@ -204,3 +204,9 @@ html,body{max-width:100%;overflow-x:hidden}
 #loginScreen.hidden,#homeScreen.hidden,#patientsScreen.hidden,#patientFormScreen.hidden,
 #patientDetailScreen.hidden,#editPatientScreen.hidden,#consultationScreen.hidden,
 #prescriptionScreen.hidden,#paymentScreen.hidden,#settingsScreen.hidden{display:none!important}
+
+/* v1.0.4: una sola vista de aplicación */
+#loginScreen.hidden,#homeScreen.hidden,#patientScreen.hidden,#newPatientScreen.hidden,
+#consultationScreen.hidden,#prescriptionScreen.hidden,#paymentScreen.hidden,
+#patientsScreen.hidden,#patientDetailScreen.hidden,#editPatientScreen.hidden,
+#settingsScreen.hidden{display:none!important;visibility:hidden!important}

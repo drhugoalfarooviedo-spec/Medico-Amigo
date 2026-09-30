@@ -1,29 +1,27 @@
-MÉDICO AMIGO v1.0.3 — RECETA + NAVEGACIÓN
+MÉDICO AMIGO v1.0.4 — FLUJO ESTABLE
 
-Corrección quirúrgica sobre v1.0.2.
+CORRECCIONES:
+- Corrige la superposición Pacientes + Editar paciente.
+- Volver desde Editar paciente retorna a la ficha del mismo paciente.
+- Volver desde una CONSULTA EN EDICIÓN retorna a la ficha del paciente y cancela el modo edición.
+- Conserva la Historia Clínica ordenada con tratamiento/receta asociada.
+- Conserva receta independiente.
 
-1. NAVEGACIÓN
-- Fuerza una sola pantalla visible.
-- Evita que Pacientes y Editar paciente queden superpuestos.
-- La clase hidden ahora siempre prevalece en PC y móvil.
+IMPORTANTE — UNA MIGRACIÓN SQL:
+La captura de error confirmó que Supabase tiene prescriptions.consultation_id como NOT NULL.
+Eso impide, a nivel de base de datos, guardar una receta independiente.
 
-2. RECETA INDEPENDIENTE
-- Corrige el guardado de una receta sin consulta.
-- Guarda prescriptions con consultation_id = null.
-- Guarda prescription_items asociados a esa receta.
-- No crea consulta ni cobro.
-- Después del guardado intenta abrir el documento para imprimir/guardar PDF.
+Ejecutar una sola vez el archivo:
+MIGRACION_RECETA_INDEPENDIENTE.sql
 
-3. HISTORIA CLÍNICA
-- Se conserva el diseño mejorado de v1.0.2.
-- Se conserva la receta/tratamiento asociado a cada consulta.
+La migración únicamente permite que consultation_id sea NULL.
+No elimina datos, no cambia RLS y no afecta las recetas vinculadas a consultas.
 
-No requiere SQL nuevo.
-No modifica RLS.
-No modifica la estructura de Supabase.
-
-PRUEBAS:
-A) Ficha > Rx RECETA > completar > guardar.
-B) Confirmar que no aumenta el número de consultas.
-C) Editar paciente y comprobar que Pacientes desaparece.
-D) Abrir Historia Clínica y confirmar que sigue mostrando tratamiento.
+PRUEBA:
+1. Ejecutar la migración SQL.
+2. Subir los archivos web a GitHub.
+3. Esperar deployment y cerrar/reabrir PWA.
+4. Paciente > Rx RECETA > llenar > GUARDAR Y CONTINUAR.
+5. Confirmar que la receta se guarda sin aumentar el número de consultas.
+6. Abrir consulta histórica > EDITAR CONSULTA > flecha atrás.
+7. Debe volver a Ficha del paciente sin mostrar dos pantallas.
