@@ -1859,12 +1859,12 @@ document.addEventListener('DOMContentLoaded',()=>{
    if(btn){btn.disabled=true;btn.textContent='GUARDANDO…'}
 
    try{
-     const a=session(),code=$('prescriptionCode')?.textContent?.trim()||('RX-'+Date.now());
+     const a=session();
+     const makeCode=()=>`RX-${new Date().toISOString().slice(0,10).replaceAll('-','')}-${(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()).replaceAll('-','').replace('.','').slice(-12).toUpperCase()}`;
+     let code=makeCode();if($('prescriptionCode'))$('prescriptionCode').textContent=code;
      const general=$('prescriptionGeneralInstructions')?.value?.trim()||null;
-     const rows=await api('prescriptions',{method:'POST',prefer:true,body:JSON.stringify({
-       doctor_id:a.user.id,patient_id:p.id,consultation_id:null,prescription_code:code,
-       diagnosis:'Receta independiente',general_instructions:general
-     })});
+     const insertRx=()=>api('prescriptions',{method:'POST',prefer:true,body:JSON.stringify({doctor_id:a.user.id,patient_id:p.id,consultation_id:null,prescription_code:code,diagnosis:'Receta independiente',general_instructions:general})});
+     let rows;try{rows=await insertRx()}catch(err){if(/duplicate|unique|prescription_code/i.test(err.message)){code=makeCode();if($('prescriptionCode'))$('prescriptionCode').textContent=code;rows=await insertRx()}else throw err}
      const rx=rows?.[0]; if(!rx?.id)throw Error('Supabase no confirmó el registro de la receta.');
      await api('prescription_items',{method:'POST',prefer:true,body:JSON.stringify(
        meds.map(x=>({...x,doctor_id:a.user.id,prescription_id:rx.id}))
@@ -1936,84 +1936,75 @@ document.addEventListener('DOMContentLoaded',()=>{
 /* v1.0.8: módulo v1.0.5 retirado por conflicto de navegación. */
 
 /* ============================================================
-   v1.0.6 — SELECTOR RX INDEPENDIENTE
-   No reutiliza las pantallas antiguas de selección de paciente.
+   v1.0.9 — NUEVA RECETA: PACIENTE EXISTENTE O NUEVO
 ============================================================ */
 document.addEventListener('DOMContentLoaded',()=>{
  const $=id=>document.getElementById(id);
-
- function patients(){
-   try{return JSON.parse(sessionStorage.getItem('medicoAmigoPatients')||'[]')}catch{return []}
- }
- function closePicker(){ $('rxPickerOverlay')?.remove(); }
+ const BASE='https://kdjvsbiqjpztdugewuve.supabase.co';
+ const KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
+ const SESSION='medico_amigo_supabase_session';
+ const sess=()=>{try{return JSON.parse(localStorage.getItem(SESSION)||'null')}catch{return null}};
+ const patients=()=>{try{return JSON.parse(sessionStorage.getItem('medicoAmigoPatients')||'[]')}catch{return []}};
+ const close=()=>document.getElementById('rxPickerOverlay')?.remove();
+ const rxCode=()=>{const d=new Date().toISOString().slice(0,10).replaceAll('-','');const u=(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()).replaceAll('-','').replace('.','').slice(-12).toUpperCase();return `RX-${d}-${u}`};
 
  function openRx(p){
    if(!p?.id){alert('No se pudo identificar al paciente.');return}
-   closePicker();
-   sessionStorage.removeItem('medicoAmigoSelectingPatientForRx');
+   close();
    sessionStorage.setItem('medicoAmigoCurrentPatientId',p.id);
    sessionStorage.setItem('medicoAmigoRxStandalone',JSON.stringify({patientId:p.id,consultationId:null}));
    window.selectedPatient=p;
-   window.currentConsultation={id:null,diagnosis:'',indications:''};
-
+   window.currentConsultation={id:null,diagnosis:'Receta independiente',indications:''};
    const put=(id,v)=>{if($(id))$(id).textContent=v||''};
-   put('prescriptionPatientName',p.name);
-   put('prescriptionSelectedName',p.name);
-   put('prescriptionSelectedMeta',[p.ci?'CI: '+p.ci:'Sin documento',p.meta].filter(Boolean).join(' · '));
+   put('prescriptionPatientName',p.name);put('prescriptionSelectedName',p.name);
+   put('prescriptionSelectedMeta',[p.ci?'CI: '+p.ci:'Sin documento',p.phone].filter(Boolean).join(' · '));
    put('prescriptionAvatar',(p.name||'P').split(/\s+/).filter(Boolean).map(x=>x[0]).slice(0,2).join('').toUpperCase());
-   put('prescriptionDiagnosis','Receta independiente');
-   put('prescriptionCode','RX-'+new Date().toISOString().slice(0,10).replaceAll('-','')+'-'+String(Date.now()).slice(-5));
+   put('prescriptionDiagnosis','Receta independiente');put('prescriptionCode',rxCode());
    if($('prescriptionGeneralInstructions'))$('prescriptionGeneralInstructions').value='';
-   if($('medicationsList')){
-     $('medicationsList').innerHTML='';
-     // Use the app's own Add medication button, whose handler is already configured.
-     $('addMedicationBtn')?.click();
-   }
-   document.querySelectorAll(
-     '#loginScreen,#homeScreen,#patientScreen,#newPatientScreen,#consultationScreen,#paymentScreen,#patientsScreen,#patientDetailScreen,#editPatientScreen,#settingsScreen'
-   ).forEach(el=>el.classList.add('hidden'));
-   $('prescriptionScreen')?.classList.remove('hidden');
-   window.scrollTo({top:0,left:0,behavior:'auto'});
+   if($('medicationsList')){$('medicationsList').innerHTML='';$('addMedicationBtn')?.click()}
+   document.querySelectorAll('#loginScreen,#homeScreen,#patientScreen,#newPatientScreen,#consultationScreen,#paymentScreen,#patientsScreen,#patientDetailScreen,#editPatientScreen,#settingsScreen').forEach(x=>x.classList.add('hidden'));
+   $('prescriptionScreen')?.classList.remove('hidden');window.scrollTo(0,0);
  }
 
- function renderPicker(){
-   closePicker();
-   const data=patients();
-   const overlay=document.createElement('div');
-   overlay.id='rxPickerOverlay';
-   overlay.innerHTML=`<div class="rx-picker-card">
-     <div class="rx-picker-head"><div><strong>Nueva receta</strong><span>Selecciona el paciente</span></div><button type="button" id="rxPickerClose">×</button></div>
-     <div class="rx-picker-search"><span>⌕</span><input id="rxPickerSearch" type="search" placeholder="Nombre, CI o teléfono"></div>
-     <div id="rxPickerList" class="rx-picker-list"></div>
-   </div>`;
-   document.body.appendChild(overlay);
-   const list=$('rxPickerList');
-   const draw=q=>{
-     q=(q||'').trim().toLowerCase();
-     const rows=data.filter(p=>!q||[p.name,p.ci,p.phone].some(v=>String(v||'').toLowerCase().includes(q)));
-     list.innerHTML='';
-     if(!rows.length){
-       list.innerHTML='<div class="rx-picker-empty">No se encontraron pacientes.</div>'; return;
-     }
-     rows.forEach(p=>{
-       const b=document.createElement('button'); b.type='button'; b.className='rx-picker-patient';
-       const ini=(p.name||'P').split(/\s+/).filter(Boolean).map(x=>x[0]).slice(0,2).join('').toUpperCase();
-       b.innerHTML=`<span class="rx-picker-avatar">${ini}</span><span><b>${p.name||'Paciente'}</b><small>CI: ${p.ci||'—'}${p.phone?' · '+p.phone:''}</small></span><i>›</i>`;
-       b.onclick=()=>openRx(p); list.appendChild(b);
-     });
+ async function saveQuick(form){
+   const a=sess();if(!a?.access_token||!a?.user?.id)throw Error('Sesión no válida.');
+   const fd=new FormData(form), body={
+     doctor_id:a.user.id,full_name:(fd.get('full_name')||'').trim(),
+     document_number:(fd.get('document_number')||'').trim()||null,
+     birth_date:(fd.get('birth_date')||'').trim()||null,
+     sex:(fd.get('sex')||'').trim()||null,phone:(fd.get('phone')||'').trim()||null
    };
-   draw('');
-   $('rxPickerSearch').oninput=e=>draw(e.target.value);
-   $('rxPickerClose').onclick=closePicker;
-   overlay.addEventListener('click',e=>{if(e.target===overlay)closePicker()});
-   setTimeout(()=>$('rxPickerSearch')?.focus(),30);
+   if(!body.full_name)throw Error('Ingresa el nombre completo.');
+   const r=await fetch(BASE+'/rest/v1/patients',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+a.access_token,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify(body)});
+   const raw=await r.text();let d;try{d=JSON.parse(raw)}catch{d=raw}
+   if(!r.ok){if(r.status===409)throw Error('Ese CI/documento ya está registrado. Búscalo en la lista.');throw Error(d?.message||raw)}
+   const x=d?.[0];if(!x?.id)throw Error('No se confirmó el registro.');
+   const p={id:x.id,name:x.full_name,ci:x.document_number||'',phone:x.phone||'',sex:x.sex||'',birth_date:x.birth_date||''};
+   const arr=patients();arr.unshift(p);sessionStorage.setItem('medicoAmigoPatients',JSON.stringify(arr));return p;
  }
 
- // Capture before every old/legacy listener.
- $('quickPrescriptionBtn')?.addEventListener('click',e=>{
-   e.preventDefault(); e.stopImmediatePropagation();
-   renderPicker();
- },true);
+ function quickNew(){
+   const c=document.querySelector('#rxPickerOverlay .rx-picker-card');if(!c)return;
+   c.innerHTML=`<div class="rx-picker-head"><div><strong>Paciente nuevo</strong><span>Registro rápido para la receta</span></div><button type="button" id="rxPickerClose">×</button></div>
+   <form id="rxQuickPatientForm" class="rx-quick-form">
+    <label>Nombre completo *<input name="full_name" required></label>
+    <div class="rx-quick-grid"><label>CI / Documento<input name="document_number"></label><label>Fecha de nacimiento<input type="date" name="birth_date"></label><label>Sexo<select name="sex"><option value="">Seleccionar</option><option>Masculino</option><option>Femenino</option><option>Otro</option></select></label><label>Teléfono / WhatsApp<input name="phone" inputmode="tel"></label></div>
+    <p class="rx-quick-note">Podrás completar el resto de la ficha clínica posteriormente.</p>
+    <div class="rx-quick-actions"><button type="button" id="rxQuickBack" class="rx-secondary">← VOLVER</button><button type="submit" class="rx-primary">GUARDAR Y GENERAR RECETA →</button></div>
+   </form>`;
+   $('rxPickerClose').onclick=close;$('rxQuickBack').onclick=picker;
+   $('rxQuickPatientForm').onsubmit=async e=>{e.preventDefault();const b=e.submitter,old=b.textContent;b.disabled=true;b.textContent='GUARDANDO…';try{openRx(await saveQuick(e.currentTarget))}catch(err){alert(err.message)}finally{b.disabled=false;b.textContent=old}};
+ }
+
+ function picker(){
+   close();const data=patients(),o=document.createElement('div');o.id='rxPickerOverlay';
+   o.innerHTML=`<div class="rx-picker-card"><div class="rx-picker-head"><div><strong>Nueva receta</strong><span>Selecciona o registra al paciente</span></div><button type="button" id="rxPickerClose">×</button></div><div class="rx-picker-body"><button type="button" id="rxNewPatientBtn" class="rx-new-patient">＋ NUEVO PACIENTE <small>Registrar y generar receta sin consulta</small></button><div class="rx-picker-search"><span>⌕</span><input id="rxPickerSearch" type="search" placeholder="Nombre, CI o teléfono"></div><div id="rxPickerList" class="rx-picker-list"></div></div></div>`;
+   document.body.appendChild(o);const list=$('rxPickerList');
+   const draw=q=>{q=(q||'').toLowerCase().trim();const rows=data.filter(p=>!q||[p.name,p.ci,p.phone].some(v=>String(v||'').toLowerCase().includes(q)));list.innerHTML='';if(!rows.length){list.innerHTML='<div class="rx-picker-empty">No se encontraron pacientes.</div>';return}rows.forEach(p=>{const b=document.createElement('button');b.type='button';b.className='rx-picker-patient';const i=(p.name||'P').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();b.innerHTML=`<span class="rx-picker-avatar">${i}</span><span><b>${p.name}</b><small>CI: ${p.ci||'—'}${p.phone?' · '+p.phone:''}</small></span><i>›</i>`;b.onclick=()=>openRx(p);list.appendChild(b)})};
+   draw('');$('rxPickerSearch').oninput=e=>draw(e.target.value);$('rxPickerClose').onclick=close;$('rxNewPatientBtn').onclick=quickNew;
+ }
+ window.medicoAmigoOpenRxPicker=picker;
+ $('quickPrescriptionBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();picker()},true);
 });
 
 

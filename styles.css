@@ -231,3 +231,8 @@ html,body{max-width:100%;overflow-x:hidden}
 @media(max-width:600px){#rxPickerOverlay{padding:0;align-items:stretch}.rx-picker-card{width:100%;max-height:none;height:100%;border-radius:0}.rx-picker-head{padding-top:max(22px,env(safe-area-inset-top))}}
 
 /* v1.0.8: selector Rx independiente es el único flujo de Nueva receta */
+
+.rx-picker-body{display:flex;flex-direction:column;min-height:0}
+.rx-new-patient{margin:18px 20px 0;border:0;border-radius:14px;background:#079fba;color:#fff;padding:14px 16px;font-weight:800;font-size:15px;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center}.rx-new-patient small{font-weight:500;opacity:.9}
+.rx-quick-form{padding:22px;overflow:auto;display:grid;gap:18px}.rx-quick-form label{display:grid;gap:7px;font-weight:700;color:#17384c;font-size:14px}.rx-quick-form input,.rx-quick-form select{width:100%;box-sizing:border-box;border:1px solid #d2e1e8;border-radius:12px;background:#fff;padding:13px 14px;font:inherit;color:#17384c}.rx-quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.rx-quick-note{margin:0;color:#6d8290;font-size:13px}.rx-quick-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}.rx-quick-actions button{border-radius:12px;padding:12px 15px;font-weight:800}.rx-secondary{border:1px solid #ccdce4;background:#fff;color:#587080}.rx-primary{border:0;background:#073f68;color:#fff}
+@media(max-width:600px){.rx-new-patient{margin:16px 16px 0;display:grid}.rx-quick-grid{grid-template-columns:1fr}.rx-quick-form{padding:18px 16px}.rx-quick-actions{display:grid}.rx-quick-actions button{width:100%}}

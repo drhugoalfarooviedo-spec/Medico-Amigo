@@ -1,31 +1,16 @@
-MÉDICO AMIGO v1.0.8 — MÓDULO DE RECETAS LIMPIO
+MÉDICO AMIGO v1.0.9 — NUEVA RECETA COMPLETA
 
-Esta versión corrige la causa observada en el video, no agrega otro parche encima.
+Nueva receta permite:
+1) Seleccionar un paciente registrado.
+2) + NUEVO PACIENTE: registro rápido y paso directo a receta, sin consulta ni cobro.
 
-SE RETIRÓ:
-- El manejador antiguo de "Nueva receta" que enviaba a Pacientes.
-- El módulo v1.0.5 que competía con el selector nuevo.
-- La dependencia de una consulta activa para recetas independientes.
+Registro rápido: nombre, CI/documento, fecha de nacimiento, sexo y teléfono.
 
-RECETA INDEPENDIENTE:
-Inicio > Nueva receta > selector flotante > paciente > receta > Guardar.
-- consultation_id = NULL
-- no crea consulta
-- no crea cobro
-- guarda prescriptions
-- guarda prescription_items
-- abre el documento profesional al terminar
+También se corrigió el código de receta:
+- se genera un identificador RX aleatorio único;
+- si hubiera una colisión, se genera otro y se reintenta automáticamente.
 
-DOCUMENTO PROFESIONAL:
-La ventana del PDF se reserva antes de esperar a Supabase para evitar que
-Chrome/Safari la bloqueen como popup después del guardado.
-Conserva datos del médico, matrícula, teléfono, paciente, código, medicamentos,
-pauta, indicaciones y firma configurada.
+La receta independiente guarda prescriptions + prescription_items con consultation_id NULL
+y conserva la salida profesional/PDF y la firma configurada.
 
-RECETA VINCULADA A CONSULTA:
-Sigue usando el flujo clínico normal y conserva consultation_id.
-
-VOLVER:
-Desde una receta independiente vuelve a Inicio, no a Consulta.
-
-No requiere SQL nuevo. La migración consultation_id nullable ya aplicada se conserva.
+No requiere SQL adicional.

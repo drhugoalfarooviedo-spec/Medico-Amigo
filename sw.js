@@ -1,4 +1,4 @@
-const CACHE = 'medico-amigo-v1.0.8';
+const CACHE = 'medico-amigo-v1.0.9';
 const APP_SHELL = [
   './',
   './index.html',
