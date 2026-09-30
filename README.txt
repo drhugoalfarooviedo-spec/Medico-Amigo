@@ -9,9 +9,3 @@ Cambio puntual sobre v1.0.12 estable:
 - No requiere SQL adicional.
 
 Se actualiza la caché PWA a v1.0.13 para que teléfonos y PC reciban app.js actualizado.
-
----
-Versión escritorio responsive
-- Se añadió una presentación específica para pantallas de PC desde 1000 px.
-- La vista móvil existente (menos de 1000 px) conserva su diseño y reglas previas.
-- No se modificó la lógica JavaScript, Supabase, recetas, consultas, pagos ni firma.

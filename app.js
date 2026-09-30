@@ -1093,7 +1093,7 @@ document.addEventListener('DOMContentLoaded',()=>{
    for(const p of patients){
      const card=document.createElement('div');card.className='patient-card';card.dataset.patientId=p.id;
      const initials=(p.name||'?').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();
-     card.innerHTML=`<div class="patient-avatar">${initials}</div><div class="patient-card-info"><strong>${p.name}</strong><span>CI: ${p.ci||'—'} · ${p.phone||'—'}</span><small>${p.meta||''}</small></div><span class="consult-count">0 consultas</span><span class="chevron">›</span>`;
+     card.innerHTML=`<div class="patient-avatar">${escapeHtml(initials)}</div><div class="patient-card-info"><strong>${escapeHtml(p.name)}</strong><span>CI: ${escapeHtml(p.ci||'—')} · ${escapeHtml(p.phone||'—')}</span><small>${escapeHtml(p.meta||'')}</small></div><span class="consult-count">0 consultas</span><span class="chevron">›</span>`;
      card.onclick=()=>{
        sessionStorage.setItem('medicoAmigoCurrentPatientId',p.id);
        if(window.state)state.currentPatientId=p.id;
@@ -2092,7 +2092,7 @@ document.addEventListener('DOMContentLoaded',()=>{
    close();const data=patients(),o=document.createElement('div');o.id='rxPickerOverlay';
    o.innerHTML=`<div class="rx-picker-card"><div class="rx-picker-head"><div><strong>Nueva receta</strong><span>Selecciona o registra al paciente</span></div><button type="button" id="rxPickerClose">×</button></div><div class="rx-picker-body"><button type="button" id="rxNewPatientBtn" class="rx-new-patient">＋ NUEVO PACIENTE <small>Registrar y generar receta sin consulta</small></button><div class="rx-picker-search"><span>⌕</span><input id="rxPickerSearch" type="search" placeholder="Nombre, CI o teléfono"></div><div id="rxPickerList" class="rx-picker-list"></div></div></div>`;
    document.body.appendChild(o);const list=$('rxPickerList');
-   const draw=q=>{q=(q||'').toLowerCase().trim();const rows=data.filter(p=>!q||[p.name,p.ci,p.phone].some(v=>String(v||'').toLowerCase().includes(q)));list.innerHTML='';if(!rows.length){list.innerHTML='<div class="rx-picker-empty">No se encontraron pacientes.</div>';return}rows.forEach(p=>{const b=document.createElement('button');b.type='button';b.className='rx-picker-patient';const i=(p.name||'P').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();b.innerHTML=`<span class="rx-picker-avatar">${i}</span><span><b>${p.name}</b><small>CI: ${p.ci||'—'}${p.phone?' · '+p.phone:''}</small></span><i>›</i>`;b.onclick=()=>openRx(p);list.appendChild(b)})};
+   const draw=q=>{q=(q||'').toLowerCase().trim();const rows=data.filter(p=>!q||[p.name,p.ci,p.phone].some(v=>String(v||'').toLowerCase().includes(q)));list.innerHTML='';if(!rows.length){list.innerHTML='<div class="rx-picker-empty">No se encontraron pacientes.</div>';return}rows.forEach(p=>{const b=document.createElement('button');b.type='button';b.className='rx-picker-patient';const i=(p.name||'P').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();b.innerHTML=`<span class="rx-picker-avatar">${escapeHtml(i)}</span><span><b>${escapeHtml(p.name)}</b><small>CI: ${escapeHtml(p.ci||'—')}${p.phone?' · '+escapeHtml(p.phone):''}</small></span><i>›</i>`;b.onclick=()=>openRx(p);list.appendChild(b)})};
    draw('');$('rxPickerSearch').oninput=e=>draw(e.target.value);$('rxPickerClose').onclick=close;$('rxNewPatientBtn').onclick=quickNew;
  }
  window.medicoAmigoOpenRxPicker=picker;
