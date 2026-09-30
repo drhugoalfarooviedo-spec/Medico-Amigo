@@ -1,18 +1,11 @@
-MÉDICO AMIGO v1.0.12 — SESIÓN AUTOMÁTICA
+MÉDICO AMIGO v1.0.13 — FIRMA EN HISTORIA CLÍNICA
 
-Corrige el error: JWT expired.
+Cambio puntual sobre v1.0.12 estable:
+- La Historia Clínica ahora muestra la firma privada del médico autenticado.
+- La firma aparece encima de la línea con nombre, especialidad y matrícula.
+- Se incluye también al imprimir o guardar la Historia Clínica como PDF.
+- Se mantiene el mecanismo privado ya usado por la receta.
+- No se modifica el flujo de recetas, pacientes, consultas, cobros ni RLS.
+- No requiere SQL adicional.
 
-La aplicación ahora:
-- revisa si el token está próximo a vencer;
-- renueva la sesión mediante el refresh_token de Supabase;
-- actualiza la sesión guardada;
-- revisa la sesión al volver a la app;
-- revisa periódicamente mientras permanece abierta;
-- si una petición REST/Storage recibe JWT expired, renueva y reintenta una vez;
-- si el refresh_token tampoco es válido, pide iniciar sesión nuevamente.
-
-También se fuerza una sesión vigente antes de registrar un paciente rápido
-y antes de guardar una receta independiente.
-
-No cambia la base de datos, RLS, historia clínica, consultas ni cobros.
-No requiere SQL.
+Se actualiza la caché PWA a v1.0.13 para que teléfonos y PC reciban app.js actualizado.
