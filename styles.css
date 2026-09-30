@@ -236,3 +236,68 @@ html,body{max-width:100%;overflow-x:hidden}
 .rx-new-patient{margin:18px 20px 0;border:0;border-radius:14px;background:#079fba;color:#fff;padding:14px 16px;font-weight:800;font-size:15px;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center}.rx-new-patient small{font-weight:500;opacity:.9}
 .rx-quick-form{padding:22px;overflow:auto;display:grid;gap:18px}.rx-quick-form label{display:grid;gap:7px;font-weight:700;color:#17384c;font-size:14px}.rx-quick-form input,.rx-quick-form select{width:100%;box-sizing:border-box;border:1px solid #d2e1e8;border-radius:12px;background:#fff;padding:13px 14px;font:inherit;color:#17384c}.rx-quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.rx-quick-note{margin:0;color:#6d8290;font-size:13px}.rx-quick-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}.rx-quick-actions button{border-radius:12px;padding:12px 15px;font-weight:800}.rx-secondary{border:1px solid #ccdce4;background:#fff;color:#587080}.rx-primary{border:0;background:#073f68;color:#fff}
 @media(max-width:600px){.rx-new-patient{margin:16px 16px 0;display:grid}.rx-quick-grid{grid-template-columns:1fr}.rx-quick-form{padding:18px 16px}.rx-quick-actions{display:grid}.rx-quick-actions button{width:100%}}
+
+/* ============================================================
+   v1.1.0 — Escritorio amplio (>= 1000 px)
+   SOLO presentación. La vista móvil existente no se modifica.
+   ============================================================ */
+@media (min-width:1000px){
+  .app{align-items:flex-start;padding:20px 32px 34px}
+
+  /* Contenedores principales: aprovechar pantalla de escritorio */
+  .home,
+  .patient-screen{
+    width:min(1180px,calc(100vw - 64px));
+    max-width:1180px;
+    min-height:calc(100vh - 40px);
+    border-radius:24px;
+  }
+
+  /* Dashboard de escritorio */
+  #homeScreen:not(.hidden){
+    display:grid;
+    grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr);
+    grid-template-rows:auto auto auto auto 1fr 76px;
+    column-gap:24px;
+    align-content:start;
+    padding-bottom:0;
+  }
+  #homeScreen .home-header{grid-column:1/-1;grid-row:1}
+  #homeScreen .doctor-welcome{grid-column:1/-1;grid-row:2;padding:28px 32px 20px}
+  #homeScreen .new-consultation-button{grid-column:1;grid-row:3;width:auto;margin:4px 0 14px 32px;min-height:96px}
+  #homeScreen #quickPrescriptionBtn{grid-column:2;grid-row:3;width:auto;margin:4px 32px 14px 0;min-height:96px}
+  #homeScreen #searchPatientBtn{grid-column:1;grid-row:4;width:auto;margin:0 0 0 32px;min-height:76px}
+  #homeScreen .today-section{grid-column:2;grid-row:4;margin:0 32px 0 0;padding:0}
+  #homeScreen .recent-section{grid-column:1/-1;grid-row:5;margin:28px 32px 24px;padding:0}
+  #homeScreen .bottom-nav{grid-column:1/-1;grid-row:6;position:relative;left:auto;right:auto;bottom:auto}
+  #homeScreen .stats-grid{gap:14px}
+  #homeScreen .stat-card{min-height:88px}
+  #homeScreen .recent-section .empty-state{min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+  /* Formularios y fichas: lectura cómoda en monitor */
+  .patient-content,.patient-form,.consultation-form,.prescription-form,.payment-form,.settings-form,
+  .patients-page,.patient-detail-page{
+    width:100%;
+    max-width:1080px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+  .screen-header{padding-left:42px;padding-right:42px}
+  .progress-steps{padding-left:90px;padding-right:90px}
+  .form-section,.medical-details{padding:24px}
+  .form-row,.vitals-grid,.medication-grid{column-gap:20px}
+  .consultation-form .form-section{padding:24px}
+  .patient-detail-grid{gap:18px}
+
+  /* Modal de consulta anterior más ancho en PC */
+  .history-modal-card{max-width:860px}
+
+  /* Selector de receta: más cómodo en escritorio */
+  .rx-picker-card{width:min(720px,calc(100vw - 80px));max-height:84vh}
+}
+
+@media (min-width:1400px){
+  .home,.patient-screen{width:min(1320px,calc(100vw - 96px));max-width:1320px}
+  .patient-content,.patient-form,.consultation-form,.prescription-form,.payment-form,.settings-form,
+  .patients-page,.patient-detail-page{max-width:1180px}
+}
