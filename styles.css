@@ -198,3 +198,9 @@ html,body{max-width:100%;overflow-x:hidden}
  #editPatientScreen .patient-form{max-width:980px;margin:0 auto}
  #editPatientScreen .form-row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 }
+
+/* v1.0.3 — hidden siempre prevalece para evitar pantallas superpuestas */
+.hidden{display:none!important}
+#loginScreen.hidden,#homeScreen.hidden,#patientsScreen.hidden,#patientFormScreen.hidden,
+#patientDetailScreen.hidden,#editPatientScreen.hidden,#consultationScreen.hidden,
+#prescriptionScreen.hidden,#paymentScreen.hidden,#settingsScreen.hidden{display:none!important}

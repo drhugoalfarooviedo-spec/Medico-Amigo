@@ -1,20 +1,29 @@
-MÉDICO AMIGO v1.0.2 — RECETA + HISTORIA CLÍNICA
+MÉDICO AMIGO v1.0.3 — RECETA + NAVEGACIÓN
 
-Correcciones sobre v1.0.1:
-- Historia clínica rediseñada en formato A4 más ordenado y profesional.
-- Omite bloques vacíos innecesarios en vez de repetir “No registrado”.
-- Cada consulta consulta su receta asociada por consultation_id.
-- La historia clínica muestra medicamentos, presentación, dosis, vía, frecuencia,
-  duración, instrucciones e indicaciones generales de la receta.
-- Apertura reforzada de “Rx RECETA” desde la ficha del paciente.
-- Mantiene edición de consulta, edición de paciente, PWA y aislamiento por médico.
-- Cache PWA actualizado a v1.0.2.
+Corrección quirúrgica sobre v1.0.2.
 
-No requiere SQL nuevo ni cambios en RLS.
+1. NAVEGACIÓN
+- Fuerza una sola pantalla visible.
+- Evita que Pacientes y Editar paciente queden superpuestos.
+- La clase hidden ahora siempre prevalece en PC y móvil.
 
-Después de subir los 8 archivos:
-1. Esperar el deployment.
-2. Cerrar por completo la PWA.
-3. Abrir nuevamente.
-4. Probar Rx RECETA desde la ficha.
-5. Abrir una historia clínica de una consulta que ya tenga receta y verificar tratamiento.
+2. RECETA INDEPENDIENTE
+- Corrige el guardado de una receta sin consulta.
+- Guarda prescriptions con consultation_id = null.
+- Guarda prescription_items asociados a esa receta.
+- No crea consulta ni cobro.
+- Después del guardado intenta abrir el documento para imprimir/guardar PDF.
+
+3. HISTORIA CLÍNICA
+- Se conserva el diseño mejorado de v1.0.2.
+- Se conserva la receta/tratamiento asociado a cada consulta.
+
+No requiere SQL nuevo.
+No modifica RLS.
+No modifica la estructura de Supabase.
+
+PRUEBAS:
+A) Ficha > Rx RECETA > completar > guardar.
+B) Confirmar que no aumenta el número de consultas.
+C) Editar paciente y comprobar que Pacientes desaparece.
+D) Abrir Historia Clínica y confirmar que sigue mostrando tratamiento.

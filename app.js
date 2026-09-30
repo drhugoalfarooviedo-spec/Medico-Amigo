@@ -1769,3 +1769,112 @@ document.addEventListener('DOMContentLoaded',()=>{
    e.preventDefault();e.stopImmediatePropagation();openRx(patient(),null);
  },true);
 });
+
+
+/* ============================================================
+   v1.0.3 — NAVEGACIÓN EXCLUSIVA
+   Garantiza que nunca queden Pacientes + Editar (u otras) visibles a la vez.
+============================================================ */
+(function(){
+ const SCREEN_IDS=[
+  'loginScreen','homeScreen','patientsScreen','patientFormScreen','patientDetailScreen',
+  'editPatientScreen','consultationScreen','prescriptionScreen','paymentScreen','settingsScreen'
+ ];
+ const oldShow=window.show;
+ window.show=function(target){
+   if(!target)return;
+   SCREEN_IDS.forEach(id=>{
+     const el=document.getElementById(id);
+     if(el && el!==target) el.classList.add('hidden');
+   });
+   target.classList.remove('hidden');
+   target.style.removeProperty('display');
+   window.scrollTo({top:0,left:0,behavior:'auto'});
+ };
+ document.addEventListener('click',e=>{
+   // Al abrir Editar paciente, ocultar explícitamente la lista y detalle antes del handler legado.
+   if(e.target.closest('#editPatientBtn')){
+     ['patientsScreen','patientDetailScreen'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+   }
+ },true);
+})();
+
+
+/* ============================================================
+   v1.0.3 — RECETA INDEPENDIENTE ROBUSTA
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const BASE='https://kdjvsbiqjpztdugewuve.supabase.co';
+ const KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
+ const SESSION='medico_amigo_supabase_session';
+ const $=id=>document.getElementById(id);
+ const session=()=>{try{return JSON.parse(localStorage.getItem(SESSION)||'null')}catch{return null}};
+ const hdr=(prefer=false)=>{const s=session();if(!s?.access_token)throw Error('Sesión no válida.');const h={apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'};if(prefer)h.Prefer='return=representation';return h};
+ async function api(path,opt={}){
+   const r=await fetch(BASE+'/rest/v1/'+path,{...opt,headers:{...hdr(opt.prefer),...(opt.headers||{})}});
+   const raw=await r.text();let d=null;try{d=raw?JSON.parse(raw):null}catch{d=raw}
+   if(!r.ok)throw Error(d?.message||raw||('HTTP '+r.status));return d;
+ }
+ function patient(){
+   const id=sessionStorage.getItem('medicoAmigoCurrentPatientId')||(window.state&&state.currentPatientId);
+   let a=[];try{a=JSON.parse(sessionStorage.getItem('medicoAmigoPatients')||'[]')}catch{}
+   return a.find(x=>x.id===id)||window.detailPatient||window.selectedPatient||null;
+ }
+ function medicationItems(){
+   return [...document.querySelectorAll('#medicationsList .medication-card')].map((c,i)=>({
+     medication_name:c.querySelector('.med-name')?.value?.trim()||null,
+     presentation:c.querySelector('.med-presentation')?.value?.trim()||null,
+     dose:c.querySelector('.med-dose')?.value?.trim()||null,
+     route:c.querySelector('.med-route')?.value||null,
+     frequency:c.querySelector('.med-frequency')?.value?.trim()||null,
+     duration:c.querySelector('.med-duration')?.value?.trim()||null,
+     instructions:c.querySelector('.med-instructions')?.value?.trim()||null,
+     item_order:i+1
+   })).filter(x=>x.medication_name||x.presentation||x.dose||x.instructions);
+ }
+ async function createStandalonePrescription(){
+   const marker=JSON.parse(sessionStorage.getItem('medicoAmigoRxStandalone')||'null');
+   if(!marker || marker.consultationId)return false; // sólo receta realmente independiente
+   const p=patient(); if(!p?.id)throw Error('No se pudo identificar al paciente.');
+   const items=medicationItems();
+   if(!items.length)throw Error('Agrega al menos un medicamento.');
+   const code=document.getElementById('prescriptionCode')?.textContent?.trim()||('RX-'+Date.now());
+   const general=document.getElementById('prescriptionGeneralInstructions')?.value?.trim()||null;
+   const s=session();
+   const rows=await api('prescriptions',{method:'POST',prefer:true,body:JSON.stringify({
+     doctor_id:s.user.id,patient_id:p.id,consultation_id:null,prescription_code:code,
+     diagnosis:null,general_instructions:general
+   })});
+   const rx=rows?.[0];if(!rx?.id)throw Error('No se recibió el identificador de la receta.');
+   await api('prescription_items',{method:'POST',prefer:true,body:JSON.stringify(items.map(x=>({...x,doctor_id:s.user.id,prescription_id:rx.id})))});
+   sessionStorage.removeItem('medicoAmigoRxStandalone');
+   return {rx,items,p};
+ }
+ function printStandalone(result){
+   const {rx,items,p}=result;
+   // Reutiliza el generador profesional existente si está disponible.
+   if(typeof window.printPrescription==='function'){window.printPrescription();return}
+   // Fallback visual seguro.
+   const meds=items.map((m,i)=>`<p><b>${i+1}. ${m.medication_name||''}</b> ${m.presentation||''}<br>${[m.dose,m.route,m.frequency,m.duration].filter(Boolean).join(' · ')}${m.instructions?'<br>'+m.instructions:''}</p>`).join('');
+   const w=window.open('about:blank','_blank');if(!w)return;
+   w.document.write(`<html><head><meta charset="utf-8"><title>Receta</title><style>@page{size:A4;margin:18mm}body{font-family:Arial;color:#17384c;max-width:760px;margin:auto;padding:20px}h1{color:#073f68;border-bottom:3px solid #16a4b8;padding-bottom:10px}.box{border:1px solid #dbe8ed;border-radius:10px;padding:14px;margin:16px 0}@media print{button{display:none}}</style></head><body><h1>MÉDICO AMIGO</h1><div class="box"><b>Paciente:</b> ${p.name||''}<br><b>CI:</b> ${p.ci||'—'}<br><b>Receta:</b> ${rx.prescription_code||''}</div><h3>Rp/</h3>${meds}<p><b>Indicaciones generales:</b> ${rx.general_instructions||'—'}</p><button onclick="window.print()">Imprimir / Guardar como PDF</button></body></html>`);
+   w.document.close();
+ }
+ // Intercepta el submit ANTES de handlers anteriores cuando el marcador es receta independiente.
+ document.getElementById('prescriptionForm')?.addEventListener('submit',async e=>{
+   let marker=null;try{marker=JSON.parse(sessionStorage.getItem('medicoAmigoRxStandalone')||'null')}catch{}
+   if(!marker || marker.consultationId)return;
+   e.preventDefault();e.stopImmediatePropagation();
+   const btn=e.submitter||document.querySelector('#prescriptionForm button[type="submit"]');
+   const old=btn?.textContent;if(btn){btn.disabled=true;btn.textContent='GUARDANDO…'}
+   try{
+     const result=await createStandalonePrescription();
+     alert('Receta independiente guardada correctamente.');
+     printStandalone(result);
+   }catch(err){
+     console.error(err);alert('No se pudo guardar la receta: '+err.message);
+   }finally{
+     if(btn){btn.disabled=false;btn.textContent=old||'GUARDAR RECETA'}
+   }
+ },true);
+});
