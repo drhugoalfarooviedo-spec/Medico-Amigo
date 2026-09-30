@@ -1,34 +1,23 @@
-MÉDICO AMIGO v1.0 ESTABLE — PWA INSTALABLE
+MÉDICO AMIGO v1.0.1 — CORRECCIONES
 
-Base clínica:
-- Derivada directamente de v1.5.3 (dashboard definitivo).
-- Mantiene aislamiento Hugo/Omar, Supabase, RLS, pacientes, consultas,
-  recetas, cobros, firmas y edición/eliminación.
+Incluye:
+- Interfaz móvil separada de escritorio: una pantalla a la vez y formularios adaptables.
+- Edición completa del paciente, incluido contacto de emergencia y antecedentes clínicos.
+- Acceso a consulta guardada y edición del mismo registro (PATCH; no duplica consulta).
+- Ver/editar/regenerar receta asociada desde historial.
+- Receta independiente sin crear una nueva consulta.
+- Firma privada convertida a imagen embebida para mayor compatibilidad en documentos móviles.
+- Historia clínica deja de descargarse como .html: abre documento imprimible/guardable como PDF.
+- Tratamiento/receta visible al abrir una consulta del historial.
+- PWA actualizada a caché v1.0.1.
 
-PWA:
-- manifest.json
-- sw.js
-- icon-192.png
-- icon-512.png
-- modo standalone
-- instalación desde Chrome/Edge
-- service worker con estrategia network-first
-- Supabase/Auth/API NO se almacenan en caché
-- cada nueva publicación intenta buscar la versión más reciente
+No requiere SQL nuevo y no modifica las políticas RLS existentes.
 
-ARCHIVOS A SUBIR A GITHUB:
-1. index.html
-2. styles.css
-3. app.js
-4. README.txt
-5. manifest.json
-6. sw.js
-7. icon-192.png
-8. icon-512.png
-
-INSTALACIÓN:
-Después del deployment, abrir Médico Amigo en Chrome/Edge.
-Usar el icono de instalación de la barra de direcciones o
-Menú > Instalar Médico Amigo / Instalar aplicación.
-
-No requiere SQL adicional.
+PRUEBAS RECOMENDADAS:
+1) Android/iPhone: editar paciente.
+2) Abrir consulta antigua > Editar consulta > guardar.
+3) Abrir consulta antigua > Ver/editar receta > reimprimir.
+4) Generar receta independiente.
+5) Ver historia clínica y Guardar/Compartir como PDF.
+6) Confirmar firma en receta.
+7) Cambiar Hugo/Omar y confirmar aislamiento.

@@ -1,4 +1,11 @@
 
+async function medicoAmigoBlobDataURL(blob){
+ return await new Promise((resolve,reject)=>{
+  const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(blob);
+ });
+}
+
+
 /* ============================================================
    v1.5.1 — CAMBIO DE SESIÓN SEGURO
    Evita que estado clínico/caché de un médico sobreviva al logout.
@@ -935,14 +942,15 @@ ${blocks}
 @page{size:A4;margin:16mm}*{box-sizing:border-box}body{font:12px Arial,sans-serif;color:#17344a;max-width:800px;margin:0 auto;padding:12px}header{text-align:center;border-bottom:2px solid #0b789b;padding-bottom:12px}h1{margin:0;color:#073f68}h2{font-size:18px}h3{font-size:14px;color:#087d9e;border-bottom:1px solid #ccdce4;padding-bottom:6px}section{page-break-inside:avoid;margin:20px 0}p{line-height:1.5;white-space:pre-wrap}.box{background:#f5f9fb;padding:12px;border-radius:8px;line-height:1.7}.foot{margin-top:38px;text-align:center}</style></head><body>${inner}${autoPrint?'<script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script>':''}</body></html>`;
  }
  async function download(){
+   const w=window.open('about:blank','_blank');
+   if(!w){alert('El navegador bloqueó el documento. Habilita ventanas emergentes para Médico Amigo.');return}
+   w.document.write('<p style="font-family:Arial;padding:30px">Preparando historia clínica…</p>');
    try{
-     const d=await data(), content=doc(body(d),false);
-     const blob=new Blob([content],{type:'text/html;charset=utf-8'});
-     const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-     const safe=(d.p.name||'paciente').replace(/[^\p{L}\p{N}]+/gu,'_').replace(/^_+|_+$/g,'');
-     a.download='Historia_Clinica_'+safe+'.html';
-     document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-   }catch(e){alert('No se pudo descargar la historia clínica: '+e.message)}
+     const d=await data();
+     w.document.open();
+     w.document.write(doc(body(d),false).replace('</body>','<div class="no-print" style="margin:25px 0;text-align:center"><button onclick="window.print()" style="padding:12px 18px;border:0;border-radius:9px;background:#073b66;color:white;font-weight:bold">Imprimir / Guardar como PDF</button></div><style>@media print{.no-print{display:none!important}}</style></body>'));
+     w.document.close();
+   }catch(e){w.close();alert('No se pudo preparar la historia clínica: '+e.message)}
  }
  async function printNow(){
    // Open synchronously on the user click so popup blockers do not reject it.
@@ -956,7 +964,7 @@ ${blocks}
    const screen=$x('patientDetailScreen'); if(!screen||screen.classList.contains('hidden'))return;
    if(screen.querySelector('#historyActions121'))return;
    const wrap=document.createElement('div');wrap.id='historyActions121';wrap.style.cssText='display:grid;gap:10px;margin:18px 0 8px';
-   const d=document.createElement('button');d.type='button';d.className='primary-button';d.textContent='⬇ DESCARGAR HISTORIA CLÍNICA';d.onclick=download;
+   const d=document.createElement('button');d.type='button';d.className='primary-button';d.textContent='📄 VER / GUARDAR HISTORIA CLÍNICA';d.onclick=download;
    wrap.append(d);
    const target=screen.querySelector('.patient-actions,.detail-actions')||screen.querySelector('.screen-content,.content')||screen;
    target.appendChild(wrap);
@@ -1290,7 +1298,7 @@ document.addEventListener('DOMContentLoaded',()=>{
      const path=prof?.[0]?.signature_url;if(!path)return;
      const r=await fetch(SUPABASE_URL+'/storage/v1/object/authenticated/doctor-signatures/'+path,{headers:{apikey:KEY,Authorization:'Bearer '+s.access_token}});
      if(!r.ok)return;
-     const objectUrl=URL.createObjectURL(await r.blob());
+     const objectUrl=await medicoAmigoBlobDataURL(await r.blob());
      let cfg={};try{cfg=JSON.parse(sessionStorage.getItem('medicoAmigoDoctorConfig')||'{}')}catch{}
      cfg.signature=objectUrl;sessionStorage.setItem('medicoAmigoDoctorConfig',JSON.stringify(cfg));
    }catch(err){console.error('Firma:',err)}
@@ -1418,7 +1426,7 @@ document.addEventListener('DOMContentLoaded',()=>{
      let signature='';
      if(p.signature_url){
        const sr=await fetch(BASE+'/storage/v1/object/authenticated/doctor-signatures/'+p.signature_url,{headers:h});
-       if(sr.ok) signature=URL.createObjectURL(await sr.blob());
+       if(sr.ok) signature=await medicoAmigoBlobDataURL(await sr.blob());
      }
      const doctor={
        name:p.full_name||'Dr. Hugo Alfaro Oviedo',
@@ -1479,7 +1487,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
  $('editPatientBtn')?.addEventListener('click',async()=>{
   try{const p=await patient(),g=p.gynecological_history||{};
-   set('editFullName',p.full_name);set('editDocument',p.document_number);set('editBirthDate',p.birth_date);set('editSex',p.sex);set('editPhone',p.phone);set('editAddress',p.address);
+   set('editFullName',p.full_name);set('editDocument',p.document_number);set('editBirthDate',p.birth_date);set('editSex',p.sex);set('editPhone',p.phone);set('editAddress',p.address);set('editEmergencyName',p.emergency_contact_name);set('editEmergencyPhone',p.emergency_contact_phone);set('editEmergencyRelationship',p.emergency_contact_relationship);
    set('editPathological',p.pathological_history||p.medical_history);set('editNonPathological',p.non_pathological_history);set('editFamily',p.family_history);
    set('editMenarche',g.menarche);set('editLmp',g.lmp);set('editCycle',g.menstrual_cycle);set('editPregnancies',g.pregnancies);set('editBirths',g.births);set('editCesareans',g.cesareans);set('editAbortions',g.abortions);set('editContraception',g.contraception);set('editGyneOther',g.other);
    set('editAllergies',p.allergies);set('editMedication',p.regular_medications);set('editObservations',p.observations);gyne();show('editPatientScreen');
@@ -1491,7 +1499,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  $('editPatientForm')?.addEventListener('submit',async e=>{
   e.preventDefault();e.stopImmediatePropagation();const id=pid(),female=/femen/i.test($('editSex').value||'');
   const g=female?{menarche:$('editMenarche').value.trim()||null,lmp:$('editLmp').value||null,menstrual_cycle:$('editCycle').value.trim()||null,pregnancies:$('editPregnancies').value||null,births:$('editBirths').value||null,cesareans:$('editCesareans').value||null,abortions:$('editAbortions').value||null,contraception:$('editContraception').value.trim()||null,other:$('editGyneOther').value.trim()||null}:null;
-  const b={full_name:$('editFullName').value.trim(),document_number:$('editDocument').value.trim()||null,birth_date:$('editBirthDate').value||null,sex:$('editSex').value||null,phone:$('editPhone').value.trim()||null,address:$('editAddress').value.trim()||null,pathological_history:$('editPathological').value.trim()||null,medical_history:$('editPathological').value.trim()||null,non_pathological_history:$('editNonPathological').value.trim()||null,family_history:$('editFamily').value.trim()||null,gynecological_history:g,allergies:$('editAllergies').value.trim()||null,regular_medications:$('editMedication').value.trim()||null,observations:$('editObservations').value.trim()||null,updated_at:new Date().toISOString()};
+  const b={full_name:$('editFullName').value.trim(),document_number:$('editDocument').value.trim()||null,birth_date:$('editBirthDate').value||null,sex:$('editSex').value||null,phone:$('editPhone').value.trim()||null,address:$('editAddress').value.trim()||null,emergency_contact_name:$('editEmergencyName').value.trim()||null,emergency_contact_phone:$('editEmergencyPhone').value.trim()||null,emergency_contact_relationship:$('editEmergencyRelationship').value.trim()||null,pathological_history:$('editPathological').value.trim()||null,medical_history:$('editPathological').value.trim()||null,non_pathological_history:$('editNonPathological').value.trim()||null,family_history:$('editFamily').value.trim()||null,gynecological_history:g,allergies:$('editAllergies').value.trim()||null,regular_medications:$('editMedication').value.trim()||null,observations:$('editObservations').value.trim()||null,updated_at:new Date().toISOString()};
   try{const r=await req('patients?id=eq.'+encodeURIComponent(id),{method:'PATCH',rep:true,body:JSON.stringify(b)});if(!r?.[0]?.id)throw Error('Supabase no confirmó los cambios.');alert('Paciente actualizado correctamente.');$('patientsNavBtn')?.click()}
   catch(err){alert('No se pudo actualizar: '+err.message)}
  });
@@ -1532,4 +1540,148 @@ document.addEventListener('DOMContentLoaded',()=>{
  };
  new MutationObserver(addDeleteButtons).observe(document.getElementById('patientHistoryList')||document.body,{childList:true,subtree:true});
  addDeleteButtons();
+});
+
+
+/* ============================================================
+   v1.0.1 — CORRECCIONES DE USO REAL / MÓVIL
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const BASE='https://kdjvsbiqjpztdugewuve.supabase.co';
+ const KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
+ const SESSION='medico_amigo_supabase_session';
+ const $=id=>document.getElementById(id);
+ const sess=()=>{try{return JSON.parse(localStorage.getItem(SESSION)||'null')}catch{return null}};
+ const headers=(rep=false)=>{const s=sess();if(!s?.access_token)throw Error('No hay sesión autenticada');const h={apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'};if(rep)h.Prefer='return=representation';return h};
+ async function req(path,opt={}){const r=await fetch(BASE+'/rest/v1/'+path,{...opt,headers:{...headers(opt.rep),...(opt.headers||{})}});const raw=await r.text();let d=null;try{d=raw?JSON.parse(raw):null}catch{d=raw}if(!r.ok)throw Error(d?.message||raw||('HTTP '+r.status));return d}
+ const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+ const currentPatientId=()=>sessionStorage.getItem('medicoAmigoCurrentPatientId')||(window.state&&state.currentPatientId)||null;
+ const currentPatient=()=>{let a=[];try{a=JSON.parse(sessionStorage.getItem('medicoAmigoPatients')||'[]')}catch{};return a.find(x=>x.id===currentPatientId())||window.detailPatient||null};
+ let editConsultationId=null, modalConsultation=null, rxMode=null;
+
+ async function prescriptionForConsultation(cid){
+   const r=await req('prescriptions?consultation_id=eq.'+encodeURIComponent(cid)+'&select=*&order=created_at.desc');
+   const rx=r?.[0];if(!rx)return null;
+   rx.items=await req('prescription_items?prescription_id=eq.'+encodeURIComponent(rx.id)+'&select=*&order=item_order.asc')||[];
+   return rx;
+ }
+ function rxHtml(rx){
+   if(!rx)return '<div class="history-detail-block"><h3>Tratamiento / receta</h3><p>Sin receta asociada.</p></div>';
+   const items=(rx.items||[]).map((x,i)=>`<div class="history-rx-item"><b>${i+1}. ${esc(x.medication_name||'Medicamento')}</b>${x.presentation?' · '+esc(x.presentation):''}<br>${[x.dose,x.route,x.frequency,x.duration].filter(Boolean).map(esc).join(' · ')}${x.instructions?'<br><small>'+esc(x.instructions)+'</small>':''}</div>`).join('');
+   return `<div class="history-detail-block"><h3>Tratamiento / receta</h3>${items||'<p>Sin medicamentos.</p>'}${rx.general_instructions?'<p><b>Indicaciones generales:</b> '+esc(rx.general_instructions)+'</p>':''}</div>`;
+ }
+
+ // Enhance consultation modal: show prescription and expose edit actions.
+ const hist=$('patientHistoryList');
+ hist?.addEventListener('click',async ev=>{
+   const card=ev.target.closest('.history-card'); if(!card || ev.target.closest('.delete-consultation-btn'))return;
+   setTimeout(async()=>{
+     const title=$('historyModalTitle')?.textContent||'';
+     let cs=[];const p=currentPatient();
+     if(p&&window.loadConsultationsFromSupabase)cs=await window.loadConsultationsFromSupabase(p);
+     // Match the opened card by diagnosis/date text; renderer keeps same object order.
+     const cards=[...hist.querySelectorAll('.history-card')],idx=cards.indexOf(card);
+     modalConsultation=cs[idx]||cs.find(c=>(c.diagnosis||'Consulta médica')===title)||null;
+     if(!modalConsultation)return;
+     try{
+       const rx=await prescriptionForConsultation(modalConsultation.id);
+       $('historyModalContent')?.insertAdjacentHTML('beforeend',rxHtml(rx));
+       const rb=$('historyPrescriptionBtn');if(rb){rb.disabled=!rx;rb.textContent=rx?'💊 VER / EDITAR RECETA':'💊 GENERAR RECETA'}
+     }catch(e){console.error(e)}
+   },40);
+ },true);
+
+ $('editHistoryConsultationBtn')?.addEventListener('click',()=>{
+   const c=modalConsultation;if(!c)return;
+   editConsultationId=c.id;
+   const set=(id,v)=>{if($(id))$(id).value=v??''};
+   set('consultationReason',c.reason);set('currentIllness',c.illness);set('bloodPressure',c.bp);set('heartRate',c.hr);set('oxygenSaturation',c.spo2);
+   set('temperature',c.temp);set('respiratoryRate',c.rr);set('weight',c.weight);set('height',c.height);set('physicalExam',c.exam);
+   set('complementaryStudies',c.studies);set('diagnosis',c.diagnosis);set('consultationIndications',c.plan);set('consultationNotes',c.notes);set('followUp',c.followUp);
+   $('consultationHistoryModal')?.classList.add('hidden');
+   if(typeof show==='function')show($('consultationScreen'));
+   const b=$('consultationForm')?.querySelector('button[type="submit"]');if(b)b.textContent='GUARDAR CAMBIOS';
+ });
+
+ // Capture edit-submit before legacy POST handler: PATCH same consultation, no duplicate consultation/cobro.
+ $('consultationForm')?.addEventListener('submit',async e=>{
+   if(!editConsultationId)return;
+   e.preventDefault();e.stopImmediatePropagation();
+   const v=id=>$(id)?.value?.trim?.()||null,n=id=>{const x=$(id)?.value;return x===''||x==null?null:Number(x)};
+   const payload={reason:v('consultationReason'),current_illness:v('currentIllness'),blood_pressure:v('bloodPressure'),heart_rate:n('heartRate'),
+    oxygen_saturation:n('oxygenSaturation'),temperature:n('temperature'),respiratory_rate:n('respiratoryRate'),weight:n('weight'),height:n('height'),
+    physical_exam:v('physicalExam'),complementary_studies:v('complementaryStudies'),diagnosis:v('diagnosis'),indications:v('consultationIndications'),
+    observations:v('consultationNotes'),follow_up:v('followUp'),updated_at:new Date().toISOString()};
+   try{
+     const rows=await req('consultations?id=eq.'+encodeURIComponent(editConsultationId),{method:'PATCH',rep:true,body:JSON.stringify(payload)});
+     if(!rows?.[0]?.id)throw Error('Supabase no confirmó la actualización.');
+     editConsultationId=null;
+     const b=$('consultationForm')?.querySelector('button[type="submit"]');if(b)b.textContent='GUARDAR Y CONTINUAR →';
+     alert('Consulta actualizada correctamente.');
+     $('patientsNavBtn')?.click();
+   }catch(err){alert('No se pudo actualizar la consulta: '+err.message)}
+ },true);
+
+ function populateRx(rx,p,c){
+   selectedPatient=p;currentConsultation=c||{id:null,diagnosis:rx?.diagnosis||'',indications:rx?.general_instructions||''};
+   $('prescriptionPatientName').textContent=p.name;$('prescriptionSelectedName').textContent=p.name;$('prescriptionSelectedMeta').textContent=[p.ci?'CI: '+p.ci:'Sin documento',p.meta].filter(Boolean).join(' · ');
+   $('prescriptionAvatar').textContent=(p.name||'P').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();
+   $('prescriptionDiagnosis').textContent=rx?.diagnosis||currentConsultation.diagnosis||'Receta independiente';
+   $('prescriptionCode').textContent=rx?.prescription_code||('RX-'+new Date().toISOString().slice(0,10).replaceAll('-','')+'-'+String(Date.now()).slice(-5));
+   $('prescriptionGeneralInstructions').value=rx?.general_instructions||currentConsultation.indications||'';
+   $('medicationsList').innerHTML='';
+   const its=rx?.items?.length?rx.items:[{}];
+   its.forEach(x=>addMedication({name:x.medication_name||'',presentation:x.presentation||'',dose:x.dose||'',route:x.route||'',frequency:x.frequency||'',duration:x.duration||'',instructions:x.instructions||''}));
+   show($('prescriptionScreen'));
+ }
+ async function openRxForCurrentConsult(){
+   if(!modalConsultation)return;
+   const p=currentPatient();if(!p)return;
+   const rx=await prescriptionForConsultation(modalConsultation.id);
+   rxMode=rx?{type:'edit',rx}:{type:'new-linked',consultationId:modalConsultation.id};
+   populateRx(rx,p,{id:modalConsultation.id,diagnosis:modalConsultation.diagnosis||'',indications:modalConsultation.plan||''});
+   $('consultationHistoryModal')?.classList.add('hidden');
+ }
+ $('historyPrescriptionBtn')?.addEventListener('click',()=>openRxForCurrentConsult().catch(e=>alert(e.message)));
+
+ async function standaloneFor(p){
+   if(!p?.id){alert('Selecciona primero un paciente.');return}
+   rxMode={type:'standalone'};
+   populateRx(null,p,{id:null,diagnosis:'',indications:''});
+   $('prescriptionDiagnosis').textContent='Receta independiente';
+ }
+ $('standalonePrescriptionFromDetailBtn')?.addEventListener('click',()=>standaloneFor(currentPatient()));
+
+ // Home shortcut: takes doctor to patients and explains next step.
+ $('quickPrescriptionBtn')?.addEventListener('click',()=>{ $('patientsNavBtn')?.click(); setTimeout(()=>alert('Selecciona un paciente y pulsa “Rx RECETA” en su ficha.'),80) });
+
+ // Capture prescription submit for edit / standalone / linked-from-history.
+ $('prescriptionForm')?.addEventListener('submit',async e=>{
+   if(!rxMode)return;
+   e.preventDefault();e.stopImmediatePropagation();
+   const p=currentPatient()||selectedPatient;if(!p?.id){alert('No se identificó al paciente.');return}
+   const items=[...document.querySelectorAll('.medication-card')].map((c,i)=>({
+    medication_name:c.querySelector('.med-name')?.value.trim()||null,presentation:c.querySelector('.med-presentation')?.value.trim()||null,
+    dose:c.querySelector('.med-dose')?.value.trim()||null,route:c.querySelector('.med-route')?.value||null,frequency:c.querySelector('.med-frequency')?.value.trim()||null,
+    duration:c.querySelector('.med-duration')?.value.trim()||null,instructions:c.querySelector('.med-instructions')?.value.trim()||null,item_order:i+1
+   })).filter(x=>x.medication_name||x.presentation||x.dose||x.instructions);
+   const general=$('prescriptionGeneralInstructions').value.trim()||null;
+   try{
+     if(rxMode.type==='edit'){
+       const id=rxMode.rx.id;
+       await req('prescriptions?id=eq.'+encodeURIComponent(id),{method:'PATCH',rep:true,body:JSON.stringify({general_instructions:general,updated_at:new Date().toISOString()})});
+       await req('prescription_items?prescription_id=eq.'+encodeURIComponent(id),{method:'DELETE'});
+       if(items.length)await req('prescription_items',{method:'POST',body:JSON.stringify(items.map(x=>({...x,prescription_id:id})))});
+       alert('Receta actualizada correctamente. Ya puedes volver a imprimirla.');
+     }else{
+       const cid=rxMode.type==='new-linked'?rxMode.consultationId:null;
+       const code=$('prescriptionCode').textContent;
+       const rows=await req('prescriptions',{method:'POST',rep:true,body:JSON.stringify({patient_id:p.id,consultation_id:cid,prescription_code:code,diagnosis:cid?(modalConsultation?.diagnosis||null):null,general_instructions:general})});
+       const rx=rows?.[0];if(!rx?.id)throw Error('No se recibió el identificador de la receta.');
+       if(items.length)await req('prescription_items',{method:'POST',body:JSON.stringify(items.map(x=>({...x,prescription_id:rx.id})))});
+       alert(cid?'Receta guardada correctamente.':'Receta independiente guardada correctamente.');
+     }
+     rxMode=null;$('patientsNavBtn')?.click();
+   }catch(err){console.error(err);alert('No se pudo guardar la receta: '+err.message)}
+ },true);
 });
