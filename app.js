@@ -725,7 +725,12 @@ document.addEventListener('DOMContentLoaded',()=>{
      $v('patientsNavBtn').click();
    }catch(err){
      console.error(err);
-     alert('No se pudo registrar el paciente: '+err.message);
+     const msg=String(err?.message||'');
+     if(msg.includes('patients_doctor_document_unique') || msg.toLowerCase().includes('duplicate key')){
+       alert('Ya existe un paciente registrado con este número de documento.');
+     }else{
+       alert('No se pudo registrar el paciente. Por favor, inténtalo nuevamente.');
+     }
    }finally{
      if(button){button.disabled=false;button.textContent=old}
    }
@@ -1142,7 +1147,15 @@ document.addEventListener('DOMContentLoaded',()=>{
      await request('patients',{method:'POST',body:JSON.stringify(payload),rep:true});
      form.reset();await refresh();
      $e('patientsNavBtn')?.click();
-   }catch(e){alert('No se pudo registrar el paciente: '+e.message)}
+   }catch(e){
+     console.error(e);
+     const msg=String(e?.message||'');
+     if(msg.includes('patients_doctor_document_unique') || msg.toLowerCase().includes('duplicate key')){
+       alert('Ya existe un paciente registrado con este número de documento.');
+     }else{
+       alert('No se pudo registrar el paciente. Por favor, inténtalo nuevamente.');
+     }
+   }
    finally{if(b){b.disabled=false;b.textContent=old}}
    return false;
  };
