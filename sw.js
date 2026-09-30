@@ -1,4 +1,4 @@
-const CACHE = 'medico-amigo-v1.0.17-friendly-duplicate';
+const CACHE = 'medico-amigo-v1.0.18-password-recovery';
 const APP_SHELL = [
   './',
   './index.html',

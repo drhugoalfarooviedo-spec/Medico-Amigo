@@ -645,6 +645,72 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 
 /* ============================================================
+   v1.0.18 — RECUPERACIÓN DE CONTRASEÑA
+   Solicita el correo de recuperación a Supabase y permite
+   establecer una nueva contraseña al volver desde el enlace.
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const URL='https://kdjvsbiqjpztdugewuve.supabase.co';
+ const KEY='sb_publishable_wKlqLyUpXL41rpCDA-6aJQ_u4JYqlVp';
+ const REDIRECT='https://drhugoalfarooviedo-spec.github.io/Medico-Amigo/';
+ const forgot=document.getElementById('forgotPasswordBtn');
+ const email=document.getElementById('email');
+ const form=document.getElementById('loginForm');
+ const authMsg=document.getElementById('authMessage');
+ const panel=document.getElementById('recoveryPanel');
+ const save=document.getElementById('saveNewPasswordBtn');
+ const newPass=document.getElementById('newPassword');
+ const confirmPass=document.getElementById('confirmNewPassword');
+ const recoveryMsg=document.getElementById('recoveryMessage');
+ let recoveryToken=null;
+ const show=(el,text,ok=false)=>{if(!el)return;el.textContent=text;el.classList.remove('hidden','success');if(ok)el.classList.add('success')};
+ const hide=el=>{if(el){el.textContent='';el.classList.add('hidden');el.classList.remove('success')}};
+
+ if(forgot)forgot.addEventListener('click',async()=>{
+   const mail=(email?.value||'').trim();
+   if(!mail){show(authMsg,'Ingresa tu correo electrónico y luego pulsa “¿Olvidaste tu contraseña?”.');email?.focus();return}
+   const old=forgot.textContent;forgot.disabled=true;forgot.textContent='ENVIANDO…';hide(authMsg);
+   try{
+     const r=await fetch(URL+'/auth/v1/recover?redirect_to='+encodeURIComponent(REDIRECT),{
+       method:'POST',headers:{'Content-Type':'application/json',apikey:KEY},body:JSON.stringify({email:mail})
+     });
+     const raw=await r.text();let d={};try{d=raw?JSON.parse(raw):{}}catch{}
+     if(!r.ok)throw Error(d?.msg||d?.message||raw||'No se pudo enviar el correo.');
+     show(authMsg,'Si el correo está registrado, recibirás un enlace para crear una nueva contraseña. Revisa también Spam.',true);
+   }catch(err){show(authMsg,'No se pudo solicitar la recuperación: '+err.message)}
+   finally{forgot.disabled=false;forgot.textContent=old}
+ });
+
+ // Supabase Recovery (implicit flow) returns the temporary access token in the URL fragment.
+ const hash=new URLSearchParams(location.hash.replace(/^#/,''));
+ if(hash.get('type')==='recovery' && hash.get('access_token')){
+   recoveryToken=hash.get('access_token');
+   form?.classList.add('hidden');panel?.classList.remove('hidden');
+   document.querySelector('#loginScreen .welcome h2')?.replaceChildren(document.createTextNode('Recuperar contraseña'));
+   const wp=document.querySelector('#loginScreen .welcome p');if(wp)wp.textContent='Crea una nueva contraseña para tu cuenta';
+   history.replaceState(null,'',location.pathname+location.search);
+ }
+ if(hash.get('error_description'))show(authMsg,decodeURIComponent(hash.get('error_description')));
+
+ if(save)save.addEventListener('click',async()=>{
+   hide(recoveryMsg);const p1=newPass?.value||'',p2=confirmPass?.value||'';
+   if(p1.length<8){show(recoveryMsg,'La contraseña debe tener al menos 8 caracteres.');return}
+   if(p1!==p2){show(recoveryMsg,'Las contraseñas no coinciden.');return}
+   if(!recoveryToken){show(recoveryMsg,'El enlace de recuperación ya no es válido. Solicita uno nuevo.');return}
+   const old=save.textContent;save.disabled=true;save.textContent='GUARDANDO…';
+   try{
+     const r=await fetch(URL+'/auth/v1/user',{method:'PUT',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+recoveryToken},body:JSON.stringify({password:p1})});
+     const raw=await r.text();let d={};try{d=raw?JSON.parse(raw):{}}catch{}
+     if(!r.ok)throw Error(d?.msg||d?.message||raw||'No se pudo cambiar la contraseña.');
+     recoveryToken=null;newPass.value='';confirmPass.value='';show(recoveryMsg,'Contraseña actualizada correctamente. Ya puedes iniciar sesión.',true);
+     setTimeout(()=>{panel.classList.add('hidden');form?.classList.remove('hidden');const h=document.querySelector('#loginScreen .welcome h2');if(h)h.textContent='Bienvenido';const wp=document.querySelector('#loginScreen .welcome p');if(wp)wp.textContent='Ingresa a tu cuenta para continuar';},1200);
+   }catch(err){show(recoveryMsg,'No se pudo actualizar la contraseña: '+err.message)}
+   finally{save.disabled=false;save.textContent=old}
+ });
+});
+
+
+/* ============================================================
    v1.1 — PACIENTES REALES EN SUPABASE
 ============================================================ */
 document.addEventListener('DOMContentLoaded',()=>{
