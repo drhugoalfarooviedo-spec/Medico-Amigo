@@ -214,3 +214,18 @@ html,body{max-width:100%;overflow-x:hidden}
 /* v1.0.5 */
 #rxPatientPickerBanner{gap:3px}
 #rxPatientPickerBanner span{font-size:13px;color:#5f7787}
+
+/* v1.0.6 — selector independiente de paciente para receta */
+#rxPickerOverlay{position:fixed;inset:0;z-index:99999;background:rgba(7,45,72,.48);display:flex;align-items:flex-start;justify-content:center;padding:8vh 18px 24px}
+.rx-picker-card{width:min(560px,100%);max-height:82vh;overflow:hidden;background:#f8fbfd;border-radius:22px;box-shadow:0 24px 70px rgba(3,37,62,.28);display:flex;flex-direction:column}
+.rx-picker-head{background:#073f68;color:#fff;padding:22px 24px;display:flex;justify-content:space-between;align-items:center}
+.rx-picker-head div{display:grid;gap:3px}.rx-picker-head strong{font-size:24px}.rx-picker-head span{font-size:14px;opacity:.85}
+.rx-picker-head button{border:0;background:rgba(255,255,255,.14);color:#fff;width:42px;height:42px;border-radius:12px;font-size:27px;cursor:pointer}
+.rx-picker-search{margin:20px 20px 10px;border:1px solid #d5e3ea;background:#fff;border-radius:14px;padding:0 14px;display:flex;align-items:center;gap:9px}
+.rx-picker-search span{font-size:24px;color:#00a3bd}.rx-picker-search input{width:100%;border:0;outline:0;background:transparent;padding:15px 0;font-size:16px}
+.rx-picker-list{padding:8px 20px 22px;overflow:auto;display:grid;gap:10px}
+.rx-picker-patient{border:1px solid #dbe7ed;background:#fff;border-radius:15px;padding:13px;display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:12px;text-align:left;cursor:pointer;color:#12334c}
+.rx-picker-patient:hover{border-color:#08a6bd;background:#f1fbfd}.rx-picker-avatar{width:48px;height:48px;border-radius:14px;background:#e5f8fb;color:#009ab3;display:grid;place-items:center;font-weight:800}
+.rx-picker-patient span:nth-child(2){display:grid;gap:4px}.rx-picker-patient b{font-size:16px}.rx-picker-patient small{font-size:12px;color:#688091}.rx-picker-patient i{font-style:normal;font-size:27px;color:#8ba2b0}
+.rx-picker-empty{text-align:center;padding:28px;color:#718695}
+@media(max-width:600px){#rxPickerOverlay{padding:0;align-items:stretch}.rx-picker-card{width:100%;max-height:none;height:100%;border-radius:0}.rx-picker-head{padding-top:max(22px,env(safe-area-inset-top))}}

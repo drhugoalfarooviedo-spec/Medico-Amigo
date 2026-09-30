@@ -1859,14 +1859,11 @@ document.addEventListener('DOMContentLoaded',()=>{
    return {rx,items,p};
  }
  function printStandalone(result){
-   const {rx,items,p}=result;
-   // Reutiliza el generador profesional existente si está disponible.
-   if(typeof window.printPrescription==='function'){window.printPrescription();return}
-   // Fallback visual seguro.
-   const meds=items.map((m,i)=>`<p><b>${i+1}. ${m.medication_name||''}</b> ${m.presentation||''}<br>${[m.dose,m.route,m.frequency,m.duration].filter(Boolean).join(' · ')}${m.instructions?'<br>'+m.instructions:''}</p>`).join('');
-   const w=window.open('about:blank','_blank');if(!w)return;
-   w.document.write(`<html><head><meta charset="utf-8"><title>Receta</title><style>@page{size:A4;margin:18mm}body{font-family:Arial;color:#17384c;max-width:760px;margin:auto;padding:20px}h1{color:#073f68;border-bottom:3px solid #16a4b8;padding-bottom:10px}.box{border:1px solid #dbe8ed;border-radius:10px;padding:14px;margin:16px 0}@media print{button{display:none}}</style></head><body><h1>MÉDICO AMIGO</h1><div class="box"><b>Paciente:</b> ${p.name||''}<br><b>CI:</b> ${p.ci||'—'}<br><b>Receta:</b> ${rx.prescription_code||''}</div><h3>Rp/</h3>${meds}<p><b>Indicaciones generales:</b> ${rx.general_instructions||'—'}</p><button onclick="window.print()">Imprimir / Guardar como PDF</button></body></html>`);
-   w.document.close();
+   // El generador profesional ya existente incluye médico, matrícula, teléfono,
+   // firma privada, formato A4 y todos los campos farmacológicos.
+   const preview=document.getElementById('previewPrescriptionBtn');
+   if(preview){ preview.click(); return; }
+   alert('La receta fue guardada correctamente. Usa “VISTA PREVIA / PDF” para abrir el documento.');
  }
  // Intercepta el submit ANTES de handlers anteriores cuando el marcador es receta independiente.
  document.getElementById('prescriptionForm')?.addEventListener('submit',async e=>{
@@ -2033,4 +2030,86 @@ document.addEventListener('DOMContentLoaded',()=>{
  });
  obs.observe(screen,{attributes:true,attributeFilter:['class']});
  document.getElementById('quickPrescriptionBtn')?.addEventListener('click',()=>setTimeout(()=>banner.style.display='grid',40),true);
+});
+
+
+/* ============================================================
+   v1.0.6 — SELECTOR RX INDEPENDIENTE
+   No reutiliza las pantallas antiguas de selección de paciente.
+============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+ const $=id=>document.getElementById(id);
+
+ function patients(){
+   try{return JSON.parse(sessionStorage.getItem('medicoAmigoPatients')||'[]')}catch{return []}
+ }
+ function closePicker(){ $('rxPickerOverlay')?.remove(); }
+
+ function openRx(p){
+   if(!p?.id){alert('No se pudo identificar al paciente.');return}
+   closePicker();
+   sessionStorage.removeItem('medicoAmigoSelectingPatientForRx');
+   sessionStorage.setItem('medicoAmigoCurrentPatientId',p.id);
+   sessionStorage.setItem('medicoAmigoRxStandalone',JSON.stringify({patientId:p.id,consultationId:null}));
+   window.selectedPatient=p;
+   window.currentConsultation={id:null,diagnosis:'',indications:''};
+
+   const put=(id,v)=>{if($(id))$(id).textContent=v||''};
+   put('prescriptionPatientName',p.name);
+   put('prescriptionSelectedName',p.name);
+   put('prescriptionSelectedMeta',[p.ci?'CI: '+p.ci:'Sin documento',p.meta].filter(Boolean).join(' · '));
+   put('prescriptionAvatar',(p.name||'P').split(/\s+/).filter(Boolean).map(x=>x[0]).slice(0,2).join('').toUpperCase());
+   put('prescriptionDiagnosis','Receta independiente');
+   put('prescriptionCode','RX-'+new Date().toISOString().slice(0,10).replaceAll('-','')+'-'+String(Date.now()).slice(-5));
+   if($('prescriptionGeneralInstructions'))$('prescriptionGeneralInstructions').value='';
+   if($('medicationsList')){
+     $('medicationsList').innerHTML='';
+     // Use the app's own Add medication button, whose handler is already configured.
+     $('addMedicationBtn')?.click();
+   }
+   document.querySelectorAll(
+     '#loginScreen,#homeScreen,#patientScreen,#newPatientScreen,#consultationScreen,#paymentScreen,#patientsScreen,#patientDetailScreen,#editPatientScreen,#settingsScreen'
+   ).forEach(el=>el.classList.add('hidden'));
+   $('prescriptionScreen')?.classList.remove('hidden');
+   window.scrollTo({top:0,left:0,behavior:'auto'});
+ }
+
+ function renderPicker(){
+   closePicker();
+   const data=patients();
+   const overlay=document.createElement('div');
+   overlay.id='rxPickerOverlay';
+   overlay.innerHTML=`<div class="rx-picker-card">
+     <div class="rx-picker-head"><div><strong>Nueva receta</strong><span>Selecciona el paciente</span></div><button type="button" id="rxPickerClose">×</button></div>
+     <div class="rx-picker-search"><span>⌕</span><input id="rxPickerSearch" type="search" placeholder="Nombre, CI o teléfono"></div>
+     <div id="rxPickerList" class="rx-picker-list"></div>
+   </div>`;
+   document.body.appendChild(overlay);
+   const list=$('rxPickerList');
+   const draw=q=>{
+     q=(q||'').trim().toLowerCase();
+     const rows=data.filter(p=>!q||[p.name,p.ci,p.phone].some(v=>String(v||'').toLowerCase().includes(q)));
+     list.innerHTML='';
+     if(!rows.length){
+       list.innerHTML='<div class="rx-picker-empty">No se encontraron pacientes.</div>'; return;
+     }
+     rows.forEach(p=>{
+       const b=document.createElement('button'); b.type='button'; b.className='rx-picker-patient';
+       const ini=(p.name||'P').split(/\s+/).filter(Boolean).map(x=>x[0]).slice(0,2).join('').toUpperCase();
+       b.innerHTML=`<span class="rx-picker-avatar">${ini}</span><span><b>${p.name||'Paciente'}</b><small>CI: ${p.ci||'—'}${p.phone?' · '+p.phone:''}</small></span><i>›</i>`;
+       b.onclick=()=>openRx(p); list.appendChild(b);
+     });
+   };
+   draw('');
+   $('rxPickerSearch').oninput=e=>draw(e.target.value);
+   $('rxPickerClose').onclick=closePicker;
+   overlay.addEventListener('click',e=>{if(e.target===overlay)closePicker()});
+   setTimeout(()=>$('rxPickerSearch')?.focus(),30);
+ }
+
+ // Capture before every old/legacy listener.
+ $('quickPrescriptionBtn')?.addEventListener('click',e=>{
+   e.preventDefault(); e.stopImmediatePropagation();
+   renderPicker();
+ },true);
 });

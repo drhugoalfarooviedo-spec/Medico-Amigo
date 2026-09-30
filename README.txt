@@ -1,25 +1,27 @@
-MÉDICO AMIGO v1.0.5 — NUEVA RECETA DIRECTA
+MÉDICO AMIGO v1.0.6 — RECETA FINAL
 
-Cambio específico:
-Inicio > Nueva receta > Seleccionar paciente > Formulario de receta.
+Correcciones:
+1. NUEVA RECETA ya no reutiliza las pantallas antiguas de pacientes.
+   - Abre un selector propio.
+   - Buscar por nombre, CI o teléfono.
+   - Tocar al paciente abre directamente la receta.
+   - Ya no debe mandar a Nuevo paciente.
 
-- Elimina el aviso que decía que había que entrar manualmente a la ficha.
-- Al pulsar Nueva receta se abre Pacientes en modo selección.
-- Al tocar el paciente se abre directamente el formulario Rx.
-- La receta queda marcada como independiente (consultation_id = NULL).
-- No crea una consulta ni un cobro.
-- El botón Rx RECETA de la ficha utiliza el mismo flujo.
-- Conserva las correcciones de navegación de v1.0.4.
-- Conserva la Historia Clínica mejorada.
+2. DOCUMENTO DE RECETA
+   - Después de guardar ya no usa el documento básico de emergencia.
+   - Abre el generador profesional ya existente de Médico Amigo.
+   - Ese generador incluye datos del médico, matrícula, teléfono, firma configurada,
+     paciente, fecha, código, diagnóstico, medicamento, presentación, dosis, vía,
+     frecuencia, duración, instrucciones e indicaciones generales.
 
-REQUISITO:
-La migración de v1.0.4 (DROP NOT NULL de prescriptions.consultation_id)
-debe estar aplicada. Si ya mostró Success, NO volver a ejecutarla.
+3. Se conservan:
+   - edición de paciente corregida
+   - navegación corregida
+   - Historia Clínica mejorada
+   - receta independiente con consultation_id NULL
 
-PRUEBA:
-1. Inicio > Nueva receta.
-2. Debe aparecer Pacientes sin alerta.
-3. Tocar William Alfaro.
-4. Debe abrir inmediatamente el formulario de receta.
-5. Completar medicamento > Guardar y continuar.
-6. Confirmar que no aumenta el número de consultas.
+No requiere SQL adicional.
+
+Prueba principal:
+Inicio > Nueva receta > seleccionar William > llenar receta > GUARDAR Y CONTINUAR.
+Debe guardarse y abrir la receta profesional.
