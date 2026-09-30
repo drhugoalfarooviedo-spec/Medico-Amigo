@@ -1,25 +1,22 @@
-MÉDICO AMIGO v1.0.10 — FIX RECETA PROFESIONAL / PDF
+MÉDICO AMIGO v1.0.11 — FIX DEFINITIVO DE CONTEXTO EN RECETA INDEPENDIENTE
 
-Problema corregido:
-La receta independiente ya llegaba a guardarse, pero al construir el documento
-profesional el objeto del paciente nuevo/independiente no incluía la propiedad
-"meta" que el generador de receta esperaba. Eso producía:
+Error observado:
 Cannot read properties of null (reading 'meta')
 
-Corrección:
-- normaliza el paciente antes de entrar a receta;
-- paciente nuevo incluye meta;
-- antes del documento profesional se normaliza nuevamente el contexto;
-- la consulta virtual de receta independiente incluye meta vacío para que el
-  generador profesional no dependa de una consulta clínica real.
+Causa encontrada:
+No era un problema del campo meta del paciente.
+El generador profesional de receta utilizaba las variables internas
+selectedPatient/currentConsultation del flujo de consulta.
+La receta independiente, en cambio, guardaba su contexto en
+window.selectedPatient/window.currentConsultation.
 
-No cambia:
-- selector de Nueva receta;
-- alta rápida de paciente;
-- Historia Clínica;
-- consultas;
-- cobros;
-- aislamiento por médico;
-- base de datos.
+Por eso la receta podía guardarse en Supabase, pero al construir el documento
+el generador recibía selectedPatient = null y fallaba al leer p.meta.
+
+Corrección:
+- prescriptionPrint usa primero el contexto clínico normal;
+- si no existe, utiliza el contexto de receta independiente;
+- valida paciente y contexto antes de generar el documento;
+- no modifica consultas, historia clínica, cobros, RLS ni base de datos.
 
 No requiere SQL.

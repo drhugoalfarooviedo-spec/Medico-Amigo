@@ -168,7 +168,15 @@ function meds(){return[...document.querySelectorAll('.medication-card')].map(c=>
 $('addMedicationBtn').onclick=()=>addMedication();$('backToConsultationBtn').onclick=$('prescriptionBackBtn').onclick=()=>show($('consultationScreen'));
 function escapeHtml(v){return String(v||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function prescriptionPrint(targetWindow=null){
- const list=meds(),p=selectedPatient,c=currentConsultation,code=$('prescriptionCode').textContent;
+ // v1.0.11: una receta independiente vive en window.selectedPatient/window.currentConsultation.
+ // El flujo clínico normal usa las variables internas selectedPatient/currentConsultation.
+ // Usar ambos contextos evita que el generador PDF reciba null.
+ const list=meds(),
+       p=selectedPatient||window.selectedPatient,
+       c=currentConsultation||window.currentConsultation,
+       code=$('prescriptionCode').textContent;
+ if(!p){throw new Error('No se encontró el paciente para generar la receta.');}
+ if(!c){throw new Error('No se encontró el contexto de la receta.');}
  const cfg=getDoctorConfig();
  const signatureHtml=cfg.signature
    ? `<div class="signature-placeholder"><img src="${cfg.signature}" alt="Firma del médico" style="max-width:260px;max-height:105px;object-fit:contain"></div>`
