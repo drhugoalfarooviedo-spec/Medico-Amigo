@@ -1871,8 +1871,8 @@ document.addEventListener('DOMContentLoaded',()=>{
      )});
 
      // Mantener contexto hasta DESPUÉS de construir el documento profesional.
-     window.selectedPatient=p;
-     window.currentConsultation={id:null,diagnosis:'Receta independiente',indications:general||''};
+     window.selectedPatient={...p,meta:p.meta||[p.ci?'CI: '+p.ci:'',p.phone,p.sex].filter(Boolean).join(' · ')};
+     window.currentConsultation={id:null,diagnosis:'Receta independiente',indications:general||'',meta:{}};
      if(typeof window.medicoAmigoPrintPrescription==='function'){
        window.medicoAmigoPrintPrescription(previewWindow);
      }else if(previewWindow){
@@ -1950,6 +1950,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
  function openRx(p){
    if(!p?.id){alert('No se pudo identificar al paciente.');return}
+   p={...p,meta:p.meta||[p.ci?'CI: '+p.ci:'',p.phone,p.sex].filter(Boolean).join(' · ')};
    close();
    sessionStorage.setItem('medicoAmigoCurrentPatientId',p.id);
    sessionStorage.setItem('medicoAmigoRxStandalone',JSON.stringify({patientId:p.id,consultationId:null}));
@@ -1979,7 +1980,7 @@ document.addEventListener('DOMContentLoaded',()=>{
    const raw=await r.text();let d;try{d=JSON.parse(raw)}catch{d=raw}
    if(!r.ok){if(r.status===409)throw Error('Ese CI/documento ya está registrado. Búscalo en la lista.');throw Error(d?.message||raw)}
    const x=d?.[0];if(!x?.id)throw Error('No se confirmó el registro.');
-   const p={id:x.id,name:x.full_name,ci:x.document_number||'',phone:x.phone||'',sex:x.sex||'',birth_date:x.birth_date||''};
+   const p={id:x.id,name:x.full_name,ci:x.document_number||'',phone:x.phone||'',sex:x.sex||'',birth_date:x.birth_date||'',meta:[x.document_number?'CI: '+x.document_number:'',x.phone,x.sex].filter(Boolean).join(' · ')};
    const arr=patients();arr.unshift(p);sessionStorage.setItem('medicoAmigoPatients',JSON.stringify(arr));return p;
  }
 
