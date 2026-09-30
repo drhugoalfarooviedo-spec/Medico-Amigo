@@ -236,3 +236,86 @@ html,body{max-width:100%;overflow-x:hidden}
 .rx-new-patient{margin:18px 20px 0;border:0;border-radius:14px;background:#079fba;color:#fff;padding:14px 16px;font-weight:800;font-size:15px;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center}.rx-new-patient small{font-weight:500;opacity:.9}
 .rx-quick-form{padding:22px;overflow:auto;display:grid;gap:18px}.rx-quick-form label{display:grid;gap:7px;font-weight:700;color:#17384c;font-size:14px}.rx-quick-form input,.rx-quick-form select{width:100%;box-sizing:border-box;border:1px solid #d2e1e8;border-radius:12px;background:#fff;padding:13px 14px;font:inherit;color:#17384c}.rx-quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.rx-quick-note{margin:0;color:#6d8290;font-size:13px}.rx-quick-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}.rx-quick-actions button{border-radius:12px;padding:12px 15px;font-weight:800}.rx-secondary{border:1px solid #ccdce4;background:#fff;color:#587080}.rx-primary{border:0;background:#073f68;color:#fff}
 @media(max-width:600px){.rx-new-patient{margin:16px 16px 0;display:grid}.rx-quick-grid{grid-template-columns:1fr}.rx-quick-form{padding:18px 16px}.rx-quick-actions{display:grid}.rx-quick-actions button{width:100%}}
+
+/* ========================================
+   v1.0.15 — ESCRITORIO RESTAURADO
+   Mantiene intacta la vista móvil <= 760px
+======================================== */
+@media (min-width:761px){
+  body{background:#eef4f7}
+  .app{align-items:flex-start;padding:28px 34px 44px}
+
+  /* Inicio: panel de escritorio ancho */
+  #homeScreen.home{
+    width:min(1320px,calc(100vw - 68px));
+    max-width:1320px;
+    min-height:calc(100vh - 56px);
+    border-radius:24px;
+    overflow:hidden;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    grid-template-areas:
+      "header header"
+      "welcome welcome"
+      "consult rx"
+      "search today"
+      "recent recent"
+      "nav nav";
+    column-gap:22px;
+    align-content:start;
+    padding-bottom:0;
+    background:#f7fafc;
+    box-shadow:0 18px 50px rgba(5,44,77,.10)
+  }
+  #homeScreen.hidden{display:none!important}
+  #homeScreen .home-header{grid-area:header;min-height:86px;padding:22px 30px}
+  #homeScreen .doctor-welcome{grid-area:welcome;padding:27px 30px 18px}
+  #homeScreen .doctor-welcome h1{font-size:30px}
+  #homeScreen #newConsultationBtn{grid-area:consult}
+  #homeScreen #quickPrescriptionBtn{grid-area:rx}
+  #homeScreen #searchPatientBtn{grid-area:search}
+  #homeScreen .today-section{grid-area:today}
+  #homeScreen .recent-section{grid-area:recent}
+  #homeScreen .bottom-nav{grid-area:nav}
+
+  #homeScreen .new-consultation-button,
+  #homeScreen .patient-search{
+    width:auto;
+    margin:4px 0 16px;
+    min-height:92px;
+    border-radius:18px
+  }
+  #homeScreen #newConsultationBtn,
+  #homeScreen #searchPatientBtn{margin-left:30px}
+  #homeScreen #quickPrescriptionBtn,
+  #homeScreen .today-section{margin-right:30px}
+  #homeScreen .today-section{padding:0;margin-top:4px;margin-bottom:16px}
+  #homeScreen .today-section .section-heading{margin-bottom:10px}
+  #homeScreen .stats-grid{gap:12px}
+  #homeScreen .stat-card{min-height:92px}
+  #homeScreen .recent-section{padding:0 30px;margin:10px 0 24px}
+  #homeScreen .recent-section .empty-state{min-height:112px;display:flex;flex-direction:column;justify-content:center}
+  #homeScreen .bottom-nav{
+    position:relative;
+    left:auto;right:auto;bottom:auto;
+    width:100%;height:72px;
+    border-radius:0;
+    border-top:1px solid #e0e9ef
+  }
+
+  /* Resto de pantallas: aprovechar el ancho disponible en PC */
+  .patient-screen{
+    width:min(1180px,calc(100vw - 68px));
+    max-width:1180px;
+    min-height:calc(100vh - 56px);
+    border-radius:24px
+  }
+  .screen-header{padding-left:30px;padding-right:30px}
+  .patient-content,.patient-form,.consultation-form,.prescription-form,.payment-form,
+  .patients-page,.patient-detail-page,.settings-form{
+    width:100%;max-width:1040px;margin-left:auto;margin-right:auto
+  }
+  .patient-form,.consultation-form,.prescription-form,.payment-form,.settings-form{padding-left:30px;padding-right:30px}
+  .patients-page,.patient-detail-page{padding-left:30px;padding-right:30px}
+  .history-modal-card{max-width:820px}
+}
