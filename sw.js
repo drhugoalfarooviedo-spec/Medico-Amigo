@@ -1,9 +1,13 @@
-const CACHE = 'medico-amigo-v1.0.18-password-recovery';
+const CACHE = 'medico-amigo-v1.0.19-laboratory';
 const APP_SHELL = [
   './',
   './index.html',
   './styles.css',
   './app.js',
+  './doctor-lab.js',
+  './laboratorio.html',
+  './lab.js',
+  './lab.css',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
