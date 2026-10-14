@@ -1,0 +1,18 @@
+MÉDICO AMIGO v1.0.19 — MÓDULO LABORATORIO (PRUEBAS)
+
+1. Mantén una copia del repositorio anterior.
+2. Carga todos los archivos de este ZIP al repositorio, sin borrar los existentes.
+3. Página laboratorio: https://drhugoalfarooviedo-spec.github.io/Medico-Amigo/laboratorio.html
+4. La cuenta laboratorio está DESACTIVADA en Supabase. No podrá acceder hasta que un administrador la active temporalmente.
+5. Pruebas exclusivamente con PACIENTE PRUEBA LABORATORIO y PDF FICTICIO.
+6. El Dr. Carlos ve los PDF desde la ficha del paciente en Resultados de laboratorio.
+7. La autorización definitiva, las pruebas reales de RLS y la auditoría de seguridad siguen pendientes.
+8. No utilizar con pacientes reales ni datos clínicos de producción hasta completar validación y aprobación institucional.
+
+NOTAS TÉCNICAS
+- El login de laboratorio utiliza sessionStorage separado del login de médicos.
+- La carga utiliza JWT del laboratorio, bucket privado y RPC de registro.
+- El doctor descarga con JWT y RLS de Storage, sin enlaces públicos.
+- La búsqueda supone que la función laboratory_search_patients recibe p_search; verificar firma exacta en Supabase antes de la prueba.
+- La autorización supone que laboratory_can_access_doctor recibe p_doctor_id; verificar firma exacta.
+- Los reemplazos/versiones posteriores no están habilitados desde esta interfaz.
