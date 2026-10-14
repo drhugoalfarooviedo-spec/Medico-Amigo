@@ -25,3 +25,5 @@ Versión 1.0.25: renovación visual exclusiva de laboratorio.html y lab.css; ló
 
 
 v1.0.26: Corrección de PDF desde Laboratorio y consulta de versiones desde ficha del médico. Solo datos ficticios. Mantener acceso del laboratorio desactivado hasta pruebas controladas. No apto aún para pacientes reales.
+
+Version 1.0.27: solo textos del portal laboratorio y cache PWA. Antes de usar datos reales: validacion de seguridad, privacidad y autorizacion institucional.
