@@ -16,3 +16,7 @@ NOTAS TÉCNICAS
 - La búsqueda utiliza search_text, conforme a la firma verificada en Supabase.
 - La autorización utiliza target_doctor, conforme a la firma verificada en Supabase.
 - Los reemplazos/versiones posteriores no están habilitados desde esta interfaz.
+
+VERSION 1.0.23: mejora visual de portal laboratorio y sección desplegable en ficha médica. No modifica la lógica de acceso, búsqueda, subida ni descarga.
+
+Versión 1.0.24: mejora visual de botones y tarjetas en ficha médica y portal de laboratorio. Sin cambios en lógica de Supabase. Verificar visualización y accesibilidad en móvil y PC.

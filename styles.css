@@ -322,3 +322,53 @@ html,body{max-width:100%;overflow-x:hidden}
 
 /* v1.0.18 — Recuperación de contraseña */
 .forgot-password-button{width:100%;border:0;background:transparent;color:var(--azul);font-weight:700;font-size:12px;margin-top:14px;cursor:pointer;padding:8px}.forgot-password-button:hover{text-decoration:underline}.recovery-panel{margin-top:20px;padding-top:20px;border-top:1px solid #e5edf3}.recovery-panel h3{color:var(--azul-oscuro);font-size:18px;margin-bottom:6px}.recovery-panel>p{color:var(--gris);font-size:12px;line-height:1.5;margin-bottom:18px}
+
+
+/* Laboratorio: integración visual con la ficha clínica */
+.laboratory-accordion{margin:20px 0;border:1px solid #dbe7ee;border-radius:20px;background:#fff;overflow:hidden;box-shadow:0 5px 22px rgba(20,65,100,.035)}
+.laboratory-summary{display:flex;align-items:center;gap:14px;list-style:none;cursor:pointer;padding:20px 22px;min-height:78px}
+.laboratory-summary::-webkit-details-marker{display:none}
+.laboratory-summary-icon{display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;background:#eaf7fa;border-radius:13px;font-size:22px}
+.laboratory-summary-text{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
+.laboratory-summary-text strong{color:#123b5b;font-size:16px}
+.laboratory-summary-text small{color:#688296;font-size:12px}
+.laboratory-chevron{color:#0a628f;font-size:27px;transition:transform .2s}
+.laboratory-accordion[open] .laboratory-chevron{transform:rotate(180deg)}
+.laboratory-content{border-top:1px solid #edf2f6;padding:18px 22px 22px}
+.laboratory-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;color:#54748b;font-size:13px;font-weight:600}
+.laboratory-refresh{border:1px solid #c6dce9;border-radius:10px;background:#f5fbff;color:#0a608f;padding:9px 13px;font-size:13px;cursor:pointer;min-height:38px}
+.laboratory-results-list{display:grid;gap:10px}
+.laboratory-results-list .patient-result{display:flex;justify-content:space-between;align-items:center;gap:18px;border:1px solid #dce9f0;border-radius:14px;background:#f9fcfe;padding:17px 18px;margin:0}
+.laboratory-result-info{min-width:0;flex:1}
+.laboratory-result-info strong{display:block;color:#123a59;font-size:15px;line-height:1.4}
+.laboratory-result-date{color:#688296;font-size:13px;margin:7px 0 0}
+.laboratory-open-pdf{background:#086596;color:white;border:0;border-radius:10px;padding:11px 15px;min-height:42px;cursor:pointer;font-weight:600;white-space:nowrap}
+.laboratory-open-pdf:hover{background:#074f76}
+.laboratory-open-pdf:disabled{opacity:.55;cursor:wait}
+@media(max-width:620px){.laboratory-summary{padding:16px}.laboratory-content{padding:14px}.laboratory-results-list .patient-result{align-items:stretch;flex-direction:column;padding:15px}.laboratory-open-pdf{width:100%}.laboratory-toolbar{flex-wrap:wrap}}
+
+/* v1.0.24 - mejora visual acotada a ficha del paciente y laboratorio */
+#patientDetailScreen .patient-profile-card{gap:14px;padding:22px;border-radius:20px;box-shadow:0 4px 20px rgba(5,44,77,.035)}
+#patientDetailScreen .detail-primary-actions{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#patientDetailScreen .detail-primary-actions button{appearance:none;border:1px solid #0a719c;border-radius:12px;background:linear-gradient(135deg,#07577f,#078fb0);color:#fff;font-family:inherit;font-size:13px;font-weight:750;line-height:1.25;padding:12px 16px;min-height:46px;cursor:pointer;box-shadow:0 4px 12px rgba(6,96,142,.13)}
+#patientDetailScreen #standalonePrescriptionFromDetailBtn{background:#fff;color:#07577f;border:1.5px solid #a7d2e0;box-shadow:none}
+#patientDetailScreen .detail-primary-actions button:hover{filter:brightness(.95)}
+#patientDetailScreen .record-management-actions{margin:18px 0 20px;gap:12px}
+#patientDetailScreen .record-management-actions button{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #cbdde8;background:#fff;color:#174d69;font-family:inherit;font-size:13px;font-weight:700;line-height:1.3;padding:12px 17px;min-height:46px;height:auto;border-radius:12px;cursor:pointer;box-shadow:0 3px 12px rgba(5,44,77,.035)}
+#patientDetailScreen .record-management-actions #deletePatientBtn{border:1px solid #e9b8b8!important;color:#b23c3c!important;background:#fff9f9!important}
+#patientDetailScreen .medical-details summary>div>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+#patientDetailScreen .medical-details summary strong{font-size:15px;line-height:1.35}
+#patientDetailScreen .medical-details summary small{display:block;font-size:12px;line-height:1.45}
+#patientDetailScreen .laboratory-accordion{margin:18px 0 24px;border:1px solid #dbe7ee;border-radius:19px;background:#fff;box-shadow:0 5px 20px rgba(5,44,77,.04);overflow:hidden}
+#patientDetailScreen .laboratory-summary{display:flex;align-items:center;gap:13px;padding:19px 20px;min-height:78px;list-style:none;cursor:pointer}
+#patientDetailScreen .laboratory-summary-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:12px;background:#e7f6fa;font-size:21px}
+#patientDetailScreen .laboratory-summary-text{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
+#patientDetailScreen .laboratory-summary-text strong{font-size:15px;color:#113c5a}
+#patientDetailScreen .laboratory-summary-text small{font-size:12px;color:#698295}
+#patientDetailScreen .laboratory-chevron{font-size:24px;color:#0b6a94}
+#patientDetailScreen .laboratory-content{padding:18px 20px 22px;border-top:1px solid #eaf0f4}
+#patientDetailScreen .laboratory-refresh{font:inherit;font-size:12px;font-weight:700;min-height:40px;border:1px solid #b8d6e5;background:#f4fbff;color:#09658d;border-radius:10px;padding:9px 13px;cursor:pointer}
+#patientDetailScreen .laboratory-results-list .patient-result{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px;background:#f7fbfd;border:1px solid #dbe9f1;border-radius:14px;min-height:80px}
+#patientDetailScreen .laboratory-open-pdf{appearance:none;min-height:44px;padding:11px 17px;background:#076a97;color:#fff;border:0;border-radius:11px;font:inherit;font-size:13px;font-weight:750;cursor:pointer;white-space:nowrap}
+@media(max-width:700px){#patientDetailScreen .patient-profile-card{flex-wrap:wrap;padding:17px}#patientDetailScreen .detail-primary-actions{width:100%;margin-left:0;display:grid;grid-template-columns:1fr 1fr}#patientDetailScreen .detail-primary-actions button{width:100%;font-size:12px;padding:11px 8px}#patientDetailScreen .record-management-actions{display:grid;grid-template-columns:1fr 1fr}#patientDetailScreen .record-management-actions button{font-size:11px;padding:10px 7px}#patientDetailScreen .laboratory-content{padding:15px}#patientDetailScreen .laboratory-results-list .patient-result{flex-direction:column;align-items:stretch}#patientDetailScreen .laboratory-open-pdf{width:100%}}
+@media(max-width:390px){#patientDetailScreen .detail-primary-actions,#patientDetailScreen .record-management-actions{grid-template-columns:1fr}}
