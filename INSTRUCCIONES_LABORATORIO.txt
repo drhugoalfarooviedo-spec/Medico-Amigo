@@ -20,3 +20,5 @@ NOTAS TÉCNICAS
 VERSION 1.0.23: mejora visual de portal laboratorio y sección desplegable en ficha médica. No modifica la lógica de acceso, búsqueda, subida ni descarga.
 
 Versión 1.0.24: mejora visual de botones y tarjetas en ficha médica y portal de laboratorio. Sin cambios en lógica de Supabase. Verificar visualización y accesibilidad en móvil y PC.
+
+Versión 1.0.25: renovación visual exclusiva de laboratorio.html y lab.css; lógica de laboratorio sin cambios.
