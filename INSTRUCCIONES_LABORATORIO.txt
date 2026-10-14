@@ -28,3 +28,5 @@ v1.0.26: Corrección de PDF desde Laboratorio y consulta de versiones desde fich
 
 Version 1.0.27: solo textos del portal laboratorio y cache PWA. Antes de usar datos reales: validacion de seguridad, privacidad y autorizacion institucional.
 Publicación v1.0.27 - actualización del portal de laboratorio.
+
+Versión 1.0.28: corrección de bloqueo en selector Nueva receta (pacientes, cierre y Escape). Sin cambios en Supabase ni Laboratorio.

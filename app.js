@@ -2117,6 +2117,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  const sess=()=>{try{return JSON.parse(localStorage.getItem(SESSION)||'null')}catch{return null}};
  const patients=()=>{try{return JSON.parse(sessionStorage.getItem('medicoAmigoPatients')||'[]')}catch{return []}};
  const close=()=>document.getElementById('rxPickerOverlay')?.remove();
+ const rxEscape=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
  const rxCode=()=>{const d=new Date().toISOString().slice(0,10).replaceAll('-','');const u=(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()).replaceAll('-','').replace('.','').slice(-12).toUpperCase();return `RX-${d}-${u}`};
 
  function openRx(p){
@@ -2173,9 +2174,26 @@ document.addEventListener('DOMContentLoaded',()=>{
    close();const data=patients(),o=document.createElement('div');o.id='rxPickerOverlay';
    o.innerHTML=`<div class="rx-picker-card"><div class="rx-picker-head"><div><strong>Nueva receta</strong><span>Selecciona o registra al paciente</span></div><button type="button" id="rxPickerClose">×</button></div><div class="rx-picker-body"><button type="button" id="rxNewPatientBtn" class="rx-new-patient">＋ NUEVO PACIENTE <small>Registrar y generar receta sin consulta</small></button><div class="rx-picker-search"><span>⌕</span><input id="rxPickerSearch" type="search" placeholder="Nombre, CI o teléfono"></div><div id="rxPickerList" class="rx-picker-list"></div></div></div>`;
    document.body.appendChild(o);const list=$('rxPickerList');
-   const draw=q=>{q=(q||'').toLowerCase().trim();const rows=data.filter(p=>!q||[p.name,p.ci,p.phone].some(v=>String(v||'').toLowerCase().includes(q)));list.innerHTML='';if(!rows.length){list.innerHTML='<div class="rx-picker-empty">No se encontraron pacientes.</div>';return}rows.forEach(p=>{const b=document.createElement('button');b.type='button';b.className='rx-picker-patient';const i=(p.name||'P').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();b.innerHTML=`<span class="rx-picker-avatar">${escapeHtml(i)}</span><span><b>${escapeHtml(p.name)}</b><small>CI: ${escapeHtml(p.ci||'—')}${p.phone?' · '+escapeHtml(p.phone):''}</small></span><i>›</i>`;b.onclick=()=>openRx(p);list.appendChild(b)})};
-   draw('');$('rxPickerSearch').oninput=e=>draw(e.target.value);$('rxPickerClose').onclick=close;$('rxNewPatientBtn').onclick=quickNew;
+   // Conectar controles ANTES de renderizar: un fallo de datos nunca debe atrapar al usuario.
+   $('rxPickerClose').onclick=close;
+   $('rxNewPatientBtn').onclick=quickNew;
+   o.addEventListener('click',e=>{if(e.target===o)close()});
+   const draw=q=>{
+     q=(q||'').toLowerCase().trim();
+     const rows=data.filter(p=>p&&(!q||[p.name,p.ci,p.phone].some(v=>String(v||'').toLowerCase().includes(q))));
+     list.innerHTML='';
+     if(!rows.length){list.innerHTML='<div class="rx-picker-empty">No se encontraron pacientes.</div>';return}
+     rows.forEach(p=>{
+       const b=document.createElement('button');b.type='button';b.className='rx-picker-patient';
+       const i=(p.name||'P').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();
+       b.innerHTML=`<span class="rx-picker-avatar">${rxEscape(i)}</span><span><b>${rxEscape(p.name)}</b><small>CI: ${rxEscape(p.ci||'—')}${p.phone?' · '+rxEscape(p.phone):''}</small></span><i>›</i>`;
+       b.onclick=()=>openRx(p);list.appendChild(b);
+     });
+   };
+   $('rxPickerSearch').oninput=e=>draw(e.target.value);
+   try{draw('')}catch(err){console.error('Error al mostrar pacientes para receta:',err);list.innerHTML='<div class="rx-picker-empty">No se pudo mostrar la lista. Cierra y vuelve a intentar.</div>'}
  }
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('rxPickerOverlay')){e.preventDefault();close()}});
  window.medicoAmigoOpenRxPicker=picker;
  $('quickPrescriptionBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();picker()},true);
 });
