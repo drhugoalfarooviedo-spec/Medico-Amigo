@@ -1,0 +1,8 @@
+MÉDICO AMIGO v1.0.34 - Rediseño de Laboratorio Los Pinos
+
+Se renovó exclusivamente la presentación de laboratorio.html y lab.css.
+Se mantienen sin cambios lab.js, app.js, agenda, interconsultas, políticas de seguridad y base de datos.
+No requiere SQL.
+Descomprimir y subir los archivos al directorio raíz de GitHub Pages.
+Probar acceso, búsqueda, registro PDF, correcciones y vista móvil antes de uso clínico.
+No se incorporaron indicadores ficticios ni reportes sin respaldo de datos.
