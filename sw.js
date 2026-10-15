@@ -1,4 +1,4 @@
-const CACHE = 'medico-amigo-v1.0.32-dashboard';
+const CACHE = 'medico-amigo-v1.0.33-desktop-grid';
 const APP_SHELL = [
   './',
   './index.html',

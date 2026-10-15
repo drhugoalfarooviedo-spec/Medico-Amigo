@@ -1,0 +1,6 @@
+Médico Amigo v1.0.33 - Corrección de accesos rápidos en escritorio.
+
+Se corrigió la herencia de posiciones CSS del diseño anterior que superponía los cuatro botones.
+Solo se aplica en pantallas mayores de 760 px; el diseño móvil queda intacto.
+No requiere cambios SQL en Supabase.
+Descomprimir y subir los archivos del ZIP al repositorio GitHub.

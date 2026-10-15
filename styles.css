@@ -461,3 +461,38 @@ html,body{max-width:100%;overflow-x:hidden}
   #homeScreen .bottom-nav{display:none}
 }
 @media(max-width:420px){#homeScreen .dash-actions{grid-template-columns:1fr 1fr;gap:9px;padding:12px 15px}#homeScreen .dash-actions .new-consultation-button,#homeScreen .dash-actions .patient-search{min-height:115px;padding:14px 11px;flex-direction:column;align-items:flex-start}#homeScreen .dash-action-arrow{display:none}#homeScreen .dash-lower-grid{padding:15px}#homeScreen .today-section{padding:0 15px}}
+
+/* v1.0.33 · Corrección exclusiva escritorio: evita herencia del grid antiguo.
+   No modifica los estilos móviles (<=760px). */
+@media (min-width:761px) {
+  #homeScreen.home-dashboard .dash-actions {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    grid-auto-flow:row;
+    align-items:stretch;
+    gap:13px;
+  }
+  #homeScreen.home-dashboard .dash-actions > button,
+  #homeScreen.home-dashboard .dash-actions > #newConsultationBtn,
+  #homeScreen.home-dashboard .dash-actions > #quickPrescriptionBtn,
+  #homeScreen.home-dashboard .dash-actions > #openAgendaBtn,
+  #homeScreen.home-dashboard .dash-actions > #searchPatientBtn {
+    grid-area:auto;
+    grid-column:auto;
+    grid-row:auto;
+    position:relative;
+    width:100%;
+    min-width:0;
+    max-width:none;
+    margin:0;
+    inset:auto;
+    transform:none;
+    box-sizing:border-box;
+  }
+  #homeScreen.home-dashboard .dash-actions > button > div {min-width:0;}
+  #homeScreen.home-dashboard .dash-actions > button strong,
+  #homeScreen.home-dashboard .dash-actions > button small {overflow-wrap:anywhere;}
+}
+@media (min-width:761px) and (max-width:1120px) {
+  #homeScreen.home-dashboard .dash-actions {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
