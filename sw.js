@@ -1,10 +1,11 @@
-const CACHE = 'medico-amigo-v1.0.28-receta-desbloqueo';
+const CACHE = 'medico-amigo-v1.0.30-interconsulta-diseno';
 const APP_SHELL = [
   './',
   './index.html',
   './styles.css',
   './app.js',
   './doctor-lab.js',
+  './interconsulta.js',
   './laboratorio.html',
   './lab.js',
   './lab.css',
