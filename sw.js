@@ -1,4 +1,4 @@
-const CACHE = 'medico-amigo-v1.0.31-agenda-citas';
+const CACHE = 'medico-amigo-v1.0.32-dashboard';
 const APP_SHELL = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const APP_SHELL = [
   './doctor-lab.js',
   './interconsulta.js',
   './agenda.js',
+  './dashboard.js',
   './laboratorio.html',
   './lab.js',
   './lab.css',
