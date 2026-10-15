@@ -1,0 +1,9 @@
+MÉDICO AMIGO v1.0.31 — AGENDA DE CITAS
+
+PASO 1: Supabase > SQL Editor > pegar y ejecutar INSTALAR_AGENDA_SUPABASE.sql.
+PASO 2: GitHub > repositorio Medico-Amigo > Add file > Upload files > subir archivos del ZIP (excepto SQL y este LEEME), reemplazando los existentes.
+PASO 3: Esperar el check verde en Actions y recargar la app.
+PASO 4: Iniciar sesión como médico, abrir Agenda de citas y probar con un paciente de su propia cuenta.
+
+La agenda permite crear, editar, filtrar por fecha y cambiar estados. No envía notificaciones ni vincula automáticamente citas con consultas clínicas.
+Las fechas y horas se guardan como hora local del centro, sin conversión de zona horaria.
